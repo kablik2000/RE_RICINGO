@@ -1,0 +1,45 @@
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# generated native folders (Continuous Native Generation)
+apps/*/ios/
+apps/*/android/
+
+# Native signing material
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# Metro
+.metro-health-check*
+
+# logs
+npm-debug.*
+pnpm-debug.*
+*.log
+
+# OS / editors
+.DS_Store
+Thumbs.db
+
+# local env files (secrets never committed)
+.env
+.env*.local
+
+# TypeScript / test output
+*.tsbuildinfo
+coverage/
+
+# Claude Code local settings
+.claude/settings.local.json
