@@ -224,7 +224,15 @@ The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for t
 
 - [x] Studio shell (2026-11-23): Next.js 16 App Router, TypeScript strict, ESLint (own config), Vitest, Roboto + Noto Serif, design tokens from `@ricingo/design-system/web` as CSS variables; overview page with backend status; in `pnpm verify`, CI build, VS Code task, preview config.
 
-- [ ] Studio app shell + teacher auth.
+- [x] Studio design approved 2026-11-23 (Design canvas "Teacher Studio – návrh designu": overview, lessons, lesson editor; Material 3 admin dashboard).
+- [x] Lesson storage (ADR-0011): `lessons` (draft as validated JSON) + immutable `lesson_versions`, Alembic migration, semantic checks in Python, Studio endpoints (dev/test only until auth), demo lesson seed, tests against PostgreSQL.
+- [x] Studio shell per design: navigation drawer (rail in the editor), top app bar, overview dashboard with real counts.
+- [x] Lessons list per design: filters, data table, status.
+- [x] Lesson editor per design: dialogue tree, sentence + segment editing, layered explanations, vocabulary and grammar links, lesson info, live phone preview, autosave, check, publish (checked in the browser 2026-11-23 on the demo lesson).
+- [ ] Student app reads published lessons from the API instead of the bundled demo (offline cache, M7 update rules).
+- [ ] Studio: drag-and-drop reordering of turns/sentences; selecting segment text with the mouse (now typed); archive / delete lessons; lesson import from file.
+- [ ] Studio validation messages: the API's schema messages are translated for known patterns only; unknown ones show in English.
+- [ ] Teacher auth (with M2 auth).
 - [ ] Students: list, invite, profile, level.
 - [ ] Assignments: assign/reorder lessons per student.
 - [ ] Authoring: edit lesson drafts, preview, publish (reusing compiler/validator).

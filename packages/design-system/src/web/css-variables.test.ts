@@ -1,4 +1,5 @@
 import { colorSchemes } from '../tokens/color-schemes';
+import { illustration } from '../tokens/illustration';
 import { spacing } from '../tokens/layout';
 import { colorVariables, layoutVariables, tokenStylesheet } from './css-variables';
 
@@ -8,7 +9,10 @@ describe('web design tokens', () => {
 
     expect(light['--rici-color-primary']).toBe(colorSchemes.light.primary);
     expect(light['--rici-color-on-primary-container']).toBe(colorSchemes.light.onPrimaryContainer);
-    expect(Object.keys(light)).toHaveLength(Object.keys(colorSchemes.light).length);
+    expect(light['--rici-art-counter-edge']).toBe(illustration.light.counterEdge);
+    expect(Object.keys(light)).toHaveLength(
+      Object.keys(colorSchemes.light).length + Object.keys(illustration.light).length,
+    );
   });
 
   it('exposes spacing, radius and the type scale in pixels', () => {

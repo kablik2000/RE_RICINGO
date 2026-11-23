@@ -29,8 +29,10 @@ services:
 
   api:
     build: ./services/api
-    # Development: Flask's reloader picks up edits in services/api/src (mounted below).
-    command: flask --app rici_api.wsgi run --host 0.0.0.0 --port 8000 --debug
+    # Development: migrate the database, then Flask's reloader picks up edits in services/api/src.
+    command: >-
+      sh -c "flask --app rici_api.wsgi db-upgrade &&
+             flask --app rici_api.wsgi run --host 0.0.0.0 --port 8000 --debug"
     environment:
       APP_ENV: development
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-rici}:${POSTGRES_PASSWORD:-rici_dev_password}@db:5432/${POSTGRES_DB:-rici}
@@ -40,6 +42,8 @@ services:
       - '${API_PORT:-8000}:8000'
     volumes:
       - ./services/api/src:/app/src
+      # Demo lesson for `pnpm backend:seed` (read-only).
+      - ./apps/mobile/src/data/demo:/demo:ro
     depends_on:
       db:
         condition: service_healthy

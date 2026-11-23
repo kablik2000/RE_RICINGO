@@ -13,6 +13,13 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-23 — **Teacher Studio built to the approved design** (ADR-0011): overview dashboard
+  with real counts, lessons list with filters and search, new-lesson form, and the lesson
+  editor (dialogue tree, sentence and segment editing with layered explanations, vocabulary and
+  grammar tabs, lesson info, live phone preview, autosave, check, publish).
+  Backend: `lessons` + immutable `lesson_versions` (Alembic migration, trigger), semantic lesson
+  checks in Python, Studio endpoints (development only until auth), demo lesson import
+  (`pnpm backend:seed`), tests against PostgreSQL (also in CI).
 - 2026-11-23 — **Teacher Studio shell** (`apps/studio`, Next.js 16): overview page with the
   backend status, shared design tokens as CSS variables (`@ricingo/design-system/web`), same
   typefaces as the app, Vitest, own ESLint config, CI build.

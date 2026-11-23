@@ -16,7 +16,8 @@
     "api:verify": "cd services/api && uv sync --locked && uv run ruff format --check . && uv run ruff check . && uv run mypy && uv run pytest -q",
     "backend:up": "docker compose up --build --detach",
     "backend:down": "docker compose down",
-    "studio:dev": "pnpm --filter @ricingo/studio dev"
+    "studio:dev": "pnpm --filter @ricingo/studio dev",
+    "backend:seed": "docker compose exec api flask --app rici_api.wsgi import-lesson /demo/al-bar.lesson.json"
   },
   "devDependencies": {
     "eslint": "^10.15.0",

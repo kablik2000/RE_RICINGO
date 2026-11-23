@@ -1,0 +1,75 @@
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--rici-space-sm);
+}
+
+.tableCard {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  font-size: var(--rici-type-body-size);
+}
+
+.table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--rici-color-on-surface-variant);
+  background: var(--rici-color-surface-container-low);
+  padding: 14px var(--rici-space-lg);
+}
+
+.table td {
+  padding: var(--rici-space-md) var(--rici-space-lg);
+  border-top: 1px solid var(--rici-color-surface-container-high);
+}
+
+.table th:first-child,
+.table td:first-child {
+  padding-left: var(--rici-space-xl);
+}
+
+.table tbody tr:hover {
+  background: color-mix(in srgb, var(--rici-color-on-surface) 4%, transparent);
+}
+
+.numeric {
+  text-align: right !important;
+}
+
+.lessonCell {
+  display: flex;
+  align-items: center;
+  gap: var(--rici-space-lg);
+  text-decoration: none;
+  color: inherit;
+}
+
+.lessonText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lessonTitle {
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.empty {
+  margin: 0;
+  padding: var(--rici-space-xl);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--rici-space-md) var(--rici-space-xl);
+  border-top: 1px solid var(--rici-color-surface-container-high);
+  font-size: 13px;
+  color: var(--rici-color-on-surface-variant);
+}

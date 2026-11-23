@@ -7,6 +7,7 @@ type LeafPaths<T, Prefix extends string = ''> = {
 }[keyof T & string];
 
 export type TranslationKey = LeafPaths<typeof cs>;
+export type TranslationParams = Readonly<Record<string, string | number>>;
 
 function lookup(key: string): string | undefined {
   let node: unknown = cs;
@@ -19,7 +20,14 @@ function lookup(key: string): string | undefined {
   return typeof node === 'string' ? node : undefined;
 }
 
-/** UI string for `key`, type-checked against the Czech catalog. */
-export function t(key: TranslationKey): string {
-  return lookup(key) ?? key;
+/** UI string for `key` (type-checked against the Czech catalog); `{name}` placeholders filled. */
+export function t(key: TranslationKey, params?: TranslationParams): string {
+  const template = lookup(key) ?? key;
+  if (params === undefined) {
+    return template;
+  }
+  return template.replace(/\{(\w+)\}/g, (placeholder, name: string) => {
+    const value = params[name];
+    return value === undefined ? placeholder : String(value);
+  });
 }

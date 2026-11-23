@@ -1,4 +1,5 @@
 import { colorSchemes, type ColorSchemeName } from '../tokens/color-schemes';
+import { illustration } from '../tokens/illustration';
 import { radius, spacing } from '../tokens/layout';
 import { typography } from '../tokens/typography';
 
@@ -19,14 +20,25 @@ function px(value: number): string {
   return `${String(value)}px`;
 }
 
-/** Colour roles of one scheme, e.g. `--rici-color-on-primary-container`. */
+/**
+ * Colour roles of one scheme (`--rici-color-on-primary-container`) and the illustration palette
+ * (`--rici-art-espresso`).
+ */
 export function colorVariables(scheme: ColorSchemeName): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(colorSchemes[scheme]).map(([role, value]) => [
-      `${PREFIX}-color-${kebab(role)}`,
-      value,
-    ]),
-  );
+  return {
+    ...Object.fromEntries(
+      Object.entries(colorSchemes[scheme]).map(([role, value]) => [
+        `${PREFIX}-color-${kebab(role)}`,
+        value,
+      ]),
+    ),
+    ...Object.fromEntries(
+      Object.entries(illustration[scheme]).map(([role, value]) => [
+        `${PREFIX}-art-${kebab(role)}`,
+        value,
+      ]),
+    ),
+  };
 }
 
 /** Scheme-independent tokens: spacing, radius and the type scale (size, line height, tracking). */

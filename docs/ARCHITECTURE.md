@@ -3,7 +3,8 @@
 > Status (2026-11-23): backend is **Flask + PostgreSQL**, Teacher Studio **Next.js**, all in this
 > monorepo (ADR-0010, superseding the Supabase plan of ADR-0002). Implemented so far: the student
 > app with a demo lesson on bundled content, visual design v1, the Flask API skeleton in Docker
-> and the Studio shell. See DEVELOPMENT_PLAN.
+> and the Teacher Studio (overview, lessons, lesson editor) on lessons stored in PostgreSQL. See
+> DEVELOPMENT_PLAN.
 > Product source of truth: `ricingo_koncepce.md` (product specification, Czech).
 
 ---
@@ -54,8 +55,8 @@ RICINGO is a private, premium learning companion for clients of one Italian lect
 
 Key ideas:
 
-1. **Content is authored mutably, consumed immutably.** The Studio edits drafts in normalized
-   tables. Publishing compiles a lesson into an immutable, versioned **lesson bundle**
+1. **Content is authored mutably, consumed immutably.** The Studio edits a lesson draft (one
+   validated JSON document per lesson, ADR-0011). Publishing compiles a lesson into an immutable, versioned **lesson bundle**
    (validated JSON + content-addressed audio). Students only ever read published versions.
 2. **Student data is append-only events + derived state.** Every answer, completed step and
    vocabulary review is a `learning_event` with a client-generated UUID. Mastery/progress

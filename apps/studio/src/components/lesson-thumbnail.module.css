@@ -1,0 +1,35 @@
+/* Illustration palette from the design system (`--rici-art-*`, light and dark). */
+.frame {
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--rici-radius-md);
+  background: var(--rici-art-backdrop);
+}
+
+.halo {
+  fill: var(--rici-art-halo);
+}
+
+.counter {
+  fill: var(--rici-art-counter);
+}
+
+.porcelain {
+  fill: var(--rici-art-porcelain);
+}
+
+.espresso {
+  fill: var(--rici-art-espresso);
+}
+
+.crema {
+  fill: var(--rici-art-crema);
+}
+
+.accent {
+  fill: none;
+  stroke: var(--rici-art-accent);
+}

@@ -17,3 +17,4 @@ Status values: **Proposed** (awaiting approval) · **Accepted** · **Superseded 
 | [0008](0008-local-native-modules.md)                       | Local Expo native modules for missing device APIs                | Accepted                  |
 | [0009](0009-visual-design-v1.md)                           | Visual design v1: Material 3, typefaces, icons, artwork          | Accepted                  |
 | [0010](0010-flask-postgresql-backend-and-nextjs-studio.md) | Flask + PostgreSQL backend, Next.js Studio, monorepo             | Accepted                  |
+| [0011](0011-lesson-drafts-as-documents.md)                 | Lesson drafts as validated JSON documents (Studio MVP)           | Accepted                  |

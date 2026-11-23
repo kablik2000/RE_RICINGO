@@ -1,0 +1,243 @@
+/* Shared Material 3 building blocks for Studio pages, all on the design tokens. */
+
+.page {
+  width: 100%;
+  max-width: 1240px;
+  box-sizing: border-box;
+  padding: var(--rici-space-xxl) var(--rici-space-xxl) 56px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rici-space-xl);
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--rici-space-lg);
+  flex-wrap: wrap;
+}
+
+.pageTitle {
+  margin: 0;
+  font-weight: 400;
+  font-size: var(--rici-type-headline-size);
+  line-height: var(--rici-type-headline-line-height);
+}
+
+.pageSubtitle {
+  margin: var(--rici-space-xs) 0 0;
+  color: var(--rici-color-on-surface-variant);
+  font-size: var(--rici-type-body-size);
+  line-height: var(--rici-type-body-line-height);
+}
+
+.actions {
+  display: flex;
+  gap: var(--rici-space-sm);
+  flex-wrap: wrap;
+}
+
+/* Buttons */
+.button {
+  height: 40px;
+  border-radius: var(--rici-radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rici-space-sm);
+  padding: 0 var(--rici-space-xl) 0 var(--rici-space-lg);
+  font: inherit;
+  font-weight: 500;
+  font-size: var(--rici-type-label-size);
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+}
+
+.button:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.filled {
+  background: var(--rici-color-primary);
+  color: var(--rici-color-on-primary);
+}
+
+.tonal {
+  background: var(--rici-color-primary-container);
+  color: var(--rici-color-on-primary-container);
+}
+
+.outlined {
+  background: transparent;
+  color: var(--rici-color-primary);
+  border: 1px solid var(--rici-color-outline);
+}
+
+.text {
+  background: transparent;
+  color: var(--rici-color-primary);
+  padding: 0 var(--rici-space-md);
+}
+
+.iconButton {
+  text-decoration: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--rici-radius-full);
+  border: none;
+  background: transparent;
+  color: var(--rici-color-on-surface-variant);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.iconButton:hover,
+.text:hover,
+.outlined:hover {
+  background: color-mix(in srgb, var(--rici-color-primary) 8%, transparent);
+}
+
+/* Surfaces */
+.card {
+  border-radius: var(--rici-radius-lg);
+  background: var(--rici-color-surface);
+  border: 1px solid var(--rici-color-surface-container-high);
+}
+
+.cardTonal {
+  border-radius: var(--rici-radius-lg);
+  background: var(--rici-color-surface-container-low);
+}
+
+.cardTitle {
+  margin: 0;
+  font-weight: 400;
+  font-size: var(--rici-type-title-size);
+  line-height: var(--rici-type-title-line-height);
+}
+
+/* Chips and status */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rici-space-xs);
+  padding: var(--rici-space-xs) 10px;
+  border-radius: var(--rici-radius-sm);
+  font-size: var(--rici-type-label-small-size);
+  line-height: var(--rici-type-label-small-line-height);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.chipOutlined {
+  border: 1px solid var(--rici-color-outline-variant);
+  color: var(--rici-color-on-surface-variant);
+}
+
+.statusPublished {
+  background: var(--rici-color-success-container);
+  color: var(--rici-color-on-success-container);
+}
+
+.statusChanged {
+  background: var(--rici-color-warning-container);
+  color: var(--rici-color-on-warning-container);
+}
+
+.statusDraft {
+  background: var(--rici-color-surface-container-high);
+  color: var(--rici-color-on-surface-variant);
+}
+
+.filterChip {
+  height: 32px;
+  border-radius: var(--rici-radius-sm);
+  border: 1px solid var(--rici-color-outline-variant);
+  background: transparent;
+  color: var(--rici-color-on-surface-variant);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rici-space-xs);
+  padding: 0 var(--rici-space-md);
+  font: inherit;
+  font-size: var(--rici-type-label-size);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.filterChipSelected {
+  border-color: var(--rici-color-primary-container);
+  background: var(--rici-color-primary-container);
+  color: var(--rici-color-on-primary-container);
+  padding-left: var(--rici-space-sm);
+}
+
+/* Form fields (outlined) */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rici-space-xs);
+  font-size: var(--rici-type-label-small-size);
+  font-weight: 500;
+  color: var(--rici-color-on-surface-variant);
+}
+
+.field:focus-within {
+  color: var(--rici-color-primary);
+}
+
+.input,
+.textarea,
+.select {
+  border-radius: var(--rici-space-sm);
+  border: 1px solid var(--rici-color-outline);
+  background: transparent;
+  color: var(--rici-color-on-surface);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 400;
+  padding: 0 var(--rici-space-md);
+}
+
+.input,
+.select {
+  height: 44px;
+}
+
+.textarea {
+  padding: 10px var(--rici-space-md);
+  line-height: 22px;
+  resize: vertical;
+  min-height: 64px;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  border: 2px solid var(--rici-color-primary);
+  padding-left: calc(var(--rici-space-md) - 1px);
+}
+
+.serif {
+  font-family: var(--rici-font-serif), Georgia, serif;
+}
+
+.muted {
+  color: var(--rici-color-on-surface-variant);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

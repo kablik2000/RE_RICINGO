@@ -5,6 +5,8 @@ import type { ReactNode } from 'react';
 
 import { t } from '@/i18n';
 
+import 'material-symbols/rounded.css';
+
 import './globals.css';
 
 // Same typefaces as the student app (ADR-0009); latin-ext for Czech and Italian diacritics.
