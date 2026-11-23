@@ -6,6 +6,9 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Fixed
 
+- 2026-11-23 — Studio "Smazat" and "Zrušit zveřejnění" could silently do nothing: they asked
+  with the browser's `confirm()`, which a browser may suppress ("prevent this page from creating
+  additional dialogs"). They now use an in-page Material dialog.
 - 2026-11-23 — Root scripts (`verify`, `test`, `typecheck`, `studio:dev`) failed with
   "'pnpm' is not recognized" when pnpm was only available through Corepack; they now call
   `corepack pnpm`. The VS Code task for the Studio is now named

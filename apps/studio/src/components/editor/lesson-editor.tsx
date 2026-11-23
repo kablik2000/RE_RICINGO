@@ -11,6 +11,7 @@ import {
   saveDraftAction,
   unpublishAction,
 } from '@/app/lessons/[id]/actions';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { Icon } from '@/components/icon';
 import { StatusChip } from '@/components/status-chip';
 import ui from '@/components/ui.module.css';
@@ -46,6 +47,7 @@ export function LessonEditor({ initial }: { initial: LessonDetail }) {
   const [unpublishing, startUnpublishing] = useTransition();
   const [deleting, startDeleting] = useTransition();
   const router = useRouter();
+  const [confirming, setConfirming] = useState<'delete' | 'unpublish' | null>(null);
   // What the server has; a draft equal to it (initial load, after publishing) is not saved again.
   const lastSaved = useRef(JSON.stringify(initial.draft));
 
@@ -88,11 +90,7 @@ export function LessonEditor({ initial }: { initial: LessonDetail }) {
   const canDelete = summary.status === 'draft' || summary.status === 'unpublished';
 
   const deleteLesson = () => {
-    const question =
-      summary.status === 'draft' ? 'editor.deleteConfirmDraft' : 'editor.deleteConfirmUnpublished';
-    if (!window.confirm(t(question, { title: draft.lesson.titleItalian }))) {
-      return;
-    }
+    setConfirming(null);
     startDeleting(async () => {
       const result = await deleteLessonAction(summary.id);
       if (result.ok) {
@@ -104,9 +102,7 @@ export function LessonEditor({ initial }: { initial: LessonDetail }) {
   };
 
   const unpublish = () => {
-    if (!window.confirm(t('editor.unpublishConfirm', { title: draft.lesson.titleItalian }))) {
-      return;
-    }
+    setConfirming(null);
     startUnpublishing(async () => {
       const result = await unpublishAction(summary.id);
       if (result.ok) {
@@ -190,7 +186,9 @@ export function LessonEditor({ initial }: { initial: LessonDetail }) {
               type="button"
               className={`${ui.button ?? ''} ${ui.outlined ?? ''}`}
               disabled={busy}
-              onClick={deleteLesson}>
+              onClick={() => {
+                setConfirming('delete');
+              }}>
               <Icon name="delete" size={18} />
               {deleting ? t('editor.deleting') : t('editor.delete')}
             </button>
@@ -200,7 +198,9 @@ export function LessonEditor({ initial }: { initial: LessonDetail }) {
               type="button"
               className={`${ui.button ?? ''} ${ui.outlined ?? ''}`}
               disabled={busy}
-              onClick={unpublish}>
+              onClick={() => {
+                setConfirming('unpublish');
+              }}>
               <Icon name="visibility_off" size={18} />
               {unpublishing ? t('editor.unpublishing') : t('editor.unpublish')}
             </button>
@@ -251,6 +251,36 @@ export function LessonEditor({ initial }: { initial: LessonDetail }) {
           </button>
         </p>
       )}
+
+      <ConfirmDialog
+        open={confirming === 'delete'}
+        title={t(
+          summary.status === 'draft'
+            ? 'editor.deleteDraft.title'
+            : 'editor.deleteUnpublished.title',
+          { title: draft.lesson.titleItalian },
+        )}
+        message={t(
+          summary.status === 'draft'
+            ? 'editor.deleteDraft.message'
+            : 'editor.deleteUnpublished.message',
+        )}
+        confirmLabel={t('editor.delete')}
+        onConfirm={deleteLesson}
+        onCancel={() => {
+          setConfirming(null);
+        }}
+      />
+      <ConfirmDialog
+        open={confirming === 'unpublish'}
+        title={t('editor.unpublishDialog.title', { title: draft.lesson.titleItalian })}
+        message={t('editor.unpublishDialog.message')}
+        confirmLabel={t('editor.unpublish')}
+        onConfirm={unpublish}
+        onCancel={() => {
+          setConfirming(null);
+        }}
+      />
 
       {showIssues && (
         <IssuesPanel

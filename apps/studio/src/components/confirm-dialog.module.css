@@ -1,0 +1,33 @@
+/* Material 3 basic dialog */
+.dialog {
+  width: min(560px, calc(100vw - 2 * var(--rici-space-lg)));
+  padding: var(--rici-space-xl);
+  border: none;
+  border-radius: var(--rici-radius-lg);
+  background: var(--rici-color-surface-container-high);
+  color: var(--rici-color-on-surface);
+}
+
+.dialog::backdrop {
+  background: color-mix(in srgb, var(--rici-color-background) 60%, transparent);
+}
+
+.title {
+  margin: 0 0 var(--rici-space-md);
+  font-size: var(--rici-type-title-size);
+  line-height: var(--rici-type-title-line-height);
+  font-weight: 500;
+}
+
+.message {
+  margin: 0;
+  font-size: var(--rici-type-body-size);
+  color: var(--rici-color-on-surface-variant);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--rici-space-sm);
+  margin-top: var(--rici-space-xl);
+}
