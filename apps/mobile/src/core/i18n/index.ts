@@ -1,1 +1,8 @@
-export { t, type TranslationKey, type TranslationParams } from './translate';
+export {
+  czechPluralForm,
+  t,
+  tPlural,
+  type PluralKey,
+  type TranslationKey,
+  type TranslationParams,
+} from './translate';

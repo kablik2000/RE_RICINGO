@@ -1,1 +1,2 @@
-export { SentenceAnalysis, type SentenceAnalysisProps } from './sentence-analysis';
+export { InteractiveSentence, type InteractiveSentenceProps } from './interactive-sentence';
+export { SegmentDetail, type SegmentDetailProps } from './segment-detail';

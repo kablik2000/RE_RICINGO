@@ -15,6 +15,15 @@ export interface ScreenProps {
   scrollable?: boolean;
   /** Set to false under a native header, which already covers the top safe area. */
   safeAreaTop?: boolean;
+  /**
+   * Edge-to-edge element at the top (an illustration), drawn under the status bar; the content
+   * below it starts as a rounded sheet overlapping its bottom edge. Scrollable screens only.
+   */
+  hero?: ReactNode;
+  /** Fixed bar above the scrolling content (e.g. a progress header). Scrollable screens only. */
+  topBar?: ReactNode;
+  /** Fixed bar below the scrolling content (e.g. previous / next). Scrollable screens only. */
+  footer?: ReactNode;
   testID?: string;
 }
 
@@ -28,15 +37,22 @@ export function Screen({
   subtitle,
   scrollable = true,
   safeAreaTop = true,
+  hero,
+  topBar,
+  footer,
   testID,
 }: ScreenProps) {
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
+  const topInset = safeAreaTop ? insets.top : 0;
+  const horizontalInsets = { paddingLeft: insets.left, paddingRight: insets.right };
+  // Content scrolls below a pinned status-bar area (it never runs under the clock); a hero draws
+  // under the status bar instead.
+  const pinTopInset = hero === undefined && topBar === undefined && topInset > 0;
   const insetStyle = {
-    paddingTop: safeAreaTop ? insets.top : 0,
-    paddingBottom: insets.bottom,
-    paddingLeft: insets.left,
-    paddingRight: insets.right,
+    paddingTop: 0,
+    paddingBottom: footer === undefined ? insets.bottom : 0,
+    ...horizontalInsets,
   };
 
   const header =
@@ -55,7 +71,9 @@ export function Screen({
 
   if (!scrollable) {
     return (
-      <View style={[styles.root, insetStyle]} {...(testID !== undefined && { testID })}>
+      <View
+        style={[styles.root, insetStyle, { paddingTop: topInset }]}
+        {...(testID !== undefined && { testID })}>
         <View style={[styles.content, styles.fill]}>
           {header}
           {children}
@@ -64,17 +82,40 @@ export function Screen({
     );
   }
 
-  return (
+  const scroll = (
     <ScrollView
       style={styles.root}
       contentContainerStyle={[insetStyle, styles.scrollContent]}
       contentInsetAdjustmentBehavior="never"
-      {...(testID !== undefined && { testID })}>
-      <View style={styles.content}>
+      {...(testID !== undefined &&
+        topBar === undefined &&
+        footer === undefined &&
+        !pinTopInset && { testID })}>
+      {hero}
+      <View style={[styles.content, hero !== undefined && styles.sheet]}>
         {header}
         {children}
       </View>
     </ScrollView>
+  );
+
+  if (topBar === undefined && footer === undefined && !pinTopInset) {
+    return scroll;
+  }
+
+  return (
+    <View style={styles.root} {...(testID !== undefined && { testID })}>
+      {topBar !== undefined && (
+        <View style={[styles.topBar, horizontalInsets, { paddingTop: topInset }]}>{topBar}</View>
+      )}
+      {pinTopInset && <View style={[styles.topBar, { height: topInset }]} />}
+      {scroll}
+      {footer !== undefined && (
+        <View style={[styles.footer, horizontalInsets, { paddingBottom: insets.bottom }]}>
+          <View style={styles.footerContent}>{footer}</View>
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -97,6 +138,27 @@ const createStyles = (theme: Theme) =>
     },
     fill: {
       flex: 1,
+    },
+    topBar: {
+      backgroundColor: theme.colors.background,
+    },
+    footer: {
+      backgroundColor: theme.colors.background,
+      borderTopWidth: theme.sizes.borderWidth,
+      borderTopColor: theme.colors.surfaceContainer,
+    },
+    footerContent: {
+      width: '100%',
+      maxWidth: theme.sizes.maxContentWidth,
+      alignSelf: 'center',
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+    },
+    sheet: {
+      marginTop: -theme.spacing.xl,
+      borderTopLeftRadius: theme.radius.xl,
+      borderTopRightRadius: theme.radius.xl,
+      backgroundColor: theme.colors.background,
     },
     header: {
       gap: theme.spacing.xs,

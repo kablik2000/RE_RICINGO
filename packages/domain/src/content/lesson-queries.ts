@@ -53,3 +53,33 @@ export function findLexemeOccurrences(bundle: LessonBundle): LexemeOccurrence[] 
     ),
   }));
 }
+
+/** A run of sentence text: an analysed segment or the plain text (spaces, punctuation) between. */
+export type SentencePiece =
+  | { kind: 'segment'; text: string; segment: Sentence['segments'][number] }
+  | { kind: 'gap'; text: string };
+
+/**
+ * Splits the sentence text into analysed segments and the text around them, in reading order, so
+ * the UI can render the sentence as typed with tappable segments. Segments that cannot be placed
+ * (content not validated) are skipped rather than shown twice.
+ */
+export function splitSentenceIntoPieces(sentence: Sentence): SentencePiece[] {
+  const pieces: SentencePiece[] = [];
+  let cursor = 0;
+  for (const segment of sentence.segments) {
+    const index = sentence.italian.indexOf(segment.text, cursor);
+    if (index === -1) {
+      continue;
+    }
+    if (index > cursor) {
+      pieces.push({ kind: 'gap', text: sentence.italian.slice(cursor, index) });
+    }
+    pieces.push({ kind: 'segment', text: segment.text, segment });
+    cursor = index + segment.text.length;
+  }
+  if (cursor < sentence.italian.length) {
+    pieces.push({ kind: 'gap', text: sentence.italian.slice(cursor) });
+  }
+  return pieces;
+}

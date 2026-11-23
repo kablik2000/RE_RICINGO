@@ -1,4 +1,13 @@
-import { Button, Card, Screen, Text, type Theme, useThemedStyles } from '@ricingo/design-system';
+import {
+  Button,
+  Card,
+  FilterChip,
+  Icon,
+  Screen,
+  Text,
+  type Theme,
+  useThemedStyles,
+} from '@ricingo/design-system';
 import { listSentencesInOrder, type LessonBundle } from '@ricingo/domain';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -41,7 +50,8 @@ function Dialogue({ bundle }: { bundle: LessonBundle }) {
         {voice.status !== 'missing' && (
           <Button
             variant="tonal"
-            label={`▶ ${t('dialogue.playAll')}`}
+            icon="headphones"
+            label={t('dialogue.playAll')}
             onPress={() => {
               player.playSequence(
                 listSentencesInOrder(lesson).map((item) => item.sentence.italian),
@@ -49,40 +59,53 @@ function Dialogue({ bundle }: { bundle: LessonBundle }) {
             }}
           />
         )}
-        <Button
-          variant="text"
-          label={showTranslation ? t('dialogue.hideTranslation') : t('dialogue.showTranslation')}
+        <FilterChip
+          label={t('dialogue.translation')}
+          selected={showTranslation}
           onPress={() => {
             setShowTranslation((value) => !value);
           }}
         />
       </View>
 
-      {lesson.turns.map((turn) => (
-        <Card
-          key={turn.id}
-          tone={turn.speakerId === firstSpeakerId ? 'surfaceContainerLow' : 'surfaceContainerHigh'}>
-          <Text variant="labelSmall" color="primary">
-            {speakers.get(turn.speakerId) ?? turn.speakerId}
-          </Text>
-          {turn.sentences.map((sentence) => (
-            <View key={sentence.id} style={styles.sentence}>
-              <Text variant="italianText" accessibilityLanguage="it-IT">
-                {sentence.italian}
+      {lesson.turns.map((turn) => {
+        const isFirstSpeaker = turn.speakerId === firstSpeakerId;
+        return (
+          <Card
+            key={turn.id}
+            variant={isFirstSpeaker ? 'filled' : 'outlined'}
+            tone={isFirstSpeaker ? 'surfaceContainerLow' : 'surface'}>
+            <View style={styles.speaker}>
+              <View style={styles.avatar}>
+                <Icon name="person" size={18} />
+              </View>
+              <Text variant="label" color="onSurfaceVariant">
+                {speakers.get(turn.speakerId) ?? turn.speakerId}
               </Text>
-              {showTranslation && (
-                <Text variant="translation" color="onSurfaceVariant">
-                  {sentence.czech}
-                </Text>
-              )}
-              <ListenButtons text={sentence.italian} compact />
             </View>
-          ))}
-        </Card>
-      ))}
+            {turn.sentences.map((sentence) => (
+              <View key={sentence.id} style={styles.sentence}>
+                <View style={styles.sentenceText}>
+                  <Text variant="italianText" accessibilityLanguage="it-IT">
+                    {sentence.italian}
+                  </Text>
+                  {showTranslation && (
+                    <Text variant="translation" color="onSurfaceVariant">
+                      {sentence.czech}
+                    </Text>
+                  )}
+                </View>
+                <ListenButtons text={sentence.italian} compact />
+              </View>
+            ))}
+          </Card>
+        );
+      })}
     </>
   );
 }
+
+const AVATAR_SIZE = 32;
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -92,7 +115,26 @@ const createStyles = (theme: Theme) =>
       alignItems: 'center',
       gap: theme.spacing.sm,
     },
+    speaker: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    avatar: {
+      width: AVATAR_SIZE,
+      height: AVATAR_SIZE,
+      borderRadius: theme.radius.full,
+      backgroundColor: theme.colors.surfaceContainer,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     sentence: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    sentenceText: {
+      flex: 1,
       gap: theme.spacing.xxs,
     },
   });

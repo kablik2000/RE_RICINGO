@@ -127,10 +127,28 @@ architecture (domain schemas, repository interface, query layer) so it is reused
 - [x] Repository moved to `C:\dev\ricingo` (2026-11-22, copy; old folder left for the owner to delete). Reanimated now compiles.
 - [x] Config plugin `plugins/with-android-cmake.js`: on Windows points Gradle at an SDK CMake whose ninja supports long paths (≥ 1.12) via `android/local.properties`. Windows long paths are already enabled on the dev PC.
 - [x] CMake 3.31.6 (ninja 1.12.1) installed into the Android SDK from Google's SDK repository (SHA-1 verified); native Android development build `com.ricingo.mobile.dev` built and running on the emulator (2026-11-22).
+- [x] App display name **"Italština RICI"** (owner request 2026-11-23; `Dev` / `Preview` suffix for non-production builds). Internal identifiers — `ricingo` code name, `@ricingo/*` packages, URL scheme, provisional app ID `com.ricingo.mobile` — are unchanged.
 - [x] Italian voice for demo text-to-speech (requested 2026-11-23; checked on the emulator: notice shown, Google TTS voice download opens):
   - [x] Fix: Android spoke English because `expo-speech` turns the language tag `it-IT` into an invalid Java locale and silently falls back to the device language → pass `it` on Android.
   - [x] Detect whether an Italian voice is installed; when it is missing, show a notice instead of playing a wrong (English-accented) pronunciation.
   - [x] One tap opens the text-to-speech engine's voice download (Android, local native module `modules/tts-voice-data`); the status is re-checked when the user comes back. iOS/web: instructions only (no system API).
+
+### Design v1 — Material 3 visual design (approved 2026-11-23)
+
+Owner approved the mockup (Design canvas "Italština RICI – návrh designu", 4 screens). Implemented and checked on the Android emulator 2026-11-23 (ADR-0009); iOS not built yet.
+
+- [x] Typefaces: Roboto (UI) and Noto Serif (Italian content), loaded at startup (`@expo-google-fonts/*`, `expo-font`).
+- [x] Icons: Material Symbols on Android/web, SF Symbols on iOS (`expo-symbols`), via a design-system `Icon` with a curated name set.
+- [x] Design system: typography scale, illustration colours, `Icon`, `IconButton`, `ListItem`, `SearchField`, Button icons and sizes, Chip variants (tag / filter), Card variants and tones, ProgressBar sizes.
+- [x] Lesson illustrations (vector, `react-native-svg`): café artwork for "Al bar", a neutral fallback for lessons without artwork.
+- [x] Lessons: greeting, highlighted first lesson, lesson list with thumbnails, note about upcoming lessons.
+- [x] Lesson intro: hero illustration, level chip, stats tiles, actions, grammar list.
+- [x] Sentence study: compact progress header, tappable words with one analysis panel, play / slow controls, fixed previous / next bar.
+- [x] Full dialogue: restyled to match.
+- [x] Vocabulary: search, filters (all / per lesson / part of speech), alphabetical sections, list rows with pronunciation.
+- [x] Owner feedback 2026-11-23: tab labels always visible (Android `labelVisibilityMode="labeled"`); a fifth tab **Domů**, first in the bar — its content is to be designed with the owner (for now: greeting and a "being prepared" note); **Lekce** keeps the approved content (greeting, first lesson, list); scrolling content no longer runs under the status bar.
+- [ ] Design the **Domů** (home) tab content together with the owner.
+- [x] Progress ("Pokračovat", "věta 4 z 12" in the mockup) is NOT shown until progress tracking exists (M7); the home card offers the first lesson instead.
 
 ### M2 — Backend foundation
 
@@ -241,7 +259,8 @@ Tasks to be broken down when M9 is near completion (see roadmap).
 - App icon and splash image are Expo template placeholders; splash colour and brand red are provisional (Q-10).
 - Web tab bar (development preview only) shows default placeholder icons and slightly clipped labels.
 - CI typechecks without generated typed routes (`.expo/types` is created by `expo start`), so route strings are only loosely typed there.
-- i18n has no interpolation or Czech plural rules yet — add with the first string that needs them.
+- Lesson artwork is chosen by lesson id in app code (`features/lessons/artwork`); it moves into lesson content (artwork key set in Teacher Studio) in M3.
+- The study screen's tappable words are nested `Text` elements; screen-reader navigation between them should be checked on a real device with TalkBack / VoiceOver.
 - CI workflow has not run yet (repository has no remote).
 - Spec §9 omits a `SentenceBuilder` type although §4 requires "skládání vět" — added to the registry plan.
 - Spec phases do not include teacher tooling in Phase 1, yet content must be authored → content-as-code bridge (ADR-0006).

@@ -1,5 +1,6 @@
 import { colorSchemes, type ColorRoles, type ColorSchemeName } from '../tokens/color-schemes';
 import { elevation, type ElevationLevel } from '../tokens/elevation';
+import { illustration, type IllustrationColors } from '../tokens/illustration';
 import { opacity, radius, sizes, spacing } from '../tokens/layout';
 import { motion } from '../tokens/motion';
 import { typography } from '../tokens/typography';
@@ -15,6 +16,7 @@ export interface Theme {
   opacity: typeof opacity;
   elevation: Readonly<Record<ElevationLevel, string>>;
   motion: typeof motion;
+  illustration: IllustrationColors;
 }
 
 function createTheme(scheme: ColorSchemeName): Theme {
@@ -28,6 +30,7 @@ function createTheme(scheme: ColorSchemeName): Theme {
     opacity,
     elevation: elevation[scheme],
     motion,
+    illustration: illustration[scheme],
   };
 }
 

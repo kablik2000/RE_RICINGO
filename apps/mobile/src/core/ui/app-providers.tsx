@@ -1,4 +1,10 @@
-import { ThemeProvider, themes, useTheme, type ColorSchemeName } from '@ricingo/design-system';
+import {
+  fontFamilies,
+  ThemeProvider,
+  themes,
+  useTheme,
+  type ColorSchemeName,
+} from '@ricingo/design-system';
 import {
   DarkTheme,
   DefaultTheme,
@@ -22,6 +28,12 @@ function toNavigationTheme(scheme: ColorSchemeName): NavigationTheme {
       text: colors.onSurface,
       border: colors.outlineVariant,
       notification: colors.primary,
+    },
+    fonts: {
+      regular: { fontFamily: fontFamilies.sansRegular, fontWeight: 'normal' },
+      medium: { fontFamily: fontFamilies.sansMedium, fontWeight: 'normal' },
+      bold: { fontFamily: fontFamilies.sansBold, fontWeight: 'normal' },
+      heavy: { fontFamily: fontFamilies.sansBold, fontWeight: 'normal' },
     },
   };
 }

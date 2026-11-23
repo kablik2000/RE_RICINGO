@@ -1,116 +1,83 @@
-import { Platform, type TextStyle } from 'react-native';
+import type { TextStyle } from 'react-native';
 
 /**
- * Font families. System fonts until brand typefaces are chosen (DEVELOPMENT_PLAN Q-10);
- * swapping them later only touches this object (plus loading the fonts with expo-font).
+ * Font families (design v1, approved 2026-11-23): Roboto for the interface, Noto Serif for Italian
+ * learning content — the serif gives the studied language a calm "book" presence that separates it
+ * from interface chrome and from Czech translations.
  *
- * - `sans`  — UI text.
- * - `serif` — Italian learning content: gives the studied sentence a calm, "book" presence that
- *   visually separates it from interface chrome and from the Czech translation.
+ * Each weight/style is its own family name because Android cannot pick weights of a custom font by
+ * `fontWeight`. The app loads exactly these names at startup (`apps/mobile/src/core/ui/fonts.ts`);
+ * until they are loaded the platform falls back to its default font.
  */
 export const fontFamilies = {
-  sans: Platform.select({ ios: 'System', default: 'sans-serif' }),
-  serif: Platform.select({ ios: 'Georgia', default: 'serif' }),
+  sansRegular: 'Roboto_400Regular',
+  sansMedium: 'Roboto_500Medium',
+  sansBold: 'Roboto_700Bold',
+  serifRegular: 'NotoSerif_400Regular',
+  serifItalic: 'NotoSerif_400Regular_Italic',
+  serifSemiBold: 'NotoSerif_600SemiBold',
 } as const;
 
-export const fontWeights = {
-  regular: '400',
-  medium: '500',
-  semibold: '600',
-  bold: '700',
-} as const satisfies Record<string, TextStyle['fontWeight']>;
+export type FontFamilyName = (typeof fontFamilies)[keyof typeof fontFamilies];
+
+/** The family name already carries the weight; `normal` avoids synthetic bolding. */
+const WEIGHT_FROM_FAMILY: TextStyle['fontWeight'] = 'normal';
 
 type TypeStyle = Required<
   Pick<TextStyle, 'fontFamily' | 'fontSize' | 'lineHeight' | 'fontWeight'>
 > &
-  Pick<TextStyle, 'letterSpacing' | 'fontStyle'>;
+  Pick<TextStyle, 'letterSpacing' | 'textTransform'>;
+
+function role(
+  fontFamily: FontFamilyName,
+  fontSize: number,
+  lineHeight: number,
+  extra: Pick<TextStyle, 'letterSpacing' | 'textTransform'> = {},
+): TypeStyle {
+  return { fontFamily, fontSize, lineHeight, fontWeight: WEIGHT_FROM_FAMILY, ...extra };
+}
 
 /**
- * Typography roles. Generic UI roles follow the Material 3 scale (trimmed to what we use);
- * the `italian*`, `translation` and `annotation` roles are RICINGO's learning-content roles.
+ * Typography roles. Interface roles follow the Material 3 type scale (trimmed to what we use); the
+ * `italian*`, `translation` and `annotation` roles are the learning-content roles.
  */
 export const typography = {
-  display: {
-    fontFamily: fontFamilies.sans,
-    fontSize: 36,
-    lineHeight: 44,
-    fontWeight: fontWeights.semibold,
-    letterSpacing: -0.25,
-  },
-  headline: {
-    fontFamily: fontFamilies.sans,
-    fontSize: 28,
-    lineHeight: 36,
-    fontWeight: fontWeights.semibold,
-  },
-  title: {
-    fontFamily: fontFamilies.sans,
-    fontSize: 20,
-    lineHeight: 28,
-    fontWeight: fontWeights.semibold,
-  },
-  bodyLarge: {
-    fontFamily: fontFamilies.sans,
-    fontSize: 17,
-    lineHeight: 26,
-    fontWeight: fontWeights.regular,
-  },
-  body: {
-    fontFamily: fontFamilies.sans,
-    fontSize: 15,
-    lineHeight: 22,
-    fontWeight: fontWeights.regular,
-  },
-  bodySmall: {
-    fontFamily: fontFamilies.sans,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: fontWeights.regular,
-  },
-  label: {
-    fontFamily: fontFamilies.sans,
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: fontWeights.medium,
-    letterSpacing: 0.1,
-  },
-  labelSmall: {
-    fontFamily: fontFamilies.sans,
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: fontWeights.medium,
-    letterSpacing: 0.4,
-  },
+  /** Screen titles of tab screens ("Slovník"). M3 headline large. */
+  headline: role(fontFamilies.sansRegular, 32, 40),
+  /** Section titles ("Všechny lekce"). M3 title large. */
+  title: role(fontFamilies.sansRegular, 22, 28),
+  /** Sub-section and card titles. M3 title medium. */
+  titleSmall: role(fontFamilies.sansMedium, 16, 24, { letterSpacing: 0.15 }),
+  bodyLarge: role(fontFamilies.sansRegular, 16, 24, { letterSpacing: 0.15 }),
+  body: role(fontFamilies.sansRegular, 14, 20, { letterSpacing: 0.25 }),
+  bodySmall: role(fontFamilies.sansRegular, 12, 16, { letterSpacing: 0.4 }),
+  /** Buttons, tabs, prominent numbers' labels. M3 label large. */
+  label: role(fontFamilies.sansMedium, 14, 20, { letterSpacing: 0.1 }),
+  labelSmall: role(fontFamilies.sansMedium, 12, 16, { letterSpacing: 0.5 }),
+  /** Small all-caps kicker above a title ("VAŠE PRVNÍ LEKCE"). */
+  overline: role(fontFamilies.sansMedium, 12, 16, {
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  }),
+  /** Large numbers in stat tiles. */
+  numeral: role(fontFamilies.sansMedium, 22, 28),
+
+  /** Lesson title on its intro screen. */
+  italianDisplay: role(fontFamilies.serifSemiBold, 36, 44),
+  /** Italian greeting / large Italian heading. */
+  italianHeadline: role(fontFamilies.serifRegular, 32, 40),
+  /** Italian titles in cards (lesson name, analysed word). */
+  italianTitle: role(fontFamilies.serifSemiBold, 22, 30),
+  /** Italian titles in list rows. */
+  italianTitleSmall: role(fontFamilies.serifSemiBold, 18, 24),
   /** The Italian sentence currently being studied. */
-  italianSentence: {
-    fontFamily: fontFamilies.serif,
-    fontSize: 24,
-    lineHeight: 34,
-    fontWeight: fontWeights.regular,
-  },
+  italianSentence: role(fontFamilies.serifRegular, 26, 38),
   /** Italian text inside lists and dialogues. */
-  italianText: {
-    fontFamily: fontFamilies.serif,
-    fontSize: 18,
-    lineHeight: 27,
-    fontWeight: fontWeights.regular,
-  },
+  italianText: role(fontFamilies.serifRegular, 18, 26),
   /** Czech translation shown under Italian text. */
-  translation: {
-    fontFamily: fontFamilies.sans,
-    fontSize: 15,
-    lineHeight: 22,
-    fontWeight: fontWeights.regular,
-    fontStyle: 'italic',
-  },
+  translation: role(fontFamilies.serifItalic, 16, 24),
   /** Grammatical annotations (e.g. "condizionale presente · 1. os. j. č."). */
-  annotation: {
-    fontFamily: fontFamilies.sans,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: fontWeights.medium,
-    letterSpacing: 0.2,
-  },
+  annotation: role(fontFamilies.sansMedium, 12, 16, { letterSpacing: 0.4 }),
 } as const satisfies Record<string, TypeStyle>;
 
 export type TypographyRole = keyof typeof typography;

@@ -1,4 +1,7 @@
-# RICINGO
+# RICINGO — Italština RICI
+
+App name shown to users: **Italština RICI**. `RICINGO` / `ricingo` remains the project code name
+(repository, packages, URL scheme, application ID).
 
 Private Italian learning app for the clients of an Italian lecturer: thematic dialogues,
 sentence-by-sentence grammar analysis, audio, contextual vocabulary, exercises and a Teacher Studio.
@@ -17,7 +20,8 @@ sentence-by-sentence grammar analysis, audio, contextual vocabulary, exercises a
 ## Stack
 
 Expo SDK 58 · React Native 0.88 · React 19.3 · TypeScript (strict) · Expo Router · TanStack Query ·
-zod · Jest + React Native Testing Library · pnpm workspaces. Planned: Supabase (Postgres, EU),
+zod · Material 3 design system (Roboto, Noto Serif, Material Symbols, SVG artwork) · Jest + React
+Native Testing Library · pnpm workspaces. Planned: Supabase (Postgres, EU),
 expo-sqlite, EAS Build / Update.
 
 ## Repository layout

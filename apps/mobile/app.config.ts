@@ -30,10 +30,12 @@ export function resolveAppEnv(raw: unknown): AppEnv {
 const rawAppEnv: unknown = process.env.APP_ENV;
 const appEnv = resolveAppEnv(rawAppEnv);
 
+/** Name shown under the app icon and in the app switcher (owner decision 2026-11-23). */
+const APP_DISPLAY_NAME = 'Italština RICI';
 const APP_NAMES: Readonly<Record<AppEnv, string>> = {
-  development: 'RICINGO Dev',
-  preview: 'RICINGO Preview',
-  production: 'RICINGO',
+  development: `${APP_DISPLAY_NAME} Dev`,
+  preview: `${APP_DISPLAY_NAME} Preview`,
+  production: APP_DISPLAY_NAME,
 };
 
 /**

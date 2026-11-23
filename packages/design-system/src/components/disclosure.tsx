@@ -3,19 +3,22 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { Theme } from '../theme/theme';
 import { useThemedStyles } from '../theme/theme-provider';
+import { Icon, type IconName } from './icon';
 import { Text } from './text';
 
 export interface DisclosureProps {
   title: string;
   children: ReactNode;
   initiallyExpanded?: boolean;
+  /** Leading icon (e.g. `idea` for deeper context). */
+  icon?: IconName;
 }
 
 /**
  * Expandable section. Used for layered explanations: the student opens deeper layers only when
  * ready, so beginners are not overwhelmed (spec §3).
  */
-export function Disclosure({ title, children, initiallyExpanded = false }: DisclosureProps) {
+export function Disclosure({ title, children, initiallyExpanded = false, icon }: DisclosureProps) {
   const styles = useThemedStyles(createStyles);
   const [expanded, setExpanded] = useState(initiallyExpanded);
 
@@ -29,12 +32,11 @@ export function Disclosure({ title, children, initiallyExpanded = false }: Discl
         accessibilityLabel={title}
         accessibilityState={{ expanded }}
         style={styles.header}>
-        <Text variant="label" color="primary">
+        {icon !== undefined && <Icon name={icon} color="primary" />}
+        <Text variant="label" style={styles.title}>
           {title}
         </Text>
-        <Text variant="label" color="primary" importantForAccessibility="no">
-          {expanded ? '−' : '+'}
-        </Text>
+        <Icon name={expanded ? 'collapse' : 'expand'} />
       </Pressable>
       {expanded && <View style={styles.content}>{children}</View>}
     </View>
@@ -47,8 +49,10 @@ const createStyles = (theme: Theme) =>
       minHeight: theme.sizes.minTouchTarget,
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
       gap: theme.spacing.md,
+    },
+    title: {
+      flex: 1,
     },
     content: {
       gap: theme.spacing.sm,

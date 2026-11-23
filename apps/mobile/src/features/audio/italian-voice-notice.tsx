@@ -1,4 +1,4 @@
-import { Button, Card, Text, type Theme, useThemedStyles } from '@ricingo/design-system';
+import { Button, Card, Icon, Text, type Theme, useThemedStyles } from '@ricingo/design-system';
 import { useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
@@ -35,16 +35,23 @@ export function ItalianVoiceNotice() {
   };
 
   return (
-    <Card tone="surfaceContainerHigh" testID="italian-voice-notice">
-      <Text variant="title" accessibilityRole="header">
-        {t('audio.voiceMissing.title')}
-      </Text>
-      <Text variant="body">{t('audio.voiceMissing.message')}</Text>
-      <Text variant="bodySmall" color="onSurfaceVariant">
-        {voiceAvailability.canOpenVoiceInstaller
-          ? t('audio.voiceMissing.androidHint')
-          : manualSteps()}
-      </Text>
+    <Card tone="surfaceContainer" radius="lg" testID="italian-voice-notice">
+      <View style={styles.header}>
+        <Icon name="volumeOff" color="primary" />
+        <View style={styles.text}>
+          <Text variant="titleSmall" accessibilityRole="header">
+            {t('audio.voiceMissing.title')}
+          </Text>
+          <Text variant="body" color="onSurfaceVariant">
+            {t('audio.voiceMissing.message')}
+          </Text>
+          <Text variant="bodySmall" color="onSurfaceVariant">
+            {voiceAvailability.canOpenVoiceInstaller
+              ? t('audio.voiceMissing.androidHint')
+              : manualSteps()}
+          </Text>
+        </View>
+      </View>
       {installerFailed && (
         <Text variant="bodySmall" color="error" accessibilityRole="alert">
           {t('audio.voiceMissing.openFailed')}
@@ -52,7 +59,12 @@ export function ItalianVoiceNotice() {
       )}
       <View style={styles.actions}>
         {voiceAvailability.canOpenVoiceInstaller && (
-          <Button label={t('audio.voiceMissing.download')} onPress={openInstaller} />
+          <Button
+            variant="tonal"
+            icon="volume"
+            label={t('audio.voiceMissing.download')}
+            onPress={openInstaller}
+          />
         )}
         <Button
           variant="text"
@@ -78,12 +90,23 @@ function manualSteps(): string {
   }
 }
 
+/** Aligns the actions with the text, past the 24 dp icon and its 12 dp gap. */
+const ICON_INDENT = 36;
+
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+      gap: theme.spacing.md,
+    },
+    text: {
+      flex: 1,
+      gap: theme.spacing.xxs,
+    },
     actions: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
       alignItems: 'center',
       gap: theme.spacing.sm,
+      paddingLeft: ICON_INDENT,
     },
   });

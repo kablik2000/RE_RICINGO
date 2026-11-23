@@ -75,7 +75,7 @@ RE_RICINGO/
 │  ├─ mobile/                    Student app (Expo SDK 58, iOS + Android)
 │  │  ├─ src/app/                Expo Router routes — thin: compose feature screens only
 │  │  │  ├─ (auth)/              sign-in, accept invitation
-│  │  │  ├─ (student)/           tabs: Learn, Vocabulary, Practice, Profile
+│  │  │  ├─ (student)/           tabs: Home, Lessons, Vocabulary, Practice, Profile
 │  │  │  └─ _layout.tsx          providers, auth gate, error boundary
 │  │  ├─ src/features/<feature>/ see §4
 │  │  ├─ src/navigation/         navigator definitions shared by native/web layouts
@@ -184,6 +184,11 @@ Deep links (`ricingo://lesson/<id>`) supported from day one for teacher assignme
   AudioButton, ProgressBar, StateViews (Loading/Empty/Error), Sheet, TextField.
 - **Italian text presentation:** dedicated typographic roles for Italian original vs Czech
   translation vs analysis annotations — the core reading experience of the product.
+- **Visual design v1 (ADR-0009):** Roboto for the interface, Noto Serif for Italian content
+  (bundled Google Fonts, one family name per weight); icons through the design-system `Icon`
+  (Material Symbols on Android/web, SF Symbols on iOS via `expo-symbols`) from a curated name
+  set; lesson artwork is vector (`react-native-svg`) drawn only from theme `illustration`
+  colours.
 - Custom components on tokens rather than React Native Paper: Paper gives generic Android
   MD3 look; RICINGO needs its own premium identity (see ADR-0007).
 

@@ -1,5 +1,5 @@
-import { LessonsScreen } from '@/features/lessons';
+import { HomeScreen } from '@/features/home';
 
-export default function LessonsRoute() {
-  return <LessonsScreen />;
+export default function HomeRoute() {
+  return <HomeScreen />;
 }

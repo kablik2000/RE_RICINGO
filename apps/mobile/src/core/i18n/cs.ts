@@ -10,13 +10,31 @@ export const cs = {
     goHome: 'Zpět na úvod',
   },
   tabs: {
+    home: 'Domů',
     learn: 'Lekce',
     vocabulary: 'Slovník',
     practice: 'Procvičování',
     profile: 'Profil',
   },
+  greeting: {
+    appName: 'Italština RICI',
+    day: 'Buongiorno!',
+    evening: 'Buonasera!',
+  },
+  home: {
+    pending: {
+      title: 'Úvodní stránka se připravuje',
+      message: 'Co tady bude, teprve navrhujeme. Lekce najdete v záložce Lekce.',
+    },
+  },
   lessons: {
     title: 'Lekce',
+    featured: 'Vaše první lekce',
+    startLesson: 'Začít lekci',
+    allLessons: 'Všechny lekce',
+    count: { one: '{count} lekce', few: '{count} lekce', other: '{count} lekcí' },
+    sentenceCount: { one: '{count} věta', few: '{count} věty', other: '{count} vět' },
+    upcoming: 'Další lekce připravuje vaše lektorka. Objeví se tady, jakmile vám je přidělí.',
     loading: 'Načítám lekce…',
     openHint: 'Otevře úvod lekce',
     empty: {
@@ -25,18 +43,22 @@ export const cs = {
     },
   },
   lessonIntro: {
-    goal: 'Cíl lekce',
-    grammar: 'Gramatika v této lekci',
-    exchanges: 'Konverzační výměny',
-    sentences: 'Věty',
+    back: 'Zpět',
+    grammar: 'Gramatika v lekci',
+    exchanges: { one: 'výměna', few: 'výměny', other: 'výměn' },
+    sentences: { one: 'věta', few: 'věty', other: 'vět' },
+    grammarTopics: { one: 'gramatika', few: 'gramatiky', other: 'gramatik' },
     start: 'Začít rozbor vět',
-    fullDialogue: 'Celý dialog',
+    fullDialogue: 'Poslechnout celý dialog',
     demoNote: 'Ukázková lekce. Vysvětlení zatím neprošla kontrolou lektora.',
     loading: 'Načítám lekci…',
   },
   study: {
     progress: 'Věta {current} z {total}',
+    close: 'Zavřít rozbor',
     analysis: 'Rozbor věty',
+    tapWord: 'Klepněte na slovo',
+    segmentHint: 'Zobrazí rozbor této části věty',
     grammar: 'Gramatika',
     depth: 'Souvislosti',
     word: 'Slovíčko',
@@ -46,29 +68,26 @@ export const cs = {
   },
   dialogue: {
     title: 'Celý dialog',
-    showTranslation: 'Zobrazit překlad',
-    hideTranslation: 'Skrýt překlad',
+    translation: 'Překlad',
     playAll: 'Přehrát celý dialog',
   },
   audio: {
     play: 'Přehrát',
     playSlow: 'Pomalu',
     playLabel: 'Přehrát výslovnost',
+    playWordLabel: 'Přehrát výslovnost: {text}',
     playSlowLabel: 'Přehrát pomalu',
     sourceNote: 'Výslovnost zatím čte hlas zařízení; nahrávky doplní lektor.',
     voiceMissing: {
       title: 'Chybí italský hlas',
-      message:
-        'Zařízení nemá italský hlas pro předčítání, takže by výslovnost zněla špatně. Přehrávání je proto vypnuté, dokud hlas nestáhnete.',
-      androidHint:
-        'Otevře se stahování hlasů – vyberte Italština (Italiano), počkejte na stažení a vraťte se zpět.',
+      message: 'Bez něj by výslovnost zněla špatně, proto je přehrávání vypnuté.',
+      androidHint: 'Ve stahování hlasů vyberte Italština (Italiano) a pak se vraťte.',
       androidSteps:
-        'Stáhněte ho v Nastavení → Systém → Jazyky → Převod textu na řeč → nastavení hlasového modulu → Instalovat hlasová data → Italiano.',
+        'Stáhněte ho v Nastavení → Systém → Jazyky → Převod textu na řeč → Instalovat hlasová data → Italiano.',
       iosSteps: 'Stáhněte ho v Nastavení → Zpřístupnění → Mluvený obsah → Hlasy → Italština.',
-      webSteps:
-        'Prohlížeč nenabízí italský hlas. Zkuste jiný prohlížeč nebo přidejte italský hlas v nastavení systému.',
-      download: 'Stáhnout italský hlas',
-      recheck: 'Zkontrolovat znovu',
+      webSteps: 'Zkuste jiný prohlížeč nebo přidejte italský hlas v nastavení systému.',
+      download: 'Stáhnout hlas',
+      recheck: 'Zkontrolovat',
       checking: 'Kontroluji…',
       openFailed:
         'Stahování hlasů se nepodařilo otevřít. Najdete ho v Nastavení → Systém → Jazyky → Převod textu na řeč.',
@@ -77,7 +96,21 @@ export const cs = {
   vocabulary: {
     title: 'Slovník',
     loading: 'Načítám slovník…',
-    fromLesson: 'Z lekce {lesson}:',
+    search: 'Hledat italské nebo české slovo',
+    searchLabel: 'Hledat ve slovníku',
+    clearSearch: 'Vymazat hledání',
+    fromLesson: '{lesson}: {sentence}',
+    filtersLabel: 'Filtry slovníku',
+    filters: {
+      all: 'Vše · {count}',
+      nouns: 'Podstatná jména',
+      verbs: 'Slovesa',
+      phrases: 'Fráze a ostatní',
+    },
+    noResults: {
+      title: 'Nic nenalezeno',
+      message: 'Zkuste jiné slovo nebo zrušte filtr.',
+    },
     gender: {
       masculine: 'm. r.',
       feminine: 'ž. r.',

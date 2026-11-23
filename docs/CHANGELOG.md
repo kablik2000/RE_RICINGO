@@ -13,6 +13,18 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-23 — **Visual design v1 (ADR-0009).**
+  - Roboto + Noto Serif typefaces, Material Symbols / SF Symbols icons, vector lesson artwork.
+  - Design system: `Icon`, `IconButton`, `ListItem`, `SearchField`, `FilterChip`, Button icons
+    and sizes, Card variants and tones, Screen hero / top bar / footer, new type roles,
+    illustration colours.
+  - Lessons: greeting, highlighted first lesson, list with artwork. Lesson intro: hero
+    illustration, stats, grammar list. Sentence study: tappable words with one analysis panel,
+    progress header, fixed previous / next. Full dialogue and vocabulary restyled; vocabulary
+    gained search and filters.
+  - Czech plural forms in i18n (`tPlural`).
+  - Navigation: new **Domů** tab (content to be designed; shows a "being prepared" note), tab
+    labels always visible.
 - 2026-11-23 — **Italian voice check for demo pronunciation.**
   - When the device has no Italian text-to-speech voice, pronunciation controls are replaced by a
     notice ("Chybí italský hlas") instead of playing English-accented Italian.
@@ -50,6 +62,8 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Changed
 
+- 2026-11-23 — App display name is now **Italština RICI** (`Dev` / `Preview` suffixes); code name
+  and identifiers stay `ricingo`.
 - 2026-11-23 — Q-3 direction approved: hybrid audio (cloud neural TTS generated at publish time,
   lecturer review, optional lecturer recordings). Provider still open.
 

@@ -3,7 +3,11 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { Theme } from '../theme/theme';
 import { useTheme, useThemedStyles } from '../theme/theme-provider';
+import type { RadiusToken, SpacingToken } from '../tokens/layout';
 import type { SurfaceTone } from './surface';
+
+export type CardTone = SurfaceTone | 'primaryContainer';
+export type CardVariant = 'filled' | 'outlined';
 
 export interface CardProps {
   children: ReactNode;
@@ -12,7 +16,12 @@ export interface CardProps {
   /** Required for pressable cards: what a screen reader announces. */
   accessibilityLabel?: string;
   accessibilityHint?: string;
-  tone?: SurfaceTone;
+  /** `filled` (tonal background) or `outlined` (surface with a hairline border). */
+  variant?: CardVariant;
+  tone?: CardTone;
+  radius?: RadiusToken;
+  /** Inner padding; `none` for cards whose content runs edge to edge (illustrations). */
+  padding?: SpacingToken;
   testID?: string;
 }
 
@@ -22,12 +31,23 @@ export function Card({
   onPress,
   accessibilityLabel,
   accessibilityHint,
-  tone = 'surfaceContainerLow',
+  variant = 'filled',
+  tone = variant === 'outlined' ? 'surface' : 'surfaceContainerLow',
+  radius = 'xl',
+  padding = 'lg',
   testID,
 }: CardProps) {
   const theme = useTheme();
   const styles = useThemedStyles(createStyles);
-  const containerStyle = [styles.card, { backgroundColor: theme.colors[tone] }];
+  const containerStyle = [
+    styles.card,
+    variant === 'outlined' && styles.outlined,
+    {
+      backgroundColor: theme.colors[tone],
+      borderRadius: theme.radius[radius],
+      padding: theme.spacing[padding],
+    },
+  ];
 
   if (onPress === undefined) {
     return (
@@ -63,10 +83,12 @@ export function Card({
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
     card: {
-      borderRadius: theme.radius.lg,
-      padding: theme.spacing.lg,
       gap: theme.spacing.sm,
       overflow: 'hidden',
+    },
+    outlined: {
+      borderWidth: theme.sizes.borderWidth,
+      borderColor: theme.colors.outlineVariant,
     },
     stateLayer: {
       ...StyleSheet.absoluteFill,

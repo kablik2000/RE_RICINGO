@@ -1,5 +1,10 @@
 import { CONTENT_SCHEMA_VERSION } from './lesson-bundle';
-import { countExchanges, findLexemeOccurrences, listSentencesInOrder } from './lesson-queries';
+import {
+  countExchanges,
+  findLexemeOccurrences,
+  listSentencesInOrder,
+  splitSentenceIntoPieces,
+} from './lesson-queries';
 import { validateLessonBundle } from './validate-lesson-bundle';
 
 function createBundle() {
@@ -161,5 +166,24 @@ describe('lesson queries', () => {
 
     expect(occurrence?.lexeme.id).toBe('desiderare');
     expect(occurrence?.sentences.map((sentence) => sentence.id)).toEqual(['cosa-desidera']);
+  });
+
+  it('splits a sentence into segments and the text between them', () => {
+    const [first, second] = listSentencesInOrder(bundle.lesson);
+    if (first === undefined || second === undefined) throw new Error('fixture has two sentences');
+
+    expect(
+      splitSentenceIntoPieces(first.sentence).map((piece) => [piece.kind, piece.text]),
+    ).toEqual([
+      ['segment', 'Cosa'],
+      ['gap', ' '],
+      ['segment', 'desidera'],
+      ['gap', '?'],
+    ]);
+    expect(
+      splitSentenceIntoPieces(second.sentence)
+        .map((piece) => piece.text)
+        .join(''),
+    ).toBe('Un caffè.');
   });
 });

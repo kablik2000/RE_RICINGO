@@ -11,14 +11,24 @@ jest.mock('@/core/config', () => ({
  * Integration tests of the real route tree in src/app with the bundled demo lesson.
  */
 describe('student navigation shell', () => {
-  it('lists the demo lesson on the lessons tab', async () => {
+  it('shows the home tab while its content is being designed', async () => {
     await renderRouter('./src/app', { initialUrl: '/' });
 
     expect(screen).toHavePathname('/');
-    expect(await screen.findByRole('button', { name: /^Al bar, V kavárně, A1/ })).toBeOnTheScreen();
+    expect(await screen.findByText('Úvodní stránka se připravuje')).toBeOnTheScreen();
+  });
+
+  it('offers the first lesson and lists lessons on the lessons tab', async () => {
+    await renderRouter('./src/app', { initialUrl: '/lessons' });
+
+    expect(await screen.findByRole('button', { name: 'Začít lekci' })).toBeOnTheScreen();
+    expect(
+      screen.getByRole('button', { name: /^Al bar, V kavárně · 12 vět, A1/ }),
+    ).toBeOnTheScreen();
   });
 
   it.each([
+    ['/lessons', 'Další lekce připravuje vaše lektorka. Objeví se tady, jakmile vám je přidělí.'],
     ['/vocabulary', 'volere'],
     ['/practice', 'Zatím není co procvičovat'],
     ['/profile', 'Verze aplikace'],
@@ -48,28 +58,32 @@ describe('student navigation shell', () => {
 
 describe('lesson flow', () => {
   it('goes from the lesson list through the sentence walkthrough to the full dialogue', async () => {
-    await renderRouter('./src/app', { initialUrl: '/' });
+    await renderRouter('./src/app', { initialUrl: '/lessons' });
 
-    await fireEvent.press(await screen.findByRole('button', { name: /^Al bar/ }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Začít lekci' }));
     expect(screen).toHavePathname('/lesson/al-bar');
-    expect(await screen.findByText('Cíl lekce')).toBeOnTheScreen();
+    expect(await screen.findByText('Gramatika v lekci')).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Začít rozbor vět' }));
     expect(screen).toHavePathname('/lesson/al-bar/study');
     expect(await screen.findByText('Věta 1 z 12')).toBeOnTheScreen();
-    expect(screen.getByText('Buongiorno!')).toBeOnTheScreen();
+    expect(screen.getByText('Dobrý den!')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Předchozí' })).toBeDisabled();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Další věta' }));
     expect(await screen.findByText('Věta 2 z 12')).toBeOnTheScreen();
-    expect(screen.getByText('Cosa desidera?')).toBeOnTheScreen();
+    expect(screen.getByText('Co si přejete?')).toBeOnTheScreen();
 
-    // Deeper explanation layers stay hidden until requested.
+    // The first word is analysed; tapping another word shows its analysis instead.
     expect(screen.queryByText(/3\. osobu jednotného čísla/)).toBeNull();
-    const [, desideraGrammar] = screen.getAllByRole('button', { name: 'Gramatika' });
-    if (desideraGrammar === undefined) throw new Error('expected a second grammar toggle');
-    await fireEvent.press(desideraGrammar);
+    await fireEvent.press(screen.getByRole('button', { name: 'desidera' }));
+    expect(screen.getByRole('button', { name: 'desidera' })).toBeSelected();
     expect(screen.getByText(/3\. osobu jednotného čísla/)).toBeOnTheScreen();
+
+    // Deeper context stays hidden until requested.
+    expect(screen.queryByText(/Zájmeno Lei se nevyslovuje/)).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Souvislosti' }));
+    expect(screen.getByText(/Zájmeno Lei se nevyslovuje/)).toBeOnTheScreen();
 
     for (let step = 3; step <= 12; step += 1) {
       await fireEvent.press(screen.getByRole('button', { name: 'Další věta' }));

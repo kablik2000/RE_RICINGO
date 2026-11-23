@@ -21,7 +21,7 @@ describe('ItalianVoiceNotice', () => {
   it('stays hidden and keeps playback when an Italian voice is installed', async () => {
     await renderWithProviders(<PronunciationArea />);
 
-    expect(await screen.findByText(`▶ ${t('audio.play')}`)).toBeOnTheScreen();
+    expect(await screen.findByRole('button', { name: t('audio.playLabel') })).toBeOnTheScreen();
     expect(screen.queryByText(t('audio.voiceMissing.title'))).not.toBeOnTheScreen();
   });
 
@@ -36,7 +36,7 @@ describe('ItalianVoiceNotice', () => {
     // iOS (the test platform) has no API to download voices: the notice explains where to get one.
     expect(screen.getByText(t('audio.voiceMissing.iosSteps'))).toBeOnTheScreen();
     expect(screen.queryByText(t('audio.voiceMissing.download'))).not.toBeOnTheScreen();
-    expect(screen.queryByText(`▶ ${t('audio.play')}`)).not.toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: t('audio.playLabel') })).not.toBeOnTheScreen();
     expect(screen.getByText(t('audio.voiceMissing.recheck'))).toBeOnTheScreen();
   });
 
@@ -51,6 +51,6 @@ describe('ItalianVoiceNotice', () => {
     await waitFor(() => {
       expect(screen.queryByText(t('audio.voiceMissing.title'))).not.toBeOnTheScreen();
     });
-    expect(screen.getByText(`▶ ${t('audio.play')}`)).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: t('audio.playLabel') })).toBeOnTheScreen();
   });
 });

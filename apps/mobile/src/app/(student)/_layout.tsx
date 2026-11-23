@@ -13,6 +13,8 @@ export default function StudentTabsLayout() {
       tintColor={colors.primary}
       backgroundColor={colors.surface}
       indicatorColor={colors.primaryContainer}
+      // Android shows only the selected tab's label by default; the owner wants all labels.
+      labelVisibilityMode="labeled"
       labelStyle={{ color: colors.onSurfaceVariant }}>
       {studentTabs.map((tab) => (
         <NativeTabs.Trigger key={tab.name} name={tab.name}>

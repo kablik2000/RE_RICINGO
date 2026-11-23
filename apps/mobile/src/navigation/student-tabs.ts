@@ -5,21 +5,22 @@ import type { TranslationKey } from '@/core/i18n';
  * tab layouts so both stay in sync. `name` must match a route file in `src/app/(student)/`.
  */
 export const studentTabs = [
-  { name: 'index', labelKey: 'tabs.learn', icon: { sf: 'book.closed', md: 'menu_book' } },
+  { name: 'index', labelKey: 'tabs.home', icon: { sf: 'house', md: 'home' } },
+  { name: 'lessons', labelKey: 'tabs.learn', icon: { sf: 'book.closed', md: 'menu_book' } },
   {
     name: 'vocabulary',
     labelKey: 'tabs.vocabulary',
-    icon: { sf: 'character.book.closed', md: 'dictionary' },
+    icon: { sf: 'character.book.closed', md: 'translate' },
   },
   {
     name: 'practice',
     labelKey: 'tabs.practice',
-    icon: { sf: 'square.and.pencil', md: 'edit_note' },
+    icon: { sf: 'square.and.pencil', md: 'exercise' },
   },
   {
     name: 'profile',
     labelKey: 'tabs.profile',
-    icon: { sf: 'person.crop.circle', md: 'account_circle' },
+    icon: { sf: 'person.crop.circle', md: 'person' },
   },
 ] as const satisfies readonly {
   name: string;
