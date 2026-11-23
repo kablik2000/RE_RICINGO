@@ -1,6 +1,6 @@
 # ADR-0004: Authentication and authorization
 
-- Status: **Accepted** (approved by product owner 2026-11-22)
+- Status: **Accepted** (approved by product owner 2026-11-22); Supabase Auth, JWT hook and RLS (points 1, 3) **superseded by [ADR-0010](0010-flask-postgresql-backend-and-nextjs-studio.md)** — invite-only, roles and scoping stay
 - Date: 2026-11-22
 
 ## Context

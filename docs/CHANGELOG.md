@@ -13,6 +13,10 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-23 — **Backend skeleton (ADR-0010).** `services/api` (Flask, SQLAlchemy, psycopg,
+  gunicorn; uv, Ruff, mypy, pytest) with `/api/v1/health`; `compose.yaml` (PostgreSQL 17, Mailpit,
+  API), `.env.example`, VS Code backend tasks, CI job with Docker image build; Docker install guide
+  `docs/setup/INSTALACE_DOCKERU.md`. Verified in Docker on the dev PC (health check reports the database `ok`).
 - 2026-11-23 — **Visual design v1 (ADR-0009).**
   - Roboto + Noto Serif typefaces, Material Symbols / SF Symbols icons, vector lesson artwork.
   - Design system: `Icon`, `IconButton`, `ListItem`, `SearchField`, `FilterChip`, Button icons
@@ -62,6 +66,9 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Changed
 
+- 2026-11-23 — **Backend decision changed (ADR-0010):** Flask + PostgreSQL replaces Supabase
+  (ADR-0002 superseded); Teacher Studio in Next.js in this monorepo (ADR-0006 decided). Plan M2
+  rewritten; content updates: automatic on Wi-Fi, offered on mobile data (Q-18), as a setting.
 - 2026-11-23 — App display name is now **Italština RICI** (`Dev` / `Preview` suffixes); code name
   and identifiers stay `ricingo`.
 - 2026-11-23 — Q-3 direction approved: hybrid audio (cloud neural TTS generated at publish time,

@@ -46,3 +46,10 @@ coverage/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Python (services/api)
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

@@ -21,18 +21,18 @@ Details: [ARCHITECTURE.md](ARCHITECTURE.md) · Decisions: [DECISIONS/](DECISIONS
 
 ## B. Architecture
 
-| Concern            | Choice                                                                 | Status                   |
-| ------------------ | ---------------------------------------------------------------------- | ------------------------ |
-| Mobile stack       | Expo SDK 58, React Native 0.88, TypeScript strict                      | Accepted — ADR-0001      |
-| Navigation         | Expo Router, typed routes                                              | Accepted — ADR-0001      |
-| Backend & DB       | Supabase (Postgres, Auth, Storage, Edge Functions), EU region          | Accepted — ADR-0002      |
-| On-device data     | expo-sqlite (+ Drizzle) as cache + outbox                              | Accepted — ADR-0002/0007 |
-| Content versioning | Immutable published lesson versions, stable item IDs                   | Accepted — ADR-0003      |
-| Progress & sync    | Append-only learning events, idempotent upload, derived state          | Accepted — ADR-0003      |
-| Auth               | Invite-only Supabase Auth, roles via JWT claim, RLS, `organization_id` | Accepted — ADR-0004      |
-| Updates            | EAS Build / EAS Update (`fingerprint`) / content via backend           | Accepted — ADR-0005      |
-| Teacher Studio     | Content-as-code first, then Expo web app                               | **Open** — ADR-0006      |
-| Repo & frontend    | pnpm monorepo, feature modules, TanStack Query, zod, own design system | Accepted — ADR-0007      |
+| Concern            | Choice                                                                        | Status                   |
+| ------------------ | ----------------------------------------------------------------------------- | ------------------------ |
+| Mobile stack       | Expo SDK 58, React Native 0.88, TypeScript strict                             | Accepted — ADR-0001      |
+| Navigation         | Expo Router, typed routes                                                     | Accepted — ADR-0001      |
+| Backend & DB       | Flask (Python) REST API `/api/v1` + PostgreSQL, S3-compatible files           | Accepted — ADR-0010      |
+| On-device data     | expo-sqlite (+ Drizzle) as cache + outbox                                     | Accepted — ADR-0002/0007 |
+| Content versioning | Immutable published lesson versions, stable item IDs                          | Accepted — ADR-0003      |
+| Progress & sync    | Append-only learning events, idempotent upload, derived state                 | Accepted — ADR-0003      |
+| Auth               | Invite-only, API-issued tokens, roles + scoping in the API, `organization_id` | Accepted — ADR-0004/0010 |
+| Updates            | EAS Build / EAS Update (`fingerprint`) / content via backend                  | Accepted — ADR-0005      |
+| Teacher Studio     | Content-as-code first, then Expo web app                                      | **Open** — ADR-0006      |
+| Repo & frontend    | pnpm monorepo, feature modules, TanStack Query, zod, own design system        | Accepted — ADR-0007      |
 
 Major modules: `auth`, `lessons`, `dialogue`, `sentence-analysis`, `grammar`, `vocabulary`,
 `exercises` (type registry), `progress`, `audio`, `profile`, `settings`; Studio: `students`,
@@ -62,7 +62,7 @@ Spec phases (§11 of the specification) map to milestones:
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | **M0 Analysis**                    | Requirements, architecture, ADRs, plan — approval gate                                                                              | —          |
 | **M1 Foundation**                  | Monorepo, Expo app, tooling, CI, design system, navigation shell, error handling, config                                            | 1          |
-| **M2 Backend foundation**          | Supabase projects, schema v1, RLS + pgTAP, invite auth, `api_v1`, type gen                                                          | 1          |
+| **M2 Backend foundation**          | Flask API + PostgreSQL, schema v1 + migrations, invite auth, `/api/v1` + OpenAPI, generated TS client                               | 1          |
 | **M3 Content pipeline**            | Domain schemas, content-as-code, compiler/publisher, versioning, audio pipeline, lesson "Al bar" end-to-end                         | 1          |
 | **M4 Core learning**               | Lesson list, lesson intro, turn-by-turn dialogue, layered sentence analysis, audio, full dialogue, grammar topic pages              | 1          |
 | **M5 Exercises v1**                | Exercise engine + registry; MultipleChoice, FillInBlank, SentenceBuilder, SentenceTranslation, Listening; result events             | 1          |
@@ -150,22 +150,28 @@ Owner approved the mockup (Design canvas "Italština RICI – návrh designu", 4
 - [ ] Design the **Domů** (home) tab content together with the owner.
 - [x] Progress ("Pokračovat", "věta 4 z 12" in the mockup) is NOT shown until progress tracking exists (M7); the home card offers the first lesson instead.
 
-### M2 — Backend foundation
+### M2 — Backend foundation (Flask + PostgreSQL, ADR-0010)
 
-- [ ] ⛔ Docker on the development machine (required by the Supabase CLI for the local stack).
-- [ ] Supabase CLI local setup, staging + production projects (EU).
-- [ ] Schema v1: organizations, profiles, teacher_students, invitations.
+The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for the Flask backend.
+
+- [x] Local stack defined for Docker (Q-20 answered: Docker): `compose.yaml` with PostgreSQL 17, Mailpit (e-mail catcher) and the API; `.env.example`; VS Code tasks "Backend: …".
+- [x] Docker Desktop installed on the dev PC (2026-11-23: Docker 29.9, Compose v5.7, WSL 2). Stack verified: `docker compose up --build` → `/api/v1/health` reports the database `ok`; Mailpit UI answers; the production image (gunicorn) also passes the health check.
+- [ ] Object storage for files (S3-compatible) in the local stack — added with the audio pipeline.
+- [x] `services/api` skeleton: Flask app factory, settings from environment, `/api/v1/health` (database check), JSON errors, Dockerfile (gunicorn), uv + Ruff + mypy (strict) + pytest; part of `pnpm verify` and a CI job that also builds the Docker image.
+- [ ] SQLAlchemy 2 models + Alembic migrations; constraints/triggers for immutability and idempotency.
+- [ ] Schema v1: organizations, users/profiles, roles, teacher_students, invitations.
 - [ ] Schema v1: content authoring tables (lessons, turns, sentences, segments, explanation layers, lexemes, grammar topics, exercises).
 - [ ] Schema v1: lesson_versions (immutable), assignments, learning_events, derived progress tables.
-- [ ] RLS policies for all tables + pgTAP tests (isolation, role checks, immutability).
-- [ ] Custom access-token hook (role, organization claims).
-- [ ] Invitation flow (Edge Function + email template).
-- [ ] `api_v1` views/RPCs: get assigned lessons, get lesson version, submit events, get progress, remote config.
-- [ ] Generated DB types → `packages/api`; typed client + error mapping.
-- [ ] Backup/PITR configuration and documented restore drill.
-- [ ] Data layer: TanStack Query provider, repository pattern, Supabase client with secure session storage.
+- [ ] Lesson JSON Schema generated from the zod schema in `packages/domain`; the API validates published lessons with it (CI checks it is current).
+- [ ] Auth: invitations, password (Argon2) + email one-time code, access + rotating refresh tokens, role/organisation checks, tests for every endpoint's access rules.
+- [ ] `/api/v1` endpoints: assigned lessons, lesson version, submit events (idempotent), progress, remote config; OpenAPI document.
+- [ ] Generated TypeScript client → `packages/api`; error mapping to `AppError`.
+- [ ] File storage (audio, artwork): S3-compatible bucket, signed URLs.
+- [ ] Hosting (EU) for API + PostgreSQL + files; backups and a documented restore drill (Q-19).
+- [ ] Mobile data layer: API-backed `LessonRepository`, secure token storage.
 - [ ] `(auth)` route group: sign-in, accept invitation, auth gate in the root layout (moved from M1).
 - [ ] Profile: account details, sign-out, account deletion entry point.
+- [ ] Update `docs/ARCHITECTURE.md` backend sections (still describe Supabase) for ADR-0010.
 
 ### M3 — Content pipeline
 
@@ -174,7 +180,7 @@ Owner approved the mockup (Design canvas "Italština RICI – návrh designu", 4
 - [ ] Exercise type registry interface + schema/evaluator for first types.
 - [ ] Answer normalization rules (Italian apostrophes, accents, punctuation) + tests.
 - [ ] Content-as-code format in `content/` + validator CLI.
-- [ ] Compiler → lesson bundle; publish to Supabase (new immutable version).
+- [ ] Compiler → lesson bundle; publish through the API (new immutable version).
 - [ ] Audio pipeline (hybrid per Q-3; provider pending): cloud TTS at publish time, lecturer review/re-generate/replace with recording, naming, hashing, upload, normal + slow variants.
 - [ ] Author lesson "Al bar" (8 exchanges) with lecturer — reference content. A developer-drafted 4-exchange demo version exists and needs review/extension.
 
@@ -206,11 +212,13 @@ Owner approved the mockup (Design canvas "Italština RICI – návrh designu", 4
 
 - [ ] Local SQLite schema + migrations + tests.
 - [ ] Content bundle and audio download/cache per assigned lesson.
+- [ ] Owner requirement 2026-11-23: the app works fully offline; when online it checks for new or changed lessons and updates them (Q-18: automatic on Wi-Fi, offered on mobile data). A lesson in progress is never swapped mid-lesson.
+- [ ] Settings → "Aktualizace lekcí" (owner request 2026-11-23): _Automaticky jen přes Wi-Fi, jinak se zeptat_ (default) / _Vždy automaticky_ / _Vždy se zeptat_; stored on the device.
 - [ ] Outbox with idempotent upload, backoff, connectivity awareness.
 - [ ] Progress overview screen.
 - [ ] Multi-device verification.
 
-### M8 — Teacher Studio MVP (platform per ADR-0006)
+### M8 — Teacher Studio MVP (Next.js `apps/studio`, ADR-0010)
 
 - [ ] Studio app shell + teacher auth.
 - [ ] Students: list, invite, profile, level.
@@ -251,7 +259,7 @@ Tasks to be broken down when M9 is near completion (see roadmap).
 - Local Android builds fail inside the AI assistant's sandbox (Java cannot open its loopback socket); run them from a normal terminal or VS Code task.
 - **Native Android builds on Windows need long-path support**: generated C++ object paths of React Native libraries exceed 260 characters. Requires Windows long paths (enabled on the dev PC) and an SDK CMake with ninja ≥ 1.12, selected by `plugins/with-android-cmake.js`. Builds are local only (owner decision 2026-11-22: no EAS cloud builds).
 - The Android emulator has no Italian text-to-speech voice preinstalled; the app now shows a notice with a one-tap download. Downloading the voice and playback afterwards has not been verified end-to-end yet.
-- Docker is not installed on the development machine; local Supabase (M2) needs it.
+- Free disk space on the dev PC is low (≈ 23 GB of 440 GB); Docker images and volumes need several GB more over time.
 - pnpm pinned to 10.34: pnpm 12 cannot run through the corepack shipped with Node 22 (corepack 0.32). Revisit when upgrading Node/corepack.
 - `eslint-plugin-react` cannot auto-detect the React version under ESLint 10 → version pinned in `eslint.config.mjs` (keep in sync with `react`).
 - Expo's config loader cannot import TypeScript modules → `app.config.ts` repeats the `APP_ENV` list; a test keeps it identical to `core/config/app-env.ts`.
@@ -270,8 +278,8 @@ Tasks to be broken down when M9 is near completion (see roadmap).
 ## G. Next steps
 
 1. Decide account ownership (Q-16) → create Expo/EAS project, set bundle identifiers, run first development builds on Android and iOS.
-2. Answer questions that shape the M2 schema: Q-2 (tenancy), Q-7 (minors), Q-9 (Supabase plan budget), Q-17 (vy/ty).
-3. Install Docker Desktop for the local Supabase stack.
+2. Answer questions that shape the M2 schema: Q-2 (tenancy), Q-7 (minors), Q-9 (hosting budget), Q-17 (vy/ty).
+3. Continue M2 on the running Docker stack: schema v1 + migrations, auth.
 4. Push the repository to a Git host so CI runs.
 5. Start M2 Backend foundation.
 6. In parallel: lecturer prepares the "Al bar" reference lesson and grammar-topic list (Q-6, Q-14).
@@ -280,7 +288,7 @@ Tasks to be broken down when M9 is near completion (see roadmap).
 
 | ID   | Question                                                                                                                                                                                                                                                                                                                                                 | Why it matters                | Blocks              |
 | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------------------- |
-| Q-1  | Teacher Studio platform: content-as-code first, then Expo web Studio (recommended) vs Next.js vs in-app?                                                                                                                                                                                                                                                 | Second app/stack, timeline    | M8 (and M3 format)  |
+| Q-1  | Teacher Studio platform. **Answered 2026-11-23:** Next.js + React + TypeScript in the monorepo (`apps/studio`), backend Flask + PostgreSQL (ADR-0010).                                                                                                                                                                                                   | Second app/stack, timeline    | M8 (and M3 format)  |
 | Q-2  | One lecturer only, or several lecturers/schools in future?                                                                                                                                                                                                                                                                                               | Tenancy, roles, pricing       | M2 schema           |
 | Q-3  | Audio source: lecturer/native-speaker recordings, neural TTS reviewed by lecturer, or hybrid? **Direction approved 2026-11-23: hybrid** — cloud neural TTS generated server-side when a lesson is published (normal + slow), reviewed by the lecturer, any line replaceable by her recording; files cached offline. Open: TTS provider and budget (Q-9). | Cost, quality, pipeline       | M3 audio (provider) |
 | Q-4  | Student platforms: iOS + Android only, or also web?                                                                                                                                                                                                                                                                                                      | Testing scope, offline on web | M1                  |
@@ -288,12 +296,15 @@ Tasks to be broken down when M9 is near completion (see roadmap).
 | Q-6  | Level framework (CEFR A1–B2?) and grammar-topic taxonomy — will the lecturer provide it?                                                                                                                                                                                                                                                                 | Content model fields          | M3                  |
 | Q-7  | Can students be minors (under 15 in CZ)?                                                                                                                                                                                                                                                                                                                 | GDPR parental consent         | M2/M9               |
 | Q-8  | Speaking and free-writing exercises: speech recognition, AI grading or teacher grading — and when?                                                                                                                                                                                                                                                       | Scope, cost, privacy          | M10+                |
-| Q-9  | Budget approval: Supabase Pro + PITR, EAS plan, Apple (99 USD/yr) + Google (25 USD) accounts, Sentry, TTS                                                                                                                                                                                                                                                | Hosting choices               | M1/M2               |
+| Q-9  | Budget approval: hosting for API + PostgreSQL + files (Q-19), EAS plan, Apple (99 USD/yr) + Google (25 USD) accounts, Sentry, TTS                                                                                                                                                                                                                        | Hosting choices               | M1/M2               |
 | Q-10 | Brand assets: RICI logo, exact red, typefaces; email sender domain for invitations                                                                                                                                                                                                                                                                       | Design tokens, auth emails    | M1/M2               |
+| Q-18 | Content updates when online. **Answered 2026-11-23:** on Wi-Fi, new/changed lessons incl. audio download automatically in the background; on mobile data the app offers the update and downloads only after the student confirms. This is the default of a student setting (Settings → Aktualizace lekcí).                                               | Sync UX, data usage           | M7                  |
+| Q-19 | Hosting for the Flask API, PostgreSQL and files (EU): e.g. a managed platform (Render, Fly.io, Railway) + managed Postgres, or a VPS (Hetzner) run by us?                                                                                                                                                                                                | Cost, operations, backups     | M2                  |
+| Q-20 | Local PostgreSQL for development. **Answered 2026-11-23:** Docker (Docker Desktop with WSL 2), useful for the whole backend stack.                                                                                                                                                                                                                       | Dev setup                     | M2                  |
 | Q-11 | Offline scope: all assigned lessons incl. audio downloadable?                                                                                                                                                                                                                                                                                            | Storage, sync design          | M7                  |
 | Q-12 | When the lecturer edits a published sentence, how to decide "minor edit" vs "new sentence"?                                                                                                                                                                                                                                                              | Progress continuity           | M3/M8               |
 | Q-13 | Adaptive difficulty: rule-based (proposed for M10) — which signals and limits?                                                                                                                                                                                                                                                                           | Personalization design        | M10                 |
 | Q-14 | Who authors the first 50–100 units; do existing materials (Word, PDF) need importing?                                                                                                                                                                                                                                                                    | Import tooling                | M3                  |
 | Q-15 | Practice reminders / push notifications wanted? (not in spec)                                                                                                                                                                                                                                                                                            | Native capability, consent    | M9+                 |
-| Q-16 | Who owns developer accounts (Apple, Google, Expo, Supabase, domain)?                                                                                                                                                                                                                                                                                     | Legal ownership, access       | M1                  |
+| Q-16 | Who owns developer accounts (Apple, Google, Expo, hosting, domain)?                                                                                                                                                                                                                                                                                      | Legal ownership, access       | M1                  |
 | Q-17 | Czech UI tone: formal "vy" (current, provisional) or informal "ty"?                                                                                                                                                                                                                                                                                      | Brand voice, all copy         | M4                  |

@@ -12,7 +12,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "pnpm -r run test",
-    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test"
+    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm api:verify",
+    "api:verify": "cd services/api && uv sync --locked && uv run ruff format --check . && uv run ruff check . && uv run mypy && uv run pytest -q",
+    "backend:up": "docker compose up --build --detach",
+    "backend:down": "docker compose down"
   },
   "devDependencies": {
     "eslint": "^10.15.0",

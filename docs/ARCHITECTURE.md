@@ -1,5 +1,10 @@
 # RICINGO — Architecture
 
+> **2026-11-23 — backend changed (ADR-0010):** Flask (Python) REST API + PostgreSQL instead of
+> Supabase, Teacher Studio in Next.js (`apps/studio`), all in this monorepo. Sections below that
+> describe Supabase (auth, RLS, `api_v1` RPCs, storage) are being rewritten — ADR-0010 wins where
+> they disagree.
+
 > Status: ADRs 0001–0005 and 0007 **accepted** (2026-11-22); ADR-0006 (Teacher Studio) open.
 > Implemented so far: M1 foundation and a demo slice of the learning experience on bundled content
 > (domain schemas, repository + query layer, lesson screens). See DEVELOPMENT_PLAN.
@@ -88,6 +93,9 @@ RE_RICINGO/
 │  │  ├─ app.config.ts           single source of app configuration (APP_ENV per EAS profile)
 │  │  └─ eas.json                build profiles and update channels
 │  └─ studio/                    Teacher Studio (later milestone; platform decision pending)
+├─ services/
+│  └─ api/                       Flask backend (Python, uv): /api/v1, SQLAlchemy, Dockerfile (ADR-0010)
+├─ compose.yaml                 local backend stack: PostgreSQL, Mailpit, API (Docker)
 ├─ packages/
 │  ├─ domain/                    pure TS: content model, zod schemas, exercise registry
 │  │                             (schemas + evaluators), answer normalization, SRS, progress rules

@@ -21,6 +21,8 @@ export default defineConfig([
     '**/expo-env.d.ts',
     'apps/*/ios/**',
     'apps/*/android/**',
+    // Python backend (ADR-0010): checked by Ruff/mypy, and its .venv bundles third-party JS.
+    'services/**',
   ]),
 
   ...expoConfig,

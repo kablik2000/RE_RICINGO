@@ -21,8 +21,8 @@ sentence-by-sentence grammar analysis, audio, contextual vocabulary, exercises a
 
 Expo SDK 58 · React Native 0.88 · React 19.3 · TypeScript (strict) · Expo Router · TanStack Query ·
 zod · Material 3 design system (Roboto, Noto Serif, Material Symbols, SVG artwork) · Jest + React
-Native Testing Library · pnpm workspaces. Planned: Supabase (Postgres, EU),
-expo-sqlite, EAS Build / Update.
+Native Testing Library · pnpm workspaces. Backend: Flask + PostgreSQL (ADR-0010).
+Planned: Next.js Teacher Studio, expo-sqlite offline cache.
 
 ## Repository layout
 
@@ -30,6 +30,7 @@ expo-sqlite, EAS Build / Update.
 apps/mobile               Student app (Expo)
 packages/design-system    Design tokens, theme and shared components
 packages/domain           Content schema, validation and pure learning logic
+services/api              Backend: Flask REST API over PostgreSQL (Docker)
 docs/                     Plan, architecture, ADRs, changelog
 .vscode/tasks.json        Build & run tasks
 ```
@@ -40,7 +41,7 @@ docs/                     Plan, architecture, ADRs, changelog
 - pnpm 10 via Corepack (bundled with Node): `corepack pnpm --version`
 - Android: Android Studio with SDK, an emulator (AVD) and JDK 17 (`java -version`)
 - iOS on Windows: only through EAS cloud builds (Expo account + EAS project, see DEVELOPMENT_PLAN Q-16)
-- From M2: Docker (local Supabase via the Supabase CLI)
+- Docker Desktop (backend stack) and [uv](https://docs.astral.sh/uv/) (Python tooling)
 
 ## Build & run from VS Code
 
@@ -68,6 +69,20 @@ On a phone, install **Expo Go** from the store and use `Expo Go: start for a pho
 Code changes reload instantly.
 
 **Native development build on Windows:** React Native libraries generate C++ files with paths over 260 characters. One-time setup: Windows long paths enabled (registry `LongPathsEnabled = 1`) and a newer CMake in the Android SDK — **CMake 3.31.6** (bundles ninja 1.12.1; Android Studio → SDK Manager → SDK Tools → CMake, tick _Show Package Details_). CMake 4.x is not recommended: it rejects the old `cmake_minimum_required` versions some libraries use. The config plugin `apps/mobile/plugins/with-android-cmake.js` then selects it automatically; run `Android: regenerate native project` once after installing it.
+
+## Backend (Flask + PostgreSQL in Docker)
+
+Requires Docker Desktop (Windows install guide: [docs/setup/INSTALACE_DOCKERU.md](docs/setup/INSTALACE_DOCKERU.md)).
+
+```sh
+cp .env.example .env        # once; development values only
+docker compose up --build   # PostgreSQL :5432, API :8000, Mailpit :8025
+```
+
+- API health: http://localhost:8000/api/v1/health
+- E-mails sent by the API (invitations): http://localhost:8025
+- VS Code tasks: `Backend: start (Docker)`, `Backend: stop`, `Backend: reset database`, `Backend: tests and checks`
+- Python checks without Docker: `corepack pnpm api:verify` (needs [uv](https://docs.astral.sh/uv/))
 
 ## Command line
 

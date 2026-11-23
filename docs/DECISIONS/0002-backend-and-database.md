@@ -1,6 +1,6 @@
 # ADR-0002: Backend and database
 
-- Status: **Accepted** (approved by product owner 2026-11-22)
+- Status: **Superseded by [ADR-0010](0010-flask-postgresql-backend-and-nextjs-studio.md)** (2026-11-23); accepted 2026-11-22
 - Date: 2026-11-22
 
 ## Context

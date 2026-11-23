@@ -1,6 +1,6 @@
 # ADR-0006: Teacher Studio platform
 
-- Status: **Open — needs product owner decision**
+- Status: **Decided by [ADR-0010](0010-flask-postgresql-backend-and-nextjs-studio.md)** (2026-11-23): option B, Next.js, in the monorepo as `apps/studio`
 - Date: 2026-11-22
 
 ## Context
@@ -29,4 +29,4 @@ or via admin scripts until then.
 
 ## Decision
 
-Pending.
+Option **B** (Next.js), in the monorepo — see ADR-0010.

@@ -150,6 +150,35 @@
       "command": "npx expo-doctor",
       "options": { "cwd": "${workspaceFolder}/apps/mobile" },
       "problemMatcher": []
+    },
+    {
+      "label": "Backend: start (Docker)",
+      "detail": "PostgreSQL, Mailpit and the Flask API in Docker. API http://localhost:8000/api/v1/health, mail http://localhost:8025.",
+      "type": "shell",
+      "command": "docker compose up --build",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: stop (Docker)",
+      "detail": "Stops the backend containers; database data is kept.",
+      "type": "shell",
+      "command": "docker compose down",
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: reset database (Docker)",
+      "detail": "Stops the backend and DELETES the local development database volume.",
+      "type": "shell",
+      "command": "docker compose down --volumes",
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: tests and checks (Python)",
+      "detail": "Ruff, mypy and pytest for services/api (no Docker needed).",
+      "type": "shell",
+      "command": "corepack pnpm api:verify",
+      "problemMatcher": []
     }
   ],
   "inputs": [

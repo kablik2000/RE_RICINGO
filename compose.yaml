@@ -1,0 +1,48 @@
+# Local backend stack (ADR-0010). Start: `docker compose up --build`  ·  Stop: `docker compose down`
+# Values come from .env (copy .env.example); the defaults below are development-only.
+name: rici
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rici}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rici_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-rici}
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      # $$ escapes compose interpolation: the variables are read inside the container.
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Catches every e-mail the API sends (invitations, one-time codes): http://localhost:8025
+  mail:
+    image: axllent/mailpit:latest
+    ports:
+      - '${MAIL_UI_PORT:-8025}:8025'
+      - '${MAIL_SMTP_PORT:-1025}:1025'
+
+  api:
+    build: ./services/api
+    # Development: Flask's reloader picks up edits in services/api/src (mounted below).
+    command: flask --app rici_api.wsgi run --host 0.0.0.0 --port 8000 --debug
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-rici}:${POSTGRES_PASSWORD:-rici_dev_password}@db:5432/${POSTGRES_DB:-rici}
+      SMTP_HOST: mail
+      SMTP_PORT: '1025'
+    ports:
+      - '${API_PORT:-8000}:8000'
+    volumes:
+      - ./services/api/src:/app/src
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
