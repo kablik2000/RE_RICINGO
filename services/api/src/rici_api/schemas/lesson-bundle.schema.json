@@ -1,0 +1,275 @@
+{
+  "$id": "https://rici.local/schemas/lesson-bundle.v1.json",
+  "title": "Lesson bundle",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "contentSchemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "lesson": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "version": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "A1",
+            "A2",
+            "B1",
+            "B2",
+            "C1",
+            "C2"
+          ]
+        },
+        "titleItalian": {
+          "type": "string",
+          "minLength": 1
+        },
+        "titleCzech": {
+          "type": "string",
+          "minLength": 1
+        },
+        "goal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "speakers": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "label"
+            ]
+          }
+        },
+        "turns": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "speakerId": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "sentences": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                    },
+                    "italian": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "czech": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "segments": {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                          },
+                          "text": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "annotation": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "explanation": {
+                            "type": "object",
+                            "properties": {
+                              "meaning": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "grammar": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "depth": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            },
+                            "required": [
+                              "meaning"
+                            ]
+                          },
+                          "lexemeIds": {
+                            "default": [],
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                            }
+                          },
+                          "grammarTopicIds": {
+                            "default": [],
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "text",
+                          "explanation"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "italian",
+                    "czech",
+                    "segments"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "speakerId",
+              "sentences"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "level",
+        "titleItalian",
+        "titleCzech",
+        "goal",
+        "speakers",
+        "turns"
+      ]
+    },
+    "grammarTopics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "summary"
+        ]
+      }
+    },
+    "lexemes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "lemma": {
+            "type": "string",
+            "minLength": 1
+          },
+          "translation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "partOfSpeech": {
+            "type": "string",
+            "enum": [
+              "noun",
+              "verb",
+              "adjective",
+              "adverb",
+              "pronoun",
+              "article",
+              "preposition",
+              "conjunction",
+              "numeral",
+              "interjection",
+              "phrase"
+            ]
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "masculine",
+              "feminine"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "id",
+          "lemma",
+          "translation",
+          "partOfSpeech"
+        ]
+      }
+    }
+  },
+  "required": [
+    "contentSchemaVersion",
+    "lesson",
+    "grammarTopics",
+    "lexemes"
+  ]
+}

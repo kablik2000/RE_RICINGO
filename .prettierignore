@@ -3,3 +3,6 @@ coverage/
 dist/
 .expo/
 services/api/.venv/
+.next/
+# Generated from the zod schema (pnpm --filter @ricingo/domain schema:update)
+**/lesson-bundle.schema.json

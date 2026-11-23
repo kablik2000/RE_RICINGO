@@ -13,6 +13,11 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-23 — **Teacher Studio shell** (`apps/studio`, Next.js 16): overview page with the
+  backend status, shared design tokens as CSS variables (`@ricingo/design-system/web`), same
+  typefaces as the app, Vitest, own ESLint config, CI build.
+- 2026-11-23 — **One lesson schema for TypeScript and Python:** JSON Schema generated from the
+  zod schema, committed for the API; the Flask API validates lesson structure with it.
 - 2026-11-23 — **Backend skeleton (ADR-0010).** `services/api` (Flask, SQLAlchemy, psycopg,
   gunicorn; uv, Ruff, mypy, pytest) with `/api/v1/health`; `compose.yaml` (PostgreSQL 17, Mailpit,
   API), `.env.example`, VS Code backend tasks, CI job with Docker image build; Docker install guide

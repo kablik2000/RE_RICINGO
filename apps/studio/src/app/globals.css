@@ -1,0 +1,28 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--rici-font-sans), system-ui, sans-serif;
+  font-size: var(--rici-type-body-large-size);
+  line-height: var(--rici-type-body-large-line-height);
+  color: var(--rici-color-on-background);
+  background: var(--rici-color-background);
+}
+
+a {
+  color: var(--rici-color-primary);
+}
+
+:focus-visible {
+  outline: 3px solid var(--rici-color-primary);
+  outline-offset: 2px;
+}

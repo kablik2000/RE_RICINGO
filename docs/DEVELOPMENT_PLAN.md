@@ -171,7 +171,9 @@ The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for t
 - [ ] Mobile data layer: API-backed `LessonRepository`, secure token storage.
 - [ ] `(auth)` route group: sign-in, accept invitation, auth gate in the root layout (moved from M1).
 - [ ] Profile: account details, sign-out, account deletion entry point.
-- [ ] Update `docs/ARCHITECTURE.md` backend sections (still describe Supabase) for ADR-0010.
+- [x] `docs/ARCHITECTURE.md` rewritten for ADR-0010 (system overview, repository layout, backend, auth, testing, security).
+- [x] Lesson JSON Schema generated from the zod schema (`packages/domain/schema/`, copy in `services/api/src/rici_api/schemas/`); a domain test fails when a copy is stale (`pnpm --filter @ricingo/domain schema:update`); the API validates bundle structure with it (`rici_api.content`), demo lesson passes.
+- [ ] Semantic lesson checks in the API (references, segment order) — port of `validateLessonBundle`, needed before publishing.
 
 ### M3 — Content pipeline
 
@@ -219,6 +221,8 @@ The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for t
 - [ ] Multi-device verification.
 
 ### M8 — Teacher Studio MVP (Next.js `apps/studio`, ADR-0010)
+
+- [x] Studio shell (2026-11-23): Next.js 16 App Router, TypeScript strict, ESLint (own config), Vitest, Roboto + Noto Serif, design tokens from `@ricingo/design-system/web` as CSS variables; overview page with backend status; in `pnpm verify`, CI build, VS Code task, preview config.
 
 - [ ] Studio app shell + teacher auth.
 - [ ] Students: list, invite, profile, level.

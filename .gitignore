@@ -53,3 +53,7 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# Next.js (apps/studio)
+.next/
+next-env.d.ts

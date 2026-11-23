@@ -35,6 +35,11 @@ jobs:
         working-directory: apps/mobile
         run: npx expo export --platform all --output-dir dist
 
+      - name: Teacher Studio production build
+        run: pnpm --filter @ricingo/studio build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+
   api:
     name: Backend (Flask) checks and Docker image
     runs-on: ubuntu-latest

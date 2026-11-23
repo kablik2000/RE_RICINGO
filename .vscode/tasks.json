@@ -152,6 +152,14 @@
       "problemMatcher": []
     },
     {
+      "label": "Studio: start (dev server)",
+      "detail": "Teacher Studio (Next.js) at http://localhost:3000. Start the backend first for live data.",
+      "type": "shell",
+      "command": "corepack pnpm studio:dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
       "label": "Backend: start (Docker)",
       "detail": "PostgreSQL, Mailpit and the Flask API in Docker. API http://localhost:8000/api/v1/health, mail http://localhost:8025.",
       "type": "shell",

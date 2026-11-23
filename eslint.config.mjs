@@ -25,6 +25,9 @@ export default defineConfig([
     'services/**',
   ]),
 
+  // The Studio has its own TypeScript root and ESLint config (apps/studio); pin this one.
+  { languageOptions: { parserOptions: { tsconfigRootDir: import.meta.dirname } } },
+
   ...expoConfig,
 
   // eslint-plugin-react's version auto-detection is incompatible with ESLint 10; pin explicitly

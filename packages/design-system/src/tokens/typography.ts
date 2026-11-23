@@ -23,16 +23,24 @@ export type FontFamilyName = (typeof fontFamilies)[keyof typeof fontFamilies];
 /** The family name already carries the weight; `normal` avoids synthetic bolding. */
 const WEIGHT_FROM_FAMILY: TextStyle['fontWeight'] = 'normal';
 
-type TypeStyle = Required<
-  Pick<TextStyle, 'fontFamily' | 'fontSize' | 'lineHeight' | 'fontWeight'>
-> &
-  Pick<TextStyle, 'letterSpacing' | 'textTransform'>;
+interface TypeStyleExtras {
+  letterSpacing?: number;
+  textTransform?: 'uppercase';
+}
+
+/** One typography role; numeric fields are plain numbers so web tokens can be derived from them. */
+export interface TypeStyle extends TypeStyleExtras {
+  fontFamily: FontFamilyName;
+  fontSize: number;
+  lineHeight: number;
+  fontWeight: TextStyle['fontWeight'];
+}
 
 function role(
   fontFamily: FontFamilyName,
   fontSize: number,
   lineHeight: number,
-  extra: Pick<TextStyle, 'letterSpacing' | 'textTransform'> = {},
+  extra: TypeStyleExtras = {},
 ): TypeStyle {
   return { fontFamily, fontSize, lineHeight, fontWeight: WEIGHT_FROM_FAMILY, ...extra };
 }

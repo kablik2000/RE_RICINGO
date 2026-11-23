@@ -1,13 +1,9 @@
 # RICINGO — Architecture
 
-> **2026-11-23 — backend changed (ADR-0010):** Flask (Python) REST API + PostgreSQL instead of
-> Supabase, Teacher Studio in Next.js (`apps/studio`), all in this monorepo. Sections below that
-> describe Supabase (auth, RLS, `api_v1` RPCs, storage) are being rewritten — ADR-0010 wins where
-> they disagree.
-
-> Status: ADRs 0001–0005 and 0007 **accepted** (2026-11-22); ADR-0006 (Teacher Studio) open.
-> Implemented so far: M1 foundation and a demo slice of the learning experience on bundled content
-> (domain schemas, repository + query layer, lesson screens). See DEVELOPMENT_PLAN.
+> Status (2026-11-23): backend is **Flask + PostgreSQL**, Teacher Studio **Next.js**, all in this
+> monorepo (ADR-0010, superseding the Supabase plan of ADR-0002). Implemented so far: the student
+> app with a demo lesson on bundled content, visual design v1, the Flask API skeleton in Docker
+> and the Studio shell. See DEVELOPMENT_PLAN.
 > Product source of truth: `ricingo_koncepce.md` (product specification, Czech).
 
 ---
@@ -35,23 +31,25 @@ RICINGO is a private, premium learning companion for clients of one Italian lect
 ```
 ┌──────────────────────────┐        ┌──────────────────────────┐
 │ Student app (Expo)       │        │ Teacher Studio (web)     │
-│ iOS / Android            │        │ Expo Router web (prop.)  │
+│ iOS / Android            │        │ Next.js + React + TS     │
 │                          │        │                          │
 │ UI ─ features ─ domain   │        │ UI ─ features ─ domain   │
 │        │                 │        │        │                 │
-│  data layer (repos)      │        │  data layer (repos)      │
-│  ├ local SQLite cache    │        │  (online only)           │
-│  ├ outbox (events)       │        │                          │
-│  └ API client (api_v1)   │        │  API client (api_v1 +    │
-└────────────┬─────────────┘        │   studio RPCs)           │
-             │ HTTPS (JWT)          └────────────┬─────────────┘
+│  data layer (repos)      │        │  server components /     │
+│  ├ local SQLite cache    │        │  route handlers          │
+│  ├ outbox (events)       │        │  (online only)           │
+│  └ API client            │        │  API client              │
+└────────────┬─────────────┘        └────────────┬─────────────┘
+             │ HTTPS, bearer token               │ HTTPS, HTTP-only cookie
              ▼                                   ▼
 ┌───────────────────────────────────────────────────────────────┐
-│ Supabase (EU region)                                          │
-│  Auth (invite-only)   Postgres (RLS)   Storage (audio, CDN)   │
-│  api_v1 schema: views + RPC functions = public contract       │
-│  Edge Functions: invitations, publishing, audio/AI pipelines  │
-└───────────────────────────────────────────────────────────────┘
+│ Flask API (services/api) — REST /api/v1 + OpenAPI             │
+│  invite-only auth · roles and scoping · publishing            │
+│  lesson check with the JSON Schema generated from zod         │
+├──────────────────────────────┬────────────────────────────────┤
+│ PostgreSQL (EU)              │ S3-compatible files (audio,    │
+│  migrations (Alembic)        │  artwork), signed URLs         │
+└──────────────────────────────┴────────────────────────────────┘
 ```
 
 Key ideas:
@@ -62,8 +60,8 @@ Key ideas:
 2. **Student data is append-only events + derived state.** Every answer, completed step and
    vocabulary review is a `learning_event` with a client-generated UUID. Mastery/progress
    tables are derived and can be recomputed. This makes offline sync conflict-free.
-3. **The client never talks to tables directly.** It talks to a versioned `api_v1` schema
-   (views + RPC functions). Tables can evolve; the contract stays stable for old app builds.
+3. **Clients never talk to the database.** They use the versioned REST API `/api/v1` (OpenAPI,
+   generated TypeScript client). Tables can evolve; the contract stays stable for old app builds.
 4. **Pure domain package.** Content types, schemas, exercise evaluation, answer normalization
    and progress rules live in a framework-free TypeScript package shared by app, Studio and
    tooling, and are unit-tested in isolation.
@@ -92,31 +90,30 @@ RE_RICINGO/
 │  │  ├─ plugins/                local config plugins (e.g. Windows CMake for Android builds)
 │  │  ├─ app.config.ts           single source of app configuration (APP_ENV per EAS profile)
 │  │  └─ eas.json                build profiles and update channels
-│  └─ studio/                    Teacher Studio (later milestone; platform decision pending)
+│  └─ studio/                    Teacher Studio: Next.js App Router, TypeScript, CSS modules on the
+│                                shared tokens, Vitest (ADR-0010)
 ├─ services/
-│  └─ api/                       Flask backend (Python, uv): /api/v1, SQLAlchemy, Dockerfile (ADR-0010)
+│  └─ api/                       Flask backend (Python, uv): /api/v1, SQLAlchemy + Alembic, Ruff,
+│                                mypy, pytest, Dockerfile (gunicorn); generated lesson JSON Schema
 ├─ compose.yaml                 local backend stack: PostgreSQL, Mailpit, API (Docker)
 ├─ packages/
-│  ├─ domain/                    pure TS: content model, zod schemas, exercise registry
-│  │                             (schemas + evaluators), answer normalization, SRS, progress rules
-│  ├─ design-system/             tokens, themes, typography, primitives & components (RN)
-│  └─ api/                       typed client for api_v1, generated DB types, DTO mappers
-├─ supabase/
-│  ├─ migrations/                SQL migrations (forward-only, reviewed)
-│  ├─ functions/                 Edge Functions (Deno)
-│  ├─ tests/                     pgTAP tests: RLS, constraints, RPCs, migrations
-│  └─ seed.sql                   local dev seed (no real personal data)
+│  ├─ domain/                    pure TS: content model, zod schemas (+ generated JSON Schema),
+│  │                             exercise registry, answer normalization, SRS, progress rules
+│  ├─ design-system/             tokens, themes, typography, components (RN); `./web` = tokens as
+│  │                             CSS custom properties for the Studio
+│  └─ api/                       generated TypeScript client for /api/v1 (from OpenAPI)
 ├─ content/                      Content-as-code source for the first lessons (until Studio)
 ├─ tools/                        content compiler/validator CLI, audio pipeline scripts
 ├─ docs/                         this documentation
 ├─ tsconfig.base.json            strict compiler options shared by all packages
-├─ eslint.config.mjs             one flat config for the workspace, incl. import boundaries
-└─ .github/workflows/ci.yml      typecheck, lint, format, tests, bundle check
+├─ eslint.config.mjs             flat config incl. import boundaries (the Studio has its own;
+│                                ESLint uses the nearest config per file)
+└─ .github/workflows/ci.yml      TS checks + tests, Studio build, bundle check; Python checks + image
 ```
 
-Status: `apps/mobile`, `packages/design-system`, `packages/domain` (content schema + validator)
-and `src/data` (repository interface with a bundled demo implementation) exist. `content/`/`tools/`
-arrive in M3, `api` and `supabase/` in M2, `apps/studio` in M8.
+Status: `apps/mobile`, `apps/studio` (shell), `services/api` (skeleton), `packages/design-system`
+and `packages/domain` exist. `packages/api` arrives with the first real endpoints (M2),
+`content/`/`tools/` in M3.
 
 Dependency direction (enforced with ESLint `no-restricted-imports` rules):
 
@@ -124,9 +121,11 @@ Dependency direction (enforced with ESLint `no-restricted-imports` rules):
 app routes → features → (domain, design-system, data) ; data → (api, domain) ; domain → nothing
 ```
 
-- `packages/domain` imports no React, no React Native, no Supabase.
+- `packages/domain` imports no React, no React Native, no network or storage code.
 - Features import other features only through their public `index.ts`.
-- Only `src/data` (and `packages/api`) know Supabase or SQLite exist.
+- Only `src/data` (and `packages/api`) know the API or SQLite exist.
+- The lesson schema has one source (zod in `packages/domain`); the Flask API validates with the
+  JSON Schema generated from it, and a test fails when the committed copy is stale.
 
 ---
 
@@ -152,13 +151,13 @@ Planned features: `auth`, `lessons`, `dialogue`, `sentence-analysis`, `grammar`,
 
 ### 4.2 State management
 
-| Kind of state                                             | Tool                                    | Notes                                                              |
-| --------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------ |
-| Server/cached data                                        | **TanStack Query**                      | Query functions call repositories, never `fetch`/Supabase directly |
-| Persistent local data                                     | **expo-sqlite** via repositories        | Content bundles, outbox, cached mastery                            |
-| Session/flow state (lesson walkthrough, exercise session) | `useReducer` + domain reducers          | Reducers live in `domain`, unit-tested                             |
-| Global UI prefs (theme, audio speed)                      | small React context backed by SQLite kv | No global store library unless a need appears                      |
-| Auth session                                              | Supabase client + `expo-secure-store`   | Exposed through `auth` feature hook                                |
+| Kind of state                                             | Tool                                    | Notes                                                     |
+| --------------------------------------------------------- | --------------------------------------- | --------------------------------------------------------- |
+| Server/cached data                                        | **TanStack Query**                      | Query functions call repositories, never `fetch` directly |
+| Persistent local data                                     | **expo-sqlite** via repositories        | Content bundles, outbox, cached mastery                   |
+| Session/flow state (lesson walkthrough, exercise session) | `useReducer` + domain reducers          | Reducers live in `domain`, unit-tested                    |
+| Global UI prefs (theme, audio speed)                      | small React context backed by SQLite kv | No global store library unless a need appears             |
+| Auth session                                              | API tokens in `expo-secure-store`       | Exposed through `auth` feature hook                       |
 
 No Redux/Zustand at the start: the only truly global state is auth and preferences.
 Revisit if cross-feature client state grows (tracked in DEVELOPMENT_PLAN technical debt).
@@ -172,7 +171,7 @@ Deep links (`ricingo://lesson/<id>`) supported from day one for teacher assignme
 ### 4.4 Error handling
 
 - Data layer returns typed errors (`AppError` with `kind`: `network`, `auth`, `forbidden`,
-  `notFound`, `validation`, `conflict`, `unexpected`) — no raw Supabase errors leak upward.
+  `notFound`, `validation`, `conflict`, `unexpected`) — no raw HTTP/API errors leak upward.
 - Every route exports an Expo Router `ErrorBoundary`; a root boundary catches the rest.
 - Screens render explicit **loading / empty / error / success** states via shared components.
 - Crash and error reporting through a single `core/telemetry` adapter (Sentry proposed).
@@ -287,22 +286,29 @@ accepted alternatives per item.
 
 ## 6. Backend & data
 
-Recommended: **Supabase (managed PostgreSQL) in an EU region + local SQLite on device**.
-Full comparison and reasoning: [ADR-0002](DECISIONS/0002-backend-and-database.md).
+**Flask (Python) REST API over PostgreSQL in an EU region + local SQLite on device**
+([ADR-0010](DECISIONS/0010-flask-postgresql-backend-and-nextjs-studio.md), superseding the
+Supabase plan of ADR-0002). Code in `services/api`; local stack in `compose.yaml` (Docker).
 
-- **Postgres** = system of record (content, versions, users, events, derived progress).
-- **Row Level Security** on every table; policies tested with pgTAP.
-- **API contract:** `api_v1` schema of views and `SECURITY INVOKER` RPC functions; generated
-  TypeScript types. Breaking changes → `api_v2` side by side; `api_v1` kept until no supported
-  build uses it.
-- **Storage:** audio files under content-addressed paths (`audio/<sha256>.m4a`) → immutable,
-  cache-forever, safe to share across lesson versions.
-- **Edge Functions:** invitation flow, publishing/compilation, audio generation, later AI jobs.
-  AI/TTS provider keys exist only server-side.
-- **Migrations:** Supabase CLI SQL migrations in git, applied by CI to staging then production;
-  expand → migrate → contract pattern so older app builds keep working.
-- **Backups:** daily backups + point-in-time recovery (Supabase Pro + PITR add-on) for
-  production; periodic logical dump to separate storage; restore drill documented and tested.
+- **PostgreSQL** = system of record (content drafts, published versions, users, events, derived
+  progress). Schema via SQLAlchemy 2 models and **Alembic** migrations in git, applied by CI to
+  staging then production; expand → migrate → contract so older app builds keep working.
+- **Rules in the database too:** published lesson versions are immutable (trigger), learning
+  events are inserted idempotently (unique client UUID), foreign keys and checks everywhere —
+  the API is not the only guard.
+- **API contract:** REST `/api/v1`, JSON, OpenAPI document generated from the code; the
+  TypeScript client in `packages/api` is generated from it. Breaking changes → `/api/v2` side by
+  side; `/api/v1` kept until no supported build uses it. Errors are JSON
+  `{"error": {"code", "message"}}` and map to `AppError` kinds in the clients.
+- **Content schema:** the zod schema in `packages/domain` is the single source; its generated
+  JSON Schema (`services/api/src/rici_api/schemas/`) validates every lesson the API publishes.
+- **Files:** audio and artwork in S3-compatible object storage under content-addressed paths
+  (`audio/<sha256>.m4a`) → immutable, cache-forever, shared across lesson versions; clients get
+  signed URLs.
+- **Background work** (publishing, audio generation, later AI jobs) runs in the API service or a
+  worker next to it; provider keys exist only server-side.
+- **Backups:** managed PostgreSQL backups + point-in-time recovery where the host offers it,
+  periodic logical dump to separate storage; restore drill documented and tested (hosting: Q-19).
 
 ### 6.1 On-device data (expo-sqlite)
 
@@ -328,7 +334,7 @@ Asymmetric data makes a general sync engine unnecessary at the start:
 - **Derived state:** recomputed on server; client pulls the latest snapshot.
 - Multi-device works because events from all devices merge on the server.
 
-Re-evaluate PowerSync (Postgres ↔ SQLite sync, Supabase-compatible) if bidirectional
+Re-evaluate a sync engine (e.g. PowerSync, Postgres ↔ SQLite) if bidirectional
 editable student data appears (e.g. personal notes edited on two devices).
 
 ---
@@ -337,14 +343,15 @@ editable student data appears (e.g. personal notes edited on two devices).
 
 [ADR-0004](DECISIONS/0004-authentication-and-authorization.md)
 
-- Supabase Auth, **invite-only** (no public sign-up): the lecturer invites a student by email;
-  the student sets a password or uses an email OTP code.
-- Roles: `student`, `teacher`, `admin` stored in `profiles` and exposed to RLS through a
-  custom access-token hook (JWT claim). Role changes are admin-only.
+- Implemented by the Flask API (ADR-0010). **Invite-only** (no public sign-up): the lecturer
+  invites a student by email; the student sets a password (Argon2) or uses an email one-time code.
+- The API issues short-lived access tokens and rotating refresh tokens. Roles `student`,
+  `teacher`, `admin`; every endpoint checks role and scope, and each rule has a test. Role changes
+  are admin-only.
 - Tenancy: every row carries `organization_id` (one organization initially). Cheap now,
   very expensive to retrofit if a second lecturer/school is added.
 - Teacher ↔ student relationship table; a teacher sees only own students' data.
-- Tokens stored with `expo-secure-store`; refresh handled by the Supabase client.
+- Mobile keeps tokens in `expo-secure-store`; the Studio uses HTTP-only, secure cookies.
 - In-app account deletion (App Store requirement) + data export (GDPR).
 
 ---
@@ -365,10 +372,9 @@ Three independent update channels:
   native layer.
 - Server-side **minimum supported app version** (remote config) → "please update" screen when a
   build is too old for the API/content schema.
-- API compatibility via `api_v1`/`api_v2` coexistence; DB via expand/contract migrations.
-- Environments: `development` (local Supabase via CLI), `staging`, `production` —
-  separate Supabase projects, separate EAS channels, config through `app.config.ts` +
-  EAS environment variables (no secrets in the client bundle beyond the public anon key).
+- API compatibility via `/api/v1`/`/api/v2` coexistence; DB via expand/contract migrations.
+- Environments: `development` (local Docker stack), `staging`, `production` — separate databases
+  and API deployments; app config through `app.config.ts`; no secrets in any client bundle.
 
 ---
 
@@ -388,30 +394,33 @@ Three independent update channels:
   (zod-validated) that the Studio shows for lecturer review (spec §8 levels 2–3).
 - Automatic checks before review: schema validation, answer/prompt consistency, vocabulary
   level checks, deterministic rules; a second model is an extra signal, not the gate.
-- Provider calls only in Edge Functions; prompts and outputs logged for audit.
+- Provider calls only in the backend; prompts and outputs logged for audit.
 
 ---
 
 ## 11. Testing strategy
 
-| Layer        | Tooling                                            | Focus                                                                                             |
-| ------------ | -------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Domain       | Jest (ts)                                          | Exercise evaluators, normalization, schemas, progress/SRS rules, reducers                         |
-| Components   | Jest + React Native Testing Library (`jest-expo`)  | Design-system components, exercise renderers, state views                                         |
-| Data layer   | Jest with in-memory fakes + SQLite migration tests | Repositories, outbox retry/idempotency, local migrations                                          |
-| Database     | pgTAP via `supabase test db`                       | RLS isolation (student A ≠ student B), constraints, immutability, RPCs, migrations on seeded data |
-| API contract | Integration tests against local Supabase           | `api_v1` shape, auth flows, invitation flow                                                       |
-| E2E          | Maestro                                            | Sign-in, complete lesson, exercise session, offline → online sync                                 |
+| Layer        | Tooling                                            | Focus                                                                                    |
+| ------------ | -------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Domain       | Jest (ts)                                          | Exercise evaluators, normalization, schemas, progress/SRS rules, reducers                |
+| Components   | Jest + React Native Testing Library (`jest-expo`)  | Design-system components, exercise renderers, state views                                |
+| Data layer   | Jest with in-memory fakes + SQLite migration tests | Repositories, outbox retry/idempotency, local migrations                                 |
+| Backend      | pytest (+ PostgreSQL in Docker), Ruff, mypy strict | Access rules per endpoint (student A ≠ student B), constraints, immutability, migrations |
+| API contract | Generated OpenAPI + TS client; JSON Schema check   | `/api/v1` shape, auth and invitation flows, lesson schema identical to the zod source    |
+| Studio       | Vitest + Testing Library, `next build` in CI       | Studio components, data helpers                                                          |
+| E2E          | Maestro                                            | Sign-in, complete lesson, exercise session, offline → online sync                        |
 
-CI (GitHub Actions or EAS Workflows): typecheck, lint, unit/component tests, pgTAP, content
-validation on every PR; E2E on release branches.
+CI (GitHub Actions): TypeScript checks and tests, Studio build, mobile bundle check, Python
+checks (Ruff, mypy, pytest) and the API Docker image on every PR; E2E on release branches.
 
 ---
 
 ## 12. Security & privacy
 
-- RLS on all tables, default deny; service-role key never in clients.
+- Authorization in the API with default deny and a test per rule; database credentials only in
+  the backend.
 - EU data residency; GDPR: data minimization, export, deletion, processing records.
-- Input validation at boundaries (zod on client, constraints/RPC checks on server).
-- Secrets only in EAS/Supabase environment configuration.
+- Input validation at boundaries (zod on clients, JSON Schema + checks in the API, constraints
+  in PostgreSQL).
+- Secrets only in the hosting environment configuration (never in git or client bundles).
 - Dependency auditing in CI; minimal dependency policy.
