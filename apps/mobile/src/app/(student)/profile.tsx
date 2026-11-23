@@ -1,6 +1,6 @@
-import { appConfig } from '@/core/config';
+import { getAppConfig } from '@/core/config';
 import { ProfileScreen } from '@/features/profile';
 
 export default function ProfileRoute() {
-  return <ProfileScreen config={appConfig} />;
+  return <ProfileScreen config={getAppConfig()} />;
 }

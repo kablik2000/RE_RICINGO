@@ -7,7 +7,7 @@ import { ProfileScreen } from './profile-screen';
 describe('ProfileScreen', () => {
   it('shows version and environment outside production', async () => {
     await renderWithProviders(
-      <ProfileScreen config={{ appEnv: 'preview', appVersion: '0.1.0' }} />,
+      <ProfileScreen config={{ appEnv: 'preview', appVersion: '0.1.0', contentApiUrl: null }} />,
     );
 
     expect(screen.getByLabelText('Verze aplikace: 0.1.0')).toBeOnTheScreen();
@@ -16,7 +16,7 @@ describe('ProfileScreen', () => {
 
   it('hides the environment in production', async () => {
     await renderWithProviders(
-      <ProfileScreen config={{ appEnv: 'production', appVersion: '1.0.0' }} />,
+      <ProfileScreen config={{ appEnv: 'production', appVersion: '1.0.0', contentApiUrl: null }} />,
     );
 
     expect(screen.getByLabelText('Verze aplikace: 1.0.0')).toBeOnTheScreen();

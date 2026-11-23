@@ -1,32 +1,35 @@
 import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
-import { lessonRepository } from './repositories';
-
-/** Query keys in one place so invalidation stays consistent. */
-export const lessonQueryKeys = {
-  all: ['lessons'] as const,
-  list: () => [...lessonQueryKeys.all, 'list'] as const,
-  bundle: (lessonId: string) => [...lessonQueryKeys.all, 'bundle', lessonId] as const,
-  vocabulary: () => ['vocabulary'] as const,
-};
+import { lessonQueryKeys } from './query-keys';
+import { useDataServices } from './query-provider';
 
 export function useLessons() {
+  const { library } = useDataServices();
   return useQuery({
     queryKey: lessonQueryKeys.list(),
-    queryFn: () => lessonRepository.listLessons(),
+    queryFn: () => library.listLessons(),
   });
 }
 
+/**
+ * One lesson's content. While a screen uses it, the lesson counts as open: an update that
+ * arrives meanwhile is installed only after the student leaves the lesson.
+ */
 export function useLessonBundle(lessonId: string) {
+  const { library, holds } = useDataServices();
+  // Registers the open lesson with the update engine (an external system) for the screen's life.
+  useEffect(() => holds.hold(lessonId), [holds, lessonId]);
   return useQuery({
     queryKey: lessonQueryKeys.bundle(lessonId),
-    queryFn: () => lessonRepository.getLessonBundle(lessonId),
+    queryFn: () => library.getLessonBundle(lessonId),
   });
 }
 
 export function useVocabulary() {
+  const { library } = useDataServices();
   return useQuery({
     queryKey: lessonQueryKeys.vocabulary(),
-    queryFn: () => lessonRepository.listVocabulary(),
+    queryFn: () => library.listVocabulary(),
   });
 }

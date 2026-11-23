@@ -1,0 +1,54 @@
+import { getNetworkStateAsync } from 'expo-network';
+
+import { getAppConfig } from '@/core/config';
+import { telemetry } from '@/core/telemetry';
+
+import { createContentApi } from './content/content-api';
+import { createContentSync, type ContentSync } from './content/content-sync';
+import { createLessonHolds, type LessonHolds } from './content/lesson-holds';
+import { toConnectionKind } from './content/update-rules';
+import { createUpdateSettings, type UpdateSettings } from './content/update-settings';
+import alBar from './demo/al-bar.lesson.json';
+import { createLessonLibrary, toSeed, type LessonLibrary } from './lesson-library';
+import { openLocalStore } from './local/open-local-store';
+
+/** Everything the data hooks use; tests replace parts through `DataProvider`. */
+export interface DataServices {
+  library: LessonLibrary;
+  holds: LessonHolds;
+  updateSettings: UpdateSettings;
+  /** `null` when this build downloads no lessons (web preview, no API configured). */
+  contentSync: ContentSync | null;
+}
+
+/** Lessons shipped inside the app: available offline from the very first start. */
+const BUNDLED_LESSONS: readonly unknown[] = [alBar];
+
+/** Composition root of the data layer. */
+export function createDataServices(): DataServices {
+  const store = openLocalStore();
+  const library = createLessonLibrary(store, () => BUNDLED_LESSONS.map(toSeed));
+  const holds = createLessonHolds();
+  const updateSettings = createUpdateSettings(store);
+  const apiUrl = getAppConfig().contentApiUrl;
+  const contentSync =
+    apiUrl === null
+      ? null
+      : createContentSync({
+          api: createContentApi(apiUrl),
+          library,
+          holds,
+          getConnection: async () => toConnectionKind(await getNetworkStateAsync()),
+          getPolicy: () => updateSettings.getPolicy(),
+          telemetry,
+        });
+  return { library, holds, updateSettings, contentSync };
+}
+
+let appServices: DataServices | null = null;
+
+/** The app's single set of services (one database, one update engine). */
+export function getAppServices(): DataServices {
+  appServices ??= createDataServices();
+  return appServices;
+}

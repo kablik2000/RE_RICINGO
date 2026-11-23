@@ -14,13 +14,14 @@ from werkzeug.exceptions import HTTPException
 
 from rici_api import lessons
 from rici_api.config import Settings, load_settings
+from rici_api.content_api import content_blueprint
 from rici_api.db import create_db_engine, database_is_reachable
 from rici_api.migrate import upgrade_database
 from rici_api.studio_api import studio_blueprint
 
 DatabaseCheck = Callable[[], bool]
 
-# Environments where the unauthenticated Studio endpoints may run (ADR-0011).
+# Environments where the unauthenticated Studio and content endpoints may run (ADR-0011).
 STUDIO_ENVIRONMENTS = ("development", "test")
 
 
@@ -41,6 +42,7 @@ def create_app(
     app.register_blueprint(_v1_blueprint(check), url_prefix="/api/v1")
     if resolved.app_env in STUDIO_ENVIRONMENTS:
         app.register_blueprint(studio_blueprint(session_factory), url_prefix="/api/v1/studio")
+        app.register_blueprint(content_blueprint(session_factory), url_prefix="/api/v1/content")
     _register_error_handlers(app)
     _register_commands(app, db_engine, session_factory)
     return app

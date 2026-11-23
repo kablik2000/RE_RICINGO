@@ -29,6 +29,8 @@ export function resolveAppEnv(raw: unknown): AppEnv {
 
 const rawAppEnv: unknown = process.env.APP_ENV;
 const appEnv = resolveAppEnv(rawAppEnv);
+/** API serving published lessons; optional in development (the app finds the local one). */
+const apiUrl = process.env.RICI_API_URL;
 
 /** Name shown under the app icon and in the app switcher (owner decision 2026-11-23). */
 const APP_DISPLAY_NAME = 'Italština RICI';
@@ -85,6 +87,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     'expo-router',
+    // Offline lesson store and settings (DEVELOPMENT_PLAN M7).
+    'expo-sqlite',
     // Windows: native Android builds need a CMake whose ninja supports long paths.
     './plugins/with-android-cmake',
     [
@@ -102,5 +106,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   extra: {
     appEnv,
+    ...(apiUrl !== undefined && apiUrl !== '' && { apiUrl }),
   },
 });

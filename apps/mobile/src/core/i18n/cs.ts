@@ -127,6 +127,41 @@ export const cs = {
       message: 'Po dokončení prvního dialogu tu najdete cvičení z vět, které už znáte.',
     },
   },
+  lessonUpdates: {
+    offer: {
+      title: 'Nové lekce k dispozici',
+      newLessons: {
+        one: '{count} nová lekce',
+        few: '{count} nové lekce',
+        other: '{count} nových lekcí',
+      },
+      changedLessons: {
+        one: '{count} upravená lekce',
+        few: '{count} upravené lekce',
+        other: '{count} upravených lekcí',
+      },
+      hint: 'Po stažení budou fungovat i bez internetu.',
+      download: 'Stáhnout',
+      later: 'Později',
+    },
+    settings: {
+      title: 'Aktualizace lekcí',
+      description:
+        'Když lektorka přidá nebo upraví lekci, aplikace ji stáhne do telefonu. Lekce pak fungují i bez internetu.',
+      policies: {
+        wifi: {
+          label: 'Automaticky přes Wi-Fi',
+          supporting: 'Na mobilních datech se aplikace nejdřív zeptá',
+        },
+        always: { label: 'Vždy automaticky', supporting: 'I na mobilních datech' },
+        ask: { label: 'Vždy se zeptat', supporting: 'Nic se nestáhne bez vašeho potvrzení' },
+      },
+      check: 'Zkontrolovat aktualizace',
+      upToDate: 'Všechny lekce jsou aktuální.',
+      lastChecked: 'Naposledy zkontrolováno {time}',
+      unavailable: 'Tato verze aplikace používá jen lekce, které jsou v ní přibalené.',
+    },
+  },
   profile: {
     title: 'Profil',
     appVersion: 'Verze aplikace',

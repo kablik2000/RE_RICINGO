@@ -313,14 +313,16 @@ Supabase plan of ADR-0002). Code in `services/api`; local stack in `compose.yaml
 
 ### 6.1 On-device data (expo-sqlite)
 
-| Table             | Purpose                                                              |
-| ----------------- | -------------------------------------------------------------------- |
-| `content_bundles` | Downloaded lesson versions (JSON + checksum) for offline reading     |
-| `audio_cache`     | Index of downloaded audio files (content-addressed)                  |
-| `outbox`          | Pending `learning_events` to upload (retry with backoff, idempotent) |
-| `mastery_cache`   | Last known derived progress for offline practice scheduling          |
-| `kv`              | Preferences, sync cursors, schema version                            |
+| Table           | Purpose                                                              |
+| --------------- | -------------------------------------------------------------------- |
+| `lessons`       | Installed lesson versions (JSON + checksum) for offline reading      |
+| `audio_cache`   | Index of downloaded audio files (content-addressed)                  |
+| `outbox`        | Pending `learning_events` to upload (retry with backoff, idempotent) |
+| `mastery_cache` | Last known derived progress for offline practice scheduling          |
+| `settings`      | Preferences (e.g. the lesson update policy), sync cursors            |
 
+Implemented so far: `lessons` and `settings` (`apps/mobile/src/data/local/`); the schema version
+is SQLite's `PRAGMA user_version`. Web previews and tests use an in-memory store instead.
 Local schema migrations ship with the app and run at startup inside a transaction.
 The device cache is disposable: it can always be rebuilt from the server, except the
 un-synced outbox, which is never dropped silently.
@@ -330,6 +332,17 @@ un-synced outbox, which is never dropped silently.
 Asymmetric data makes a general sync engine unnecessary at the start:
 
 - **Down (content):** read-only, versioned bundles → simple fetch-if-newer + cache.
+  Implemented in `src/data/content/` against `GET /api/v1/content/lessons` (catalog: newest
+  published version + checksum per lesson) and `…/lessons/<id>/versions/<n>` (immutable bundle):
+  - checks at start, when the app returns after 15 min, and when the connection changes;
+  - the student's policy (Q-18, Profile → Aktualizace lekcí) decides: automatic on Wi-Fi and
+    offered on mobile data (default), always automatic, or always offered;
+  - every download is validated with the domain schema before it is installed; a broken one is
+    skipped and the installed version stays;
+  - a lesson open on screen is never replaced: its update waits until the student leaves it;
+  - first start works offline: the store is seeded with the lessons bundled in the app.
+    Until authentication exists the catalog lists every published lesson and runs only in
+    development; it becomes "assigned lessons" with M2 auth.
 - **Up (progress):** append-only events with client UUIDs → upload outbox; server upsert by
   `id` ignores duplicates; no conflicts possible.
 - **Derived state:** recomputed on server; client pulls the latest snapshot.

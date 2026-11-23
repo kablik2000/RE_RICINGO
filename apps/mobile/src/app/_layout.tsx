@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 
 import { t } from '@/core/i18n';
 import { AppProviders, RouteErrorBoundary, useAppFonts } from '@/core/ui';
-import { DataProvider } from '@/data';
+import { ContentSyncDriver, DataProvider } from '@/data';
 
 export function ErrorBoundary(props: ErrorBoundaryProps) {
   return (
@@ -36,6 +36,7 @@ export default function RootLayout() {
   return (
     <AppProviders>
       <DataProvider>
+        <ContentSyncDriver />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(student)" />
           {/* Intro and study draw their own top bars (hero illustration, progress header). */}

@@ -158,11 +158,10 @@ The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for t
 - [x] Docker Desktop installed on the dev PC (2026-11-23: Docker 29.9, Compose v5.7, WSL 2). Stack verified: `docker compose up --build` → `/api/v1/health` reports the database `ok`; Mailpit UI answers; the production image (gunicorn) also passes the health check.
 - [ ] Object storage for files (S3-compatible) in the local stack — added with the audio pipeline.
 - [x] `services/api` skeleton: Flask app factory, settings from environment, `/api/v1/health` (database check), JSON errors, Dockerfile (gunicorn), uv + Ruff + mypy (strict) + pytest; part of `pnpm verify` and a CI job that also builds the Docker image.
-- [ ] SQLAlchemy 2 models + Alembic migrations; constraints/triggers for immutability and idempotency.
+- [ ] SQLAlchemy 2 models + Alembic migrations; constraints/triggers for immutability and idempotency. (Lessons + immutable lesson versions done with ADR-0011; idempotency comes with learning events.)
 - [ ] Schema v1: organizations, users/profiles, roles, teacher_students, invitations.
 - [ ] Schema v1: content authoring tables (lessons, turns, sentences, segments, explanation layers, lexemes, grammar topics, exercises).
 - [ ] Schema v1: lesson_versions (immutable), assignments, learning_events, derived progress tables.
-- [ ] Lesson JSON Schema generated from the zod schema in `packages/domain`; the API validates published lessons with it (CI checks it is current).
 - [ ] Auth: invitations, password (Argon2) + email one-time code, access + rotating refresh tokens, role/organisation checks, tests for every endpoint's access rules.
 - [ ] `/api/v1` endpoints: assigned lessons, lesson version, submit events (idempotent), progress, remote config; OpenAPI document.
 - [ ] Generated TypeScript client → `packages/api`; error mapping to `AppError`.
@@ -173,7 +172,7 @@ The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for t
 - [ ] Profile: account details, sign-out, account deletion entry point.
 - [x] `docs/ARCHITECTURE.md` rewritten for ADR-0010 (system overview, repository layout, backend, auth, testing, security).
 - [x] Lesson JSON Schema generated from the zod schema (`packages/domain/schema/`, copy in `services/api/src/rici_api/schemas/`); a domain test fails when a copy is stale (`pnpm --filter @ricingo/domain schema:update`); the API validates bundle structure with it (`rici_api.content`), demo lesson passes.
-- [ ] Semantic lesson checks in the API (references, segment order) — port of `validateLessonBundle`, needed before publishing.
+- [x] Semantic lesson checks in the API (references, segment order) — port of `validateLessonBundle` (`rici_api.content`), enforced on publish.
 
 ### M3 — Content pipeline
 
@@ -212,10 +211,11 @@ The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for t
 
 ### M7 — Offline & progress
 
-- [ ] Local SQLite schema + migrations + tests.
-- [ ] Content bundle and audio download/cache per assigned lesson.
-- [ ] Owner requirement 2026-11-23: the app works fully offline; when online it checks for new or changed lessons and updates them (Q-18: automatic on Wi-Fi, offered on mobile data). A lesson in progress is never swapped mid-lesson.
-- [ ] Settings → "Aktualizace lekcí" (owner request 2026-11-23): _Automaticky jen přes Wi-Fi, jinak se zeptat_ (default) / _Vždy automaticky_ / _Vždy se zeptat_; stored on the device.
+- [x] Local SQLite schema + migrations (`lessons`, `settings`; `PRAGMA user_version`) — logic tested against the in-memory store; the SQLite adapter itself is checked on the device only.
+- [ ] SQLite adapter tests on a device or emulator (Maestro / dev build) — Jest has no native SQLite.
+- [ ] Content bundle and audio download/cache per assigned lesson. (Bundles done: `/api/v1/content` catalog + versions, validated install; audio comes with the audio pipeline; "assigned" with M2 auth.)
+- [x] Owner requirement 2026-11-23: the app works fully offline; when online it checks for new or changed lessons and updates them (Q-18: automatic on Wi-Fi, offered on mobile data). A lesson in progress is never swapped mid-lesson.
+- [x] Settings → "Aktualizace lekcí" (owner request 2026-11-23, in the Profile tab): _Automaticky jen přes Wi-Fi, jinak se zeptat_ (default) / _Vždy automaticky_ / _Vždy se zeptat_; stored on the device.
 - [ ] Outbox with idempotent upload, backoff, connectivity awareness.
 - [ ] Progress overview screen.
 - [ ] Multi-device verification.
@@ -229,7 +229,9 @@ The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for t
 - [x] Studio shell per design: navigation drawer (rail in the editor), top app bar, overview dashboard with real counts.
 - [x] Lessons list per design: filters, data table, status.
 - [x] Lesson editor per design: dialogue tree, sentence + segment editing, layered explanations, vocabulary and grammar links, lesson info, live phone preview, autosave, check, publish (checked in the browser 2026-11-23 on the demo lesson).
-- [ ] Student app reads published lessons from the API instead of the bundled demo (offline cache, M7 update rules).
+- [x] Student app reads published lessons from the API instead of the bundled demo (offline cache, M7 update rules). Development only until auth; verified on the Android emulator against the Docker API.
+- [ ] Content API for real builds: authentication, assigned lessons only, production URL (`RICI_API_URL`), HTTPS — with M2 auth and hosting (Q-19).
+- [ ] Lessons removed from the catalog (archived, unassigned) stay on the device; define removal with assignments.
 - [ ] Studio: drag-and-drop reordering of turns/sentences; selecting segment text with the mouse (now typed); archive / delete lessons; lesson import from file.
 - [ ] Studio validation messages: the API's schema messages are translated for known patterns only; unknown ones show in English.
 - [ ] Teacher auth (with M2 auth).
@@ -254,18 +256,18 @@ Tasks to be broken down when M9 is near completion (see roadmap).
 
 ## E. Current status
 
-|                 |                                                                                               |
-| --------------- | --------------------------------------------------------------------------------------------- |
-| **Completed**   | M0 analysis; M1 foundation except the blocked items below; demo lesson slice                  |
-| **In progress** | —                                                                                             |
-| **Pending**     | M2 backend foundation                                                                         |
-| **Blocked**     | EAS project + device builds (Q-16); brand assets (Q-10); crash reporting (Q-9); Docker for M2 |
+|                 |                                                                                   |
+| --------------- | --------------------------------------------------------------------------------- |
+| **Completed**   | M0 analysis; M1 foundation except the blocked items below; demo lesson slice      |
+| **In progress** | M2 backend (Docker stack, lessons); M7 offline content updates; M8 Teacher Studio |
+| **Pending**     | M2 backend foundation                                                             |
+| **Blocked**     | EAS project + store builds (Q-16); brand assets (Q-10); crash reporting (Q-9)     |
 
 ## F. Known issues and technical debt
 
 - **Demo content is not lecturer-reviewed.** Italian sentences follow the spec's example; Czech explanations are developer drafts (spec §8 requires lecturer approval).
 - **Demo audio is device text-to-speech** (quality depends on the device's Italian voice); real audio is open question Q-3.
-- **Lessons are bundled with the app** (`createBundledLessonRepository`) until the M2 backend exists.
+- **Lesson downloads are development-only**: without authentication the content catalog lists every published lesson and is served only by a development API; release builds use the bundled demo lesson.
 - **Application ID is provisional** (`com.ricingo.mobile`); it cannot change after store publishing (Q-16).
 - iOS has not been built (requires EAS cloud build or a Mac).
 - Local Android builds fail inside the AI assistant's sandbox (Java cannot open its loopback socket); run them from a normal terminal or VS Code task.

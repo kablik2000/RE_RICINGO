@@ -13,6 +13,14 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-23 — **Student app downloads published lessons and works offline** (M7 start, Q-18):
+  lessons live in an on-device SQLite store (seeded with the bundled demo lesson); the app
+  checks the API's new content catalog (`/api/v1/content`) at start, on return and when the
+  connection changes, downloads updates on Wi-Fi automatically and offers them on mobile data
+  (banner on Home and Lessons). Profile → **Aktualizace lekcí** lets the student choose
+  _Automaticky přes Wi-Fi_ / _Vždy automaticky_ / _Vždy se zeptat_ and check manually. An open
+  lesson is never swapped mid-lesson. New native modules `expo-sqlite`, `expo-network` → a new
+  development build is required.
 - 2026-11-23 — **Teacher Studio built to the approved design** (ADR-0011): overview dashboard
   with real counts, lessons list with filters and search, new-lesson form, and the lesson
   editor (dialogue tree, sentence and segment editing with layered explanations, vocabulary and

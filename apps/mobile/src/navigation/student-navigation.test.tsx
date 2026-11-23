@@ -4,7 +4,7 @@ import { renderRouter } from 'expo-router/testing-library';
 
 // Jest's expo-constants mock does not evaluate app.config.ts, so provide the validated config.
 jest.mock('@/core/config', () => ({
-  appConfig: { appEnv: 'development', appVersion: '0.1.0' },
+  getAppConfig: () => ({ appEnv: 'development', appVersion: '0.1.0', contentApiUrl: null }),
 }));
 
 /**

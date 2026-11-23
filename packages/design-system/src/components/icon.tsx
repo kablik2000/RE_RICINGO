@@ -31,6 +31,10 @@ export const icons = {
   library: { md: 'auto_stories', sf: 'books.vertical' },
   person: { md: 'person', sf: 'person' },
   translate: { md: 'translate', sf: 'character.book.closed' },
+  download: { md: 'download', sf: 'arrow.down.circle' },
+  sync: { md: 'sync', sf: 'arrow.triangle.2.circlepath' },
+  radioOn: { md: 'radio_button_checked', sf: 'largecircle.fill.circle' },
+  radioOff: { md: 'radio_button_unchecked', sf: 'circle' },
 } as const satisfies Record<string, { md: AndroidSymbol; sf: SFSymbol }>;
 
 export type IconName = keyof typeof icons;

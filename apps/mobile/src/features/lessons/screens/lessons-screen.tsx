@@ -14,6 +14,7 @@ import { Greeting, QueryView } from '@/core/ui';
 import { type LessonSummary, useLessons } from '@/data';
 
 import { FeaturedLessonCard } from '../components/featured-lesson-card';
+import { LessonUpdatesBanner } from '../components/lesson-updates-banner';
 import { LessonListItem } from '../components/lesson-list-item';
 
 /** Lessons tab: greeting, the lesson to start, and all assigned lessons. */
@@ -22,6 +23,7 @@ export function LessonsScreen() {
   return (
     <Screen>
       <Greeting />
+      <LessonUpdatesBanner />
       <QueryView query={lessons} loadingMessage={t('lessons.loading')}>
         {(items) =>
           items[0] === undefined ? (

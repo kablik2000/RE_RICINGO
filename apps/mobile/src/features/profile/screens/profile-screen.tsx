@@ -4,18 +4,23 @@ import { StyleSheet, View } from 'react-native';
 import type { AppConfig } from '@/core/config';
 import { t } from '@/core/i18n';
 
+import { LessonUpdateSettings } from '../components/lesson-update-settings';
+
 export interface ProfileScreenProps {
   config: AppConfig;
 }
 
 /**
- * Profile shell: build information only. Account details and settings arrive with authentication
- * (milestone M2). `config` is injected so the screen stays testable without native constants.
+ * Profile: lesson update settings and build information. Account details arrive with
+ * authentication (M2). `config` is injected so the screen stays testable without native constants.
  */
 export function ProfileScreen({ config }: ProfileScreenProps) {
   const styles = useThemedStyles(createStyles);
   return (
     <Screen title={t('profile.title')}>
+      <Surface tone="surfaceContainerLow" style={styles.list}>
+        <LessonUpdateSettings />
+      </Surface>
       <Surface tone="surfaceContainerLow" style={styles.list}>
         <InfoRow label={t('profile.appVersion')} value={config.appVersion} />
         {config.appEnv !== 'production' && (

@@ -234,6 +234,53 @@ def import_published_bundle(session: Session, bundle: object) -> str:
 
 
 @dataclass(frozen=True)
+class PublishedLesson:
+    """The newest published version of a lesson, as the student app's catalog lists it."""
+
+    id: str
+    version: int
+    checksum: str
+    published_at: datetime
+    title_italian: str
+    title_czech: str
+    level: str
+
+
+def list_published(session: Session) -> list[PublishedLesson]:
+    """Newest version of every published, not archived lesson (oldest lesson first)."""
+    lessons = session.scalars(
+        select(Lesson).where(Lesson.archived_at.is_(None)).order_by(Lesson.created_at, Lesson.id)
+    ).all()
+    catalog = []
+    for lesson in lessons:
+        latest = _latest_version(session, lesson.id)
+        if latest is None:
+            continue
+        body = latest.bundle["lesson"]
+        catalog.append(
+            PublishedLesson(
+                id=lesson.id,
+                version=latest.version,
+                checksum=latest.checksum,
+                published_at=latest.published_at,
+                title_italian=_text(body.get("titleItalian")),
+                title_czech=_text(body.get("titleCzech")),
+                level=_text(body.get("level")),
+            )
+        )
+    return catalog
+
+
+def get_published_version(session: Session, lesson_id: str, version: int) -> LessonVersion:
+    """One published version; archived lessons are no longer served."""
+    _get(session, lesson_id)
+    published = session.get(LessonVersion, (lesson_id, version))
+    if published is None:
+        raise LessonNotFoundError(f"{lesson_id} v{version}")
+    return published
+
+
+@dataclass(frozen=True)
 class Overview:
     lessons_total: int
     lessons_published: int
