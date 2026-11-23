@@ -1,3 +1,8 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+
+# Plain (hoisted) node_modules instead of pnpm's symlinked layout. Required for native Android
+# builds on Windows: CMake/ninja loop on symlinked paths ("build.ninja still dirty") and the
+# isolated layout's long paths exceed Windows limits. See Expo monorepo guide.
+nodeLinker: hoisted

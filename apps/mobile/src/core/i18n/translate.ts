@@ -33,13 +33,24 @@ function flatten(
 
 const messages = flatten(cs, '', new Map());
 
+export type TranslationParams = Readonly<Record<string, string | number>>;
+
+const PLACEHOLDER = /\{(\w+)\}/g;
+
 /**
- * Returns the UI string for `key`. Keys are type-checked against the catalog, so a missing entry
- * is a compile error. Placeholder interpolation and Czech plural rules will be added together with
- * the first string that needs them.
+ * Returns the UI string for `key` (type-checked against the catalog), replacing `{name}`
+ * placeholders with `params`. Unknown placeholders stay visible so they are caught in review.
+ * Czech plural rules will be added with the first string that needs them.
  */
-export function t(key: TranslationKey): string {
-  return messages.get(key) ?? key;
+export function t(key: TranslationKey, params?: TranslationParams): string {
+  const template = messages.get(key) ?? key;
+  if (params === undefined) {
+    return template;
+  }
+  return template.replace(PLACEHOLDER, (placeholder, name: string) => {
+    const value = params[name];
+    return value === undefined ? placeholder : String(value);
+  });
 }
 
 /** The flattened catalog (key → string); used by tests to validate completeness. */

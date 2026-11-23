@@ -78,16 +78,37 @@ export default defineConfig([
     },
   },
 
-  // Core is the foundation features build on; it must not depend on features.
+  // Core and data are foundations features build on; they must not depend on features.
   {
-    files: ['apps/mobile/src/core/**/*.{ts,tsx}'],
+    files: ['apps/mobile/src/core/**/*.{ts,tsx}', 'apps/mobile/src/data/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
           patterns: [
             featureDeepImports,
-            { group: ['@/features', '@/features/*'], message: 'core/ must not import features.' },
+            {
+              group: ['@/features', '@/features/*'],
+              message: 'core/ and data/ must not import features.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  // The domain package is framework-free (docs/ARCHITECTURE.md §3).
+  {
+    files: ['packages/domain/src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['react', 'react-native', 'expo', 'expo-*', '@/*', '@ricingo/design-system'],
+              message: 'The domain package must stay free of UI frameworks and app code.',
+            },
           ],
         },
       ],

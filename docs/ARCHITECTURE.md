@@ -1,7 +1,8 @@
 # RICINGO — Architecture
 
 > Status: ADRs 0001–0005 and 0007 **accepted** (2026-11-22); ADR-0006 (Teacher Studio) open.
-> Implemented so far: M1 foundation (workspace, mobile shell, design system, core). See DEVELOPMENT_PLAN.
+> Implemented so far: M1 foundation and a demo slice of the learning experience on bundled content
+> (domain schemas, repository + query layer, lesson screens). See DEVELOPMENT_PLAN.
 > Product source of truth: `ricingo_koncepce.md` (product specification, Czech).
 
 ---
@@ -78,7 +79,7 @@ RE_RICINGO/
 │  │  │  └─ _layout.tsx          providers, auth gate, error boundary
 │  │  ├─ src/features/<feature>/ see §4
 │  │  ├─ src/navigation/         navigator definitions shared by native/web layouts
-│  │  ├─ src/data/               (M2) local db (expo-sqlite), migrations, sync/outbox, api adapters
+│  │  ├─ src/data/               repositories + query hooks; later local db, sync/outbox, api adapters
 │  │  ├─ src/core/               config, errors, i18n catalog, telemetry, app-level UI (providers,
 │  │  │                          error boundary, not-found)
 │  │  ├─ src/testing/            test-only helpers (render with providers)
@@ -103,8 +104,9 @@ RE_RICINGO/
 └─ .github/workflows/ci.yml      typecheck, lint, format, tests, bundle check
 ```
 
-Status: `apps/mobile` and `packages/design-system` exist (M1). `domain` and `content/`/`tools/`
-arrive in M3, `api`, `supabase/` and `src/data` in M2, `apps/studio` in M8.
+Status: `apps/mobile`, `packages/design-system`, `packages/domain` (content schema + validator)
+and `src/data` (repository interface with a bundled demo implementation) exist. `content/`/`tools/`
+arrive in M3, `api` and `supabase/` in M2, `apps/studio` in M8.
 
 Dependency direction (enforced with ESLint `no-restricted-imports` rules):
 

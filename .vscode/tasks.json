@@ -1,0 +1,170 @@
+{
+  // RICINGO build & run tasks. Run with: Terminal → Run Task… (Ctrl+Shift+P → "Tasks: Run Task").
+  // Default build task (Ctrl+Shift+B): "Android: build & run (local)" (native development build).
+  // Default test task: "Verify (typecheck, lint, format, tests)".
+  "version": "2.0.0",
+  "options": {
+    "cwd": "${workspaceFolder}"
+  },
+  "tasks": [
+    {
+      "label": "Install dependencies",
+      "detail": "pnpm install for the whole workspace (pnpm via Corepack).",
+      "type": "shell",
+      "command": "corepack pnpm install",
+      "problemMatcher": []
+    },
+    {
+      "label": "Verify (typecheck, lint, format, tests)",
+      "detail": "The same checks as CI. Run before committing.",
+      "type": "shell",
+      "command": "corepack pnpm verify",
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "Test",
+      "type": "shell",
+      "command": "corepack pnpm test",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Typecheck",
+      "type": "shell",
+      "command": "corepack pnpm typecheck",
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "Lint",
+      "type": "shell",
+      "command": "corepack pnpm lint",
+      "problemMatcher": ["$eslint-stylish"]
+    },
+    {
+      "label": "Format (Prettier)",
+      "type": "shell",
+      "command": "corepack pnpm format",
+      "problemMatcher": []
+    },
+    {
+      "label": "Expo Go: run on Android emulator",
+      "detail": "Fastest way to run the app: no native build. Start the emulator first; Expo Go (SDK 58) is installed on it automatically.",
+      "type": "shell",
+      "command": "npx expo start --go --android",
+      "options": { "cwd": "${workspaceFolder}/apps/mobile" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Expo Go: start for a phone (QR code)",
+      "detail": "Install Expo Go on the phone (same Wi-Fi as this PC) and scan the QR code shown in the terminal.",
+      "type": "shell",
+      "command": "npx expo start --go",
+      "options": { "cwd": "${workspaceFolder}/apps/mobile" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Start dev server (Metro)",
+      "detail": "For a development build on a device/emulator. Keep it running; press r to reload.",
+      "type": "shell",
+      "command": "npx expo start",
+      "options": { "cwd": "${workspaceFolder}/apps/mobile" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Start web preview",
+      "detail": "Browser preview at http://localhost:8081 (development only).",
+      "type": "shell",
+      "command": "npx expo start --web",
+      "options": { "cwd": "${workspaceFolder}/apps/mobile" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: start emulator",
+      "detail": "Boots an Android Virtual Device from Android Studio.",
+      "type": "shell",
+      "command": "& \"${env:ANDROID_HOME}/emulator/emulator.exe\" -avd ${input:androidAvd}",
+      "options": {
+        "shell": { "executable": "powershell.exe", "args": ["-NoProfile", "-Command"] }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: build & run (local)",
+      "detail": "Native development build with Gradle, installed on the running emulator/device; starts Metro. First build ~15 min, later builds are incremental. Windows: needs long paths + SDK CMake 3.31.6 (see README).",
+      "type": "shell",
+      "command": "npx expo run:android",
+      "options": { "cwd": "${workspaceFolder}/apps/mobile" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: build release APK (local)",
+      "detail": "Release build for testing on devices. Signed with the debug key — not for store upload.",
+      "type": "shell",
+      "command": "npx expo run:android --variant release --no-bundler",
+      "options": { "cwd": "${workspaceFolder}/apps/mobile" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: regenerate native project",
+      "detail": "Clean prebuild of apps/mobile/android after changing app.config.ts or native dependencies.",
+      "type": "shell",
+      "command": "npx expo prebuild --platform android --clean",
+      "options": { "cwd": "${workspaceFolder}/apps/mobile" },
+      "problemMatcher": []
+    },
+    {
+      "label": "EAS: development build (cloud)",
+      "detail": "Cloud build via EAS. Requires an Expo account and an initialised EAS project (DEVELOPMENT_PLAN Q-16). iOS builds are only possible this way on Windows.",
+      "type": "shell",
+      "command": "npx eas-cli@latest build --profile development --platform ${input:platform}",
+      "options": { "cwd": "${workspaceFolder}/apps/mobile" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "EAS: preview build (cloud)",
+      "detail": "Internal-distribution build for testers (APP_ENV=preview).",
+      "type": "shell",
+      "command": "npx eas-cli@latest build --profile preview --platform ${input:platform}",
+      "options": { "cwd": "${workspaceFolder}/apps/mobile" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Export JS bundles (Android, iOS, web)",
+      "detail": "Bundles all platforms without native compilation (same check as CI).",
+      "type": "shell",
+      "command": "npx expo export --platform all --output-dir dist",
+      "options": { "cwd": "${workspaceFolder}/apps/mobile" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Expo doctor",
+      "detail": "Checks dependency versions and app config against the Expo SDK.",
+      "type": "shell",
+      "command": "npx expo-doctor",
+      "options": { "cwd": "${workspaceFolder}/apps/mobile" },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "androidAvd",
+      "type": "promptString",
+      "description": "Android Virtual Device name (list them with: emulator -list-avds)",
+      "default": "Pixel_3a_API_34_extension_level_7_x86_64"
+    },
+    {
+      "id": "platform",
+      "type": "pickString",
+      "description": "Target platform",
+      "options": ["android", "ios"],
+      "default": "android"
+    }
+  ]
+}

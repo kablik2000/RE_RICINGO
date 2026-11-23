@@ -41,3 +41,7 @@ export {
   type ErrorStateProps,
   type StateAction,
 } from './components/state-views';
+export { Card, type CardProps } from './components/card';
+export { Chip, type ChipProps } from './components/chip';
+export { Disclosure, type DisclosureProps } from './components/disclosure';
+export { ProgressBar, type ProgressBarProps } from './components/progress-bar';

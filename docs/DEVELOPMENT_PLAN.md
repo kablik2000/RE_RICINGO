@@ -2,7 +2,7 @@
 
 > Central tracking document. Update it before starting, while doing, and after finishing every task.
 > Legend: `[x]` done · `[ ] ⏳` in progress · `[ ]` pending · `[ ] ⛔` blocked
-> Last updated: 2026-11-22 (M1 foundation)
+> Last updated: 2026-11-22 (M1 foundation + demo lesson)
 
 ---
 
@@ -48,7 +48,9 @@ Dependency policy: every added dependency is listed below with a reason; Expo pa
 | react-native-reanimated, react-native-worklets, react-native-gesture-handler                                                                               | mobile                      | Template defaults kept for planned motion/gesture work (ADR-0007); first use in M4/M5 |
 | react-dom, react-native-web                                                                                                                                | mobile                      | Web target for development previews only (Q-4)                                        |
 | expo-dev-client                                                                                                                                            | mobile                      | Development builds instead of Expo Go (ADR-0001)                                      |
-| zod                                                                                                                                                        | mobile                      | Runtime validation of config now; content/API schemas later (ADR-0007)                |
+| zod                                                                                                                                                        | mobile, domain              | Runtime validation of config and content bundles (ADR-0007)                           |
+| @tanstack/react-query                                                                                                                                      | mobile                      | Async/server state for repositories (ADR-0007)                                        |
+| expo-speech                                                                                                                                                | mobile                      | DEMO pronunciation via device text-to-speech until real audio exists (Q-3)            |
 | jest, jest-expo, @testing-library/react-native, @types/jest                                                                                                | mobile, design-system (dev) | Unit/component testing                                                                |
 | eslint, eslint-config-expo, typescript-eslint, eslint-config-prettier, prettier, typescript                                                                | root (dev)                  | Code quality tooling                                                                  |
 
@@ -106,6 +108,26 @@ Spec phases (§11 of the specification) map to milestones:
 - [ ] ⛔ Crash-reporting provider (Sentry proposed, Q-9) — telemetry port exists with console adapter only.
 - [ ] `ListItem` and `AudioButton` components — deferred to M4, when a screen first needs them.
 
+### Demo — "Al bar" vertical slice (pre-M2, requested 2026-11-22)
+
+A runnable demo of the core learning experience on bundled content, built on the real
+architecture (domain schemas, repository interface, query layer) so it is reused, not thrown away.
+
+- [x] `packages/domain`: lesson-bundle zod schema (lesson → turns → sentences → segments with layered explanation; grammar topics; lexemes), semantic validator (unique IDs, references, segment order), reading-order and vocabulary queries + tests.
+- [x] Demo lesson "Al bar" (`apps/mobile/src/data/demo/al-bar.lesson.json`): 7 turns, 12 sentences, 7 grammar topics, 21 lexemes. **Explanations drafted by the developer — need lecturer review.**
+- [x] Data layer: `LessonRepository` interface, bundled (demo) implementation validated with the domain validator, TanStack Query hooks and provider.
+- [x] Screens: lesson list, lesson intro, sentence-by-sentence walkthrough with layered analysis, full dialogue with translation toggle, vocabulary with "where I met this word".
+- [x] Pronunciation via device text-to-speech (normal + slow) behind a `SpeechPlayer` interface — DEMO, replaced by recorded audio in M3.
+- [x] Design system: Card, Chip, Disclosure, ProgressBar; `Screen.safeAreaTop`.
+- [x] Integration test of the full lesson flow (list → intro → 12 sentences → dialogue).
+- [x] VS Code `tasks.json`: install, verify, start Metro/web, start emulator, Android local build & run, release APK, prebuild, EAS cloud builds, bundle export, expo-doctor.
+- [x] Provisional application ID `com.ricingo.mobile` (+ `.dev`/`.preview`) for local builds — to be confirmed (Q-16).
+- [x] Runs on Android (emulator, Expo Go SDK 58): lesson list, intro and walkthrough checked; speech plays (emulator has no Italian voice, falls back to English).
+- [x] pnpm switched to `nodeLinker: hoisted` (native builds on Windows loop with pnpm's symlinked layout).
+- [x] Repository moved to `C:\dev\ricingo` (2026-11-22, copy; old folder left for the owner to delete). Reanimated now compiles.
+- [x] Config plugin `plugins/with-android-cmake.js`: on Windows points Gradle at an SDK CMake whose ninja supports long paths (≥ 1.12) via `android/local.properties`. Windows long paths are already enabled on the dev PC.
+- [x] CMake 3.31.6 (ninja 1.12.1) installed into the Android SDK from Google's SDK repository (SHA-1 verified); native Android development build `com.ricingo.mobile.dev` built and running on the emulator (2026-11-22).
+
 ### M2 — Backend foundation
 
 - [ ] ⛔ Docker on the development machine (required by the Supabase CLI for the local stack).
@@ -125,13 +147,14 @@ Spec phases (§11 of the specification) map to milestones:
 
 ### M3 — Content pipeline
 
-- [ ] Domain model + zod schemas (lesson, turn, sentence, segment, layers, lexeme, grammar topic).
+- [x] Domain model + zod schemas (lesson, turn, sentence, segment, layers, lexeme, grammar topic) — done in the demo slice.
+- [x] Content validator (IDs, references, segment order) — done in the demo slice.
 - [ ] Exercise type registry interface + schema/evaluator for first types.
 - [ ] Answer normalization rules (Italian apostrophes, accents, punctuation) + tests.
 - [ ] Content-as-code format in `content/` + validator CLI.
 - [ ] Compiler → lesson bundle; publish to Supabase (new immutable version).
 - [ ] Audio pipeline (blocked on Q-3): naming, hashing, upload, normal + slow variants.
-- [ ] Author lesson "Al bar" (8 exchanges) with lecturer — reference content.
+- [ ] Author lesson "Al bar" (8 exchanges) with lecturer — reference content. A developer-drafted 4-exchange demo version exists and needs review/extension.
 
 ### M4 — Core learning experience
 
@@ -191,14 +214,21 @@ Tasks to be broken down when M9 is near completion (see roadmap).
 
 |                 |                                                                                               |
 | --------------- | --------------------------------------------------------------------------------------------- |
-| **Completed**   | M0 analysis; M1 foundation except the blocked items below                                     |
+| **Completed**   | M0 analysis; M1 foundation except the blocked items below; demo lesson slice                  |
 | **In progress** | —                                                                                             |
 | **Pending**     | M2 backend foundation                                                                         |
 | **Blocked**     | EAS project + device builds (Q-16); brand assets (Q-10); crash reporting (Q-9); Docker for M2 |
 
 ## F. Known issues and technical debt
 
-- **Native builds not yet run.** Verified so far: TypeScript, lint, 65 unit/component/route tests, Android/iOS/web JS bundles, web preview. No development build on a device or simulator yet (needs EAS project, Q-16).
+- **Demo content is not lecturer-reviewed.** Italian sentences follow the spec's example; Czech explanations are developer drafts (spec §8 requires lecturer approval).
+- **Demo audio is device text-to-speech** (quality depends on the device's Italian voice); real audio is open question Q-3.
+- **Lessons are bundled with the app** (`createBundledLessonRepository`) until the M2 backend exists.
+- **Application ID is provisional** (`com.ricingo.mobile`); it cannot change after store publishing (Q-16).
+- iOS has not been built (requires EAS cloud build or a Mac).
+- Local Android builds fail inside the AI assistant's sandbox (Java cannot open its loopback socket); run them from a normal terminal or VS Code task.
+- **Native Android builds on Windows need long-path support**: generated C++ object paths of React Native libraries exceed 260 characters. Requires Windows long paths (enabled on the dev PC) and an SDK CMake with ninja ≥ 1.12, selected by `plugins/with-android-cmake.js`. Builds are local only (owner decision 2026-11-22: no EAS cloud builds).
+- The Android emulator has no Italian text-to-speech voice installed; demo pronunciation falls back to English there.
 - Docker is not installed on the development machine; local Supabase (M2) needs it.
 - pnpm pinned to 10.34: pnpm 12 cannot run through the corepack shipped with Node 22 (corepack 0.32). Revisit when upgrading Node/corepack.
 - `eslint-plugin-react` cannot auto-detect the React version under ESLint 10 → version pinned in `eslint.config.mjs` (keep in sync with `react`).

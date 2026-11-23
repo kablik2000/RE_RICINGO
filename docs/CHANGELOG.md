@@ -6,6 +6,18 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-22 — **Demo: "Al bar" lesson slice.**
+  - `packages/domain`: lesson-bundle schema (zod) with layered explanations, grammar topics and
+    lexemes; semantic content validator; reading-order and vocabulary queries.
+  - Demo lesson "Al bar" bundled with the app (12 sentences, developer-drafted explanations
+    pending lecturer review).
+  - Data layer: `LessonRepository` with a bundled demo implementation, TanStack Query hooks.
+  - Screens: lesson list and intro, sentence-by-sentence analysis, full dialogue, vocabulary.
+  - Pronunciation through device text-to-speech (demo, normal + slow speed).
+  - Design system: Card, Chip, Disclosure, ProgressBar.
+  - VS Code `tasks.json` for verifying, running (Metro, web, emulator) and building (local
+    Android, EAS cloud).
+  - Provisional application ID `com.ricingo.mobile` for local builds.
 - 2026-11-22 — **M1 Foundation.**
   - pnpm workspace (`apps/*`, `packages/*`), Node 22, strict shared TypeScript config.
   - `apps/mobile`: Expo SDK 58 / React Native 0.88 app with Expo Router, development-client
@@ -24,6 +36,8 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
   ADRs 0001–0007 in `docs/DECISIONS/`, `README.md`.
 
 ### Changed
+
+- 2026-11-22 — Repository moved to `C:\dev\ricingo`; pnpm uses a hoisted `node_modules`; config plugin selects a long-path-capable CMake for local Android builds on Windows; lesson routes no longer depend on generated typed-route definitions.
 
 - 2026-11-22 — ADRs 0001–0005 and 0007 accepted by the product owner. ADR-0006 (Teacher Studio
   platform) remains open.

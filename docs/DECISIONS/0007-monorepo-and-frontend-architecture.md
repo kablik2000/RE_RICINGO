@@ -52,3 +52,6 @@ Clarifications made while implementing; the decision itself is unchanged.
   workspace is simpler and needs no publishing of presets.
 - pnpm is pinned to 10.x: pnpm 12 does not run through the corepack bundled with Node 22.
 - Tests are colocated with source files (Expo's recommended project structure).
+- pnpm uses `nodeLinker: hoisted` (plain `node_modules`): with the default isolated (symlinked)
+  layout, native Android builds on Windows fail (CMake/ninja "build.ninja still dirty", overlong
+  paths). This follows Expo's monorepo guidance for native build errors.

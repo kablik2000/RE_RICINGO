@@ -13,6 +13,8 @@ export interface ScreenProps {
   subtitle?: string;
   /** Scrollable content (default) or a fixed, full-height layout (e.g. centred state views). */
   scrollable?: boolean;
+  /** Set to false under a native header, which already covers the top safe area. */
+  safeAreaTop?: boolean;
   testID?: string;
 }
 
@@ -20,11 +22,18 @@ export interface ScreenProps {
  * Root container of every screen: background, safe-area insets, consistent padding and a readable
  * maximum content width.
  */
-export function Screen({ children, title, subtitle, scrollable = true, testID }: ScreenProps) {
+export function Screen({
+  children,
+  title,
+  subtitle,
+  scrollable = true,
+  safeAreaTop = true,
+  testID,
+}: ScreenProps) {
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const insetStyle = {
-    paddingTop: insets.top,
+    paddingTop: safeAreaTop ? insets.top : 0,
     paddingBottom: insets.bottom,
     paddingLeft: insets.left,
     paddingRight: insets.right,

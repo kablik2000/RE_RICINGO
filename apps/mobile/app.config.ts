@@ -36,6 +36,19 @@ const APP_NAMES: Readonly<Record<AppEnv, string>> = {
   production: 'RICINGO',
 };
 
+/**
+ * PROVISIONAL application identifier — must be confirmed with the account owner before the first
+ * store or EAS build, because it cannot change after publishing (DEVELOPMENT_PLAN Q-16).
+ * Non-production variants get a suffix so they can be installed next to the production app.
+ */
+const BASE_APP_ID = 'com.ricingo.mobile';
+const APP_ID_SUFFIXES: Readonly<Record<AppEnv, string>> = {
+  development: '.dev',
+  preview: '.preview',
+  production: '',
+};
+const appId = `${BASE_APP_ID}${APP_ID_SUFFIXES[appEnv]}`;
+
 /** Provisional brand red (see packages/design-system palette, open question Q-10). */
 const SPLASH_BACKGROUND = '#B3122E';
 
@@ -47,13 +60,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: 'portrait',
   scheme: 'ricingo',
   userInterfaceStyle: 'automatic',
-  // Bundle identifiers are set when the EAS project is created (blocked on Q-16: account ownership).
   icon: './assets/images/icon.png',
   ios: {
+    bundleIdentifier: appId,
     icon: './assets/expo.icon',
     supportsTablet: true,
   },
   android: {
+    package: appId,
     adaptiveIcon: {
       backgroundColor: '#FFFFFF',
       foregroundImage: './assets/images/android-icon-foreground.png',
@@ -69,6 +83,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     'expo-router',
+    // Windows: native Android builds need a CMake whose ninja supports long paths.
+    './plugins/with-android-cmake',
     [
       'expo-splash-screen',
       {

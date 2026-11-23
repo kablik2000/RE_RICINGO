@@ -12,6 +12,7 @@ export default function StudentTabsLayout() {
     <NativeTabs
       tintColor={colors.primary}
       backgroundColor={colors.surface}
+      indicatorColor={colors.primaryContainer}
       labelStyle={{ color: colors.onSurfaceVariant }}>
       {studentTabs.map((tab) => (
         <NativeTabs.Trigger key={tab.name} name={tab.name}>

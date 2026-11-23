@@ -1,0 +1,596 @@
+{
+  "contentSchemaVersion": 1,
+  "lesson": {
+    "id": "al-bar",
+    "version": 1,
+    "level": "A1",
+    "titleItalian": "Al bar",
+    "titleCzech": "V kavárně",
+    "goal": "Objednat si kávu a něco k jídlu, zeptat se na cenu a zaplatit.",
+    "speakers": [
+      { "id": "barista", "label": "Barista" },
+      { "id": "customer", "label": "Zákazník" }
+    ],
+    "turns": [
+      {
+        "id": "turn-1",
+        "speakerId": "barista",
+        "sentences": [
+          {
+            "id": "buongiorno-barista",
+            "italian": "Buongiorno!",
+            "czech": "Dobrý den!",
+            "segments": [
+              {
+                "id": "buongiorno-barista-greeting",
+                "text": "Buongiorno",
+                "annotation": "pozdrav",
+                "explanation": {
+                  "meaning": "Dobrý den.",
+                  "grammar": "Vzniklo spojením buon (dobrý) + giorno (den) a píše se dohromady.",
+                  "depth": "Buongiorno se říká zhruba do odpoledne, potom se zdraví buonasera."
+                },
+                "lexemeIds": ["buongiorno"],
+                "grammarTopicIds": ["greetings"]
+              }
+            ]
+          },
+          {
+            "id": "cosa-desidera",
+            "italian": "Cosa desidera?",
+            "czech": "Co si přejete?",
+            "segments": [
+              {
+                "id": "cosa-desidera-cosa",
+                "text": "Cosa",
+                "annotation": "tázací zájmeno",
+                "explanation": {
+                  "meaning": "co",
+                  "grammar": "Uvozuje otázku. Slovosled se nemění, otázku poznáme podle intonace a otazníku.",
+                  "depth": "Hovorově se ptáme také Che cosa…? nebo jen Che…?"
+                },
+                "lexemeIds": ["cosa"]
+              },
+              {
+                "id": "cosa-desidera-desidera",
+                "text": "desidera",
+                "annotation": "desiderare · presente · 3. os. j. č.",
+                "explanation": {
+                  "meaning": "(vy) si přejete",
+                  "grammar": "Pro vykání používá italština 3. osobu jednotného čísla (zdvořilé Lei). Doslova „přeje si“, ale znamená „přejete si“.",
+                  "depth": "Zájmeno Lei se nevyslovuje – italština ho stejně jako čeština běžně vynechává. Kamarádovi bychom tykali: Cosa desideri?"
+                },
+                "lexemeIds": ["desiderare"],
+                "grammarTopicIds": ["formal-lei"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "turn-2",
+        "speakerId": "customer",
+        "sentences": [
+          {
+            "id": "buongiorno-customer",
+            "italian": "Buongiorno.",
+            "czech": "Dobrý den.",
+            "segments": [
+              {
+                "id": "buongiorno-customer-greeting",
+                "text": "Buongiorno",
+                "annotation": "pozdrav",
+                "explanation": {
+                  "meaning": "Dobrý den – odpověď na pozdrav stejným slovem."
+                },
+                "lexemeIds": ["buongiorno"],
+                "grammarTopicIds": ["greetings"]
+              }
+            ]
+          },
+          {
+            "id": "vorrei-cappuccino-pizza",
+            "italian": "Vorrei un cappuccino e una pizza.",
+            "czech": "Dal bych si cappuccino a pizzu.",
+            "segments": [
+              {
+                "id": "vorrei-cappuccino-pizza-vorrei",
+                "text": "Vorrei",
+                "annotation": "volere · condizionale presente · 1. os. j. č.",
+                "explanation": {
+                  "meaning": "chtěl / chtěla bych",
+                  "grammar": "Infinitiv je volere (chtít). Tvar vorrei je podmiňovací způsob (condizionale presente) v 1. osobě jednotného čísla.",
+                  "depth": "Při objednávání zní vorrei zdvořileji než přímé voglio (chci) – podobně jako české „dal bych si“ místo „chci“."
+                },
+                "lexemeIds": ["volere"],
+                "grammarTopicIds": ["conditional-vorrei"]
+              },
+              {
+                "id": "vorrei-cappuccino-pizza-un-cappuccino",
+                "text": "un cappuccino",
+                "annotation": "neurčitý člen + podst. jm. · m. r., j. č.",
+                "explanation": {
+                  "meaning": "(jedno) cappuccino",
+                  "grammar": "Cappuccino je podstatné jméno mužského rodu v jednotném čísle, proto má neurčitý člen un.",
+                  "depth": "Una by patřilo k ženskému rodu. Slova mužského rodu začínající na s + souhlásku nebo na z mají člen uno (uno studente)."
+                },
+                "lexemeIds": ["cappuccino"],
+                "grammarTopicIds": ["indefinite-article"]
+              },
+              {
+                "id": "vorrei-cappuccino-pizza-e",
+                "text": "e",
+                "annotation": "spojka",
+                "explanation": {
+                  "meaning": "a",
+                  "grammar": "Spojuje dvě položky objednávky.",
+                  "depth": "Pozor na přízvuk: e (a) je spojka, è (je) je tvar slovesa essere."
+                },
+                "lexemeIds": ["e"]
+              },
+              {
+                "id": "vorrei-cappuccino-pizza-una-pizza",
+                "text": "una pizza",
+                "annotation": "neurčitý člen + podst. jm. · ž. r., j. č.",
+                "explanation": {
+                  "meaning": "(jednu) pizzu",
+                  "grammar": "Pizza je podstatné jméno ženského rodu v jednotném čísle, proto má neurčitý člen una.",
+                  "depth": "Většina podstatných jmen zakončených na -a je ženského rodu. Před samohláskou se una zkracuje: un'aranciata."
+                },
+                "lexemeIds": ["pizza"],
+                "grammarTopicIds": ["indefinite-article"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "turn-3",
+        "speakerId": "barista",
+        "sentences": [
+          {
+            "id": "certo",
+            "italian": "Certo.",
+            "czech": "Jistě.",
+            "segments": [
+              {
+                "id": "certo-certo",
+                "text": "Certo",
+                "annotation": "příslovce",
+                "explanation": {
+                  "meaning": "jistě, samozřejmě",
+                  "grammar": "Krátká souhlasná odpověď, velmi častá v obchodech a restauracích."
+                },
+                "lexemeIds": ["certo"]
+              }
+            ]
+          },
+          {
+            "id": "al-banco-o-al-tavolo",
+            "italian": "Al banco o al tavolo?",
+            "czech": "U baru, nebo ke stolu?",
+            "segments": [
+              {
+                "id": "al-banco-o-al-tavolo-al-banco",
+                "text": "Al banco",
+                "annotation": "a + il · předložka se členem",
+                "explanation": {
+                  "meaning": "u baru (u pultu)",
+                  "grammar": "Al vzniklo spojením předložky a a určitého členu il: a + il = al. Banco je podstatné jméno mužského rodu.",
+                  "depth": "V italském baru se káva často pije ve stoje u pultu. U stolu bývá dražší, protože se připočítává obsluha."
+                },
+                "lexemeIds": ["banco"],
+                "grammarTopicIds": ["articulated-prepositions"]
+              },
+              {
+                "id": "al-banco-o-al-tavolo-o",
+                "text": "o",
+                "annotation": "spojka",
+                "explanation": {
+                  "meaning": "nebo",
+                  "grammar": "Nabízí výběr ze dvou možností."
+                },
+                "lexemeIds": ["o"]
+              },
+              {
+                "id": "al-banco-o-al-tavolo-al-tavolo",
+                "text": "al tavolo",
+                "annotation": "a + il · předložka se členem",
+                "explanation": {
+                  "meaning": "ke stolu, u stolu",
+                  "grammar": "Opět a + il = al. Tavolo (stůl) je podstatné jméno mužského rodu."
+                },
+                "lexemeIds": ["tavolo"],
+                "grammarTopicIds": ["articulated-prepositions"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "turn-4",
+        "speakerId": "customer",
+        "sentences": [
+          {
+            "id": "al-banco-grazie",
+            "italian": "Al banco, grazie.",
+            "czech": "U baru, děkuji.",
+            "segments": [
+              {
+                "id": "al-banco-grazie-al-banco",
+                "text": "Al banco",
+                "annotation": "a + il · předložka se členem",
+                "explanation": {
+                  "meaning": "u baru",
+                  "grammar": "Odpověď zopakuje výraz z otázky: a + il = al."
+                },
+                "lexemeIds": ["banco"],
+                "grammarTopicIds": ["articulated-prepositions"]
+              },
+              {
+                "id": "al-banco-grazie-grazie",
+                "text": "grazie",
+                "annotation": "citoslovce",
+                "explanation": {
+                  "meaning": "děkuji",
+                  "grammar": "Nejběžnější poděkování.",
+                  "depth": "Zesílené poděkování: grazie mille (děkuji mockrát)."
+                },
+                "lexemeIds": ["grazie"]
+              }
+            ]
+          },
+          {
+            "id": "quant-e",
+            "italian": "Quant'è?",
+            "czech": "Kolik to dělá?",
+            "segments": [
+              {
+                "id": "quant-e-quanto",
+                "text": "Quant'",
+                "annotation": "quanto · elize",
+                "explanation": {
+                  "meaning": "kolik",
+                  "grammar": "Quanto znamená kolik. Před è ztrácí koncovou samohlásku a místo ní píšeme apostrof (elize): quanto + è = quant'è."
+                },
+                "lexemeIds": ["quanto"]
+              },
+              {
+                "id": "quant-e-e",
+                "text": "è",
+                "annotation": "essere · presente · 3. os. j. č.",
+                "explanation": {
+                  "meaning": "je",
+                  "grammar": "Tvar slovesa essere (být). Doslova „Kolik je?“ – ustálená otázka na cenu při placení.",
+                  "depth": "Přízvuk je důležitý: è (je) se liší od spojky e (a)."
+                },
+                "lexemeIds": ["essere"],
+                "grammarTopicIds": ["essere-present"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "turn-5",
+        "speakerId": "barista",
+        "sentences": [
+          {
+            "id": "sono-sei-euro",
+            "italian": "Sono sei euro e cinquanta.",
+            "czech": "Dělá to šest eur padesát.",
+            "segments": [
+              {
+                "id": "sono-sei-euro-sono",
+                "text": "Sono",
+                "annotation": "essere · presente · 3. os. mn. č.",
+                "explanation": {
+                  "meaning": "jsou (dělá to)",
+                  "grammar": "Sloveso je v množném čísle, protože se shoduje s částkou sei euro (šest eur).",
+                  "depth": "Česky řekneme „dělá to“ v jednotném čísle, italština ale sloveso přizpůsobí množnému číslu. U jednoho eura: È un euro."
+                },
+                "lexemeIds": ["essere"],
+                "grammarTopicIds": ["essere-present"]
+              },
+              {
+                "id": "sono-sei-euro-sei-euro",
+                "text": "sei euro",
+                "annotation": "číslovka + podst. jm. · m. r., mn. č.",
+                "explanation": {
+                  "meaning": "šest eur",
+                  "grammar": "Euro se v množném čísle nemění: un euro, sei euro.",
+                  "depth": "Sei je zároveň tvar slovesa essere (tu sei = ty jsi). Význam poznáme z kontextu."
+                },
+                "lexemeIds": ["sei", "euro"]
+              },
+              {
+                "id": "sono-sei-euro-e-cinquanta",
+                "text": "e cinquanta",
+                "annotation": "spojka + číslovka",
+                "explanation": {
+                  "meaning": "a padesát (centů)",
+                  "grammar": "Centy se obvykle připojují jen spojkou e, bez slova centesimi."
+                },
+                "lexemeIds": ["e", "cinquanta"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "turn-6",
+        "speakerId": "customer",
+        "sentences": [
+          {
+            "id": "ecco-a-lei",
+            "italian": "Ecco a Lei.",
+            "czech": "Tady máte.",
+            "segments": [
+              {
+                "id": "ecco-a-lei-ecco",
+                "text": "Ecco",
+                "annotation": "ukazovací výraz",
+                "explanation": {
+                  "meaning": "tady je, tady máte",
+                  "grammar": "Ecco uvádí to, co právě podáváme nebo ukazujeme.",
+                  "depth": "Ecco il caffè! = Tady je káva!"
+                },
+                "lexemeIds": ["ecco"]
+              },
+              {
+                "id": "ecco-a-lei-a-lei",
+                "text": "a Lei",
+                "annotation": "předložka + zdvořilé zájmeno",
+                "explanation": {
+                  "meaning": "vám",
+                  "grammar": "A Lei = vám (vykání). Předložka a zde odpovídá českému 3. pádu."
+                },
+                "grammarTopicIds": ["formal-lei"]
+              }
+            ]
+          },
+          {
+            "id": "grazie-buona-giornata",
+            "italian": "Grazie, buona giornata!",
+            "czech": "Děkuji, hezký den!",
+            "segments": [
+              {
+                "id": "grazie-buona-giornata-grazie",
+                "text": "Grazie",
+                "annotation": "citoslovce",
+                "explanation": {
+                  "meaning": "děkuji"
+                },
+                "lexemeIds": ["grazie"]
+              },
+              {
+                "id": "grazie-buona-giornata-buona-giornata",
+                "text": "buona giornata",
+                "annotation": "příd. jm. + podst. jm. · ž. r., j. č.",
+                "explanation": {
+                  "meaning": "hezký den",
+                  "grammar": "Giornata je ženského rodu, proto má přídavné jméno buono tvar buona.",
+                  "depth": "Buona giornata se říká při loučení. Giornata je den v jeho průběhu, giorno den jako kalendářní jednotka."
+                },
+                "lexemeIds": ["buono", "giornata"],
+                "grammarTopicIds": ["adjective-agreement"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "turn-7",
+        "speakerId": "barista",
+        "sentences": [
+          {
+            "id": "grazie-a-lei-arrivederci",
+            "italian": "Grazie a Lei, arrivederci!",
+            "czech": "Já děkuji, na shledanou!",
+            "segments": [
+              {
+                "id": "grazie-a-lei-arrivederci-grazie-a-lei",
+                "text": "Grazie a Lei",
+                "annotation": "poděkování + zdvořilé zájmeno",
+                "explanation": {
+                  "meaning": "já děkuji vám",
+                  "grammar": "Odpověď na poděkování. Zdvořilé Lei zdůrazňuje, že děkuje i druhá strana."
+                },
+                "lexemeIds": ["grazie"],
+                "grammarTopicIds": ["formal-lei"]
+              },
+              {
+                "id": "grazie-a-lei-arrivederci-arrivederci",
+                "text": "arrivederci",
+                "annotation": "pozdrav",
+                "explanation": {
+                  "meaning": "na shledanou",
+                  "grammar": "Formální rozloučení. Mezi přáteli stačí ciao."
+                },
+                "lexemeIds": ["arrivederci"],
+                "grammarTopicIds": ["greetings"]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "grammarTopics": [
+    {
+      "id": "greetings",
+      "title": "Pozdravy během dne",
+      "summary": "Buongiorno se říká zhruba do odpoledne, buonasera odpoledne a večer. Při loučení zdvořile arrivederci, mezi přáteli ciao."
+    },
+    {
+      "id": "formal-lei",
+      "title": "Vykání (Lei)",
+      "summary": "Italština vyká zájmenem Lei a slovesem ve 3. osobě jednotného čísla: Cosa desidera? = Co si přejete? V psaném textu se Lei často píše s velkým L."
+    },
+    {
+      "id": "conditional-vorrei",
+      "title": "Vorrei – zdvořilá žádost",
+      "summary": "Vorrei je podmiňovací způsob (condizionale presente) slovesa volere. Odpovídá českému „chtěl/a bych“ a je zdvořilejší než přímé voglio (chci)."
+    },
+    {
+      "id": "indefinite-article",
+      "title": "Neurčitý člen",
+      "summary": "Rod podstatného jména určuje člen: un pro mužský rod (un cappuccino), una pro ženský rod (una pizza). Před samohláskou se una zkracuje na un', mužský rod před s + souhláskou a z má uno."
+    },
+    {
+      "id": "articulated-prepositions",
+      "title": "Předložka + člen (al, alla…)",
+      "summary": "Předložky se v italštině spojují se členem: a + il = al (al banco), a + la = alla (alla cassa). Stejně se chovají předložky di, da, in a su."
+    },
+    {
+      "id": "essere-present",
+      "title": "Sloveso essere (být)",
+      "summary": "Nepravidelné sloveso: sono, sei, è, siamo, siete, sono. Pozor na rozdíl: è (je) s přízvukem je sloveso, e (a) je spojka."
+    },
+    {
+      "id": "adjective-agreement",
+      "title": "Shoda přídavného jména",
+      "summary": "Přídavné jméno se shoduje s podstatným jménem v rodě i čísle: buono → buona giornata. Před podstatným jménem mužského rodu se buono zkracuje na buon (buon viaggio)."
+    }
+  ],
+  "lexemes": [
+    {
+      "id": "buongiorno",
+      "lemma": "buongiorno",
+      "translation": "dobrý den",
+      "partOfSpeech": "interjection"
+    },
+    {
+      "id": "arrivederci",
+      "lemma": "arrivederci",
+      "translation": "na shledanou",
+      "partOfSpeech": "interjection"
+    },
+    {
+      "id": "cosa",
+      "lemma": "cosa",
+      "translation": "co",
+      "partOfSpeech": "pronoun",
+      "note": "Tázací zájmeno; hovorově také che cosa nebo jen che."
+    },
+    {
+      "id": "desiderare",
+      "lemma": "desiderare",
+      "translation": "přát si",
+      "partOfSpeech": "verb"
+    },
+    {
+      "id": "volere",
+      "lemma": "volere",
+      "translation": "chtít",
+      "partOfSpeech": "verb",
+      "note": "Nepravidelné sloveso: voglio, vuoi, vuole…; zdvořile vorrei."
+    },
+    {
+      "id": "cappuccino",
+      "lemma": "cappuccino",
+      "translation": "cappuccino",
+      "partOfSpeech": "noun",
+      "gender": "masculine"
+    },
+    {
+      "id": "pizza",
+      "lemma": "pizza",
+      "translation": "pizza",
+      "partOfSpeech": "noun",
+      "gender": "feminine"
+    },
+    {
+      "id": "e",
+      "lemma": "e",
+      "translation": "a",
+      "partOfSpeech": "conjunction"
+    },
+    {
+      "id": "o",
+      "lemma": "o",
+      "translation": "nebo",
+      "partOfSpeech": "conjunction"
+    },
+    {
+      "id": "certo",
+      "lemma": "certo",
+      "translation": "jistě, samozřejmě",
+      "partOfSpeech": "adverb"
+    },
+    {
+      "id": "banco",
+      "lemma": "banco",
+      "translation": "pult, bar",
+      "partOfSpeech": "noun",
+      "gender": "masculine",
+      "note": "Al banco = u baru, ve stoje."
+    },
+    {
+      "id": "tavolo",
+      "lemma": "tavolo",
+      "translation": "stůl",
+      "partOfSpeech": "noun",
+      "gender": "masculine"
+    },
+    {
+      "id": "grazie",
+      "lemma": "grazie",
+      "translation": "děkuji",
+      "partOfSpeech": "interjection"
+    },
+    {
+      "id": "quanto",
+      "lemma": "quanto",
+      "translation": "kolik",
+      "partOfSpeech": "adverb"
+    },
+    {
+      "id": "essere",
+      "lemma": "essere",
+      "translation": "být",
+      "partOfSpeech": "verb",
+      "note": "Nepravidelné sloveso: sono, sei, è, siamo, siete, sono."
+    },
+    {
+      "id": "sei",
+      "lemma": "sei",
+      "translation": "šest",
+      "partOfSpeech": "numeral",
+      "note": "Pozor: sei je také tvar slovesa essere (tu sei = ty jsi)."
+    },
+    {
+      "id": "euro",
+      "lemma": "euro",
+      "translation": "euro",
+      "partOfSpeech": "noun",
+      "gender": "masculine",
+      "note": "V množném čísle se nemění: un euro, due euro."
+    },
+    {
+      "id": "cinquanta",
+      "lemma": "cinquanta",
+      "translation": "padesát",
+      "partOfSpeech": "numeral"
+    },
+    {
+      "id": "ecco",
+      "lemma": "ecco",
+      "translation": "tady je, tady máte",
+      "partOfSpeech": "adverb"
+    },
+    {
+      "id": "buono",
+      "lemma": "buono",
+      "translation": "dobrý",
+      "partOfSpeech": "adjective"
+    },
+    {
+      "id": "giornata",
+      "lemma": "giornata",
+      "translation": "den (v jeho průběhu)",
+      "partOfSpeech": "noun",
+      "gender": "feminine"
+    }
+  ]
+}
