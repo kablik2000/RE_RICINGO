@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { t } from '@/core/i18n';
 
+import { useItalianVoice } from './use-italian-voice';
 import { usePronunciation } from './use-pronunciation';
 
 export interface ListenButtonsProps {
@@ -12,9 +13,19 @@ export interface ListenButtonsProps {
   compact?: boolean;
 }
 
+/**
+ * Pronunciation controls. Hidden while the device has no Italian voice; the screen shows
+ * `ItalianVoiceNotice` once instead.
+ */
+
 export function ListenButtons({ text, compact = false }: ListenButtonsProps) {
   const styles = useThemedStyles(createStyles);
   const player = usePronunciation();
+  const voice = useItalianVoice();
+
+  if (voice.status === 'missing') {
+    return null;
+  }
 
   if (compact) {
     return (

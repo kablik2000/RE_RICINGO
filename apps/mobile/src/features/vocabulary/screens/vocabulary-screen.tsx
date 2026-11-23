@@ -12,7 +12,7 @@ import { StyleSheet, View } from 'react-native';
 import { t } from '@/core/i18n';
 import { QueryView } from '@/core/ui';
 import { useVocabulary, type VocabularyEntry } from '@/data';
-import { ListenButtons } from '@/features/audio';
+import { ItalianVoiceNotice, ListenButtons } from '@/features/audio';
 
 export function VocabularyScreen() {
   const vocabulary = useVocabulary();
@@ -26,9 +26,12 @@ export function VocabularyScreen() {
               message={t('vocabulary.empty.message')}
             />
           ) : (
-            entries.map((entry) => (
-              <VocabularyCard key={`${entry.lessonId}:${entry.lexeme.id}`} entry={entry} />
-            ))
+            <>
+              <ItalianVoiceNotice />
+              {entries.map((entry) => (
+                <VocabularyCard key={`${entry.lessonId}:${entry.lexeme.id}`} entry={entry} />
+              ))}
+            </>
           )
         }
       </QueryView>

@@ -6,7 +6,12 @@ import { StyleSheet, View } from 'react-native';
 import { t } from '@/core/i18n';
 import { QueryView } from '@/core/ui';
 import { useLessonBundle } from '@/data';
-import { ListenButtons, usePronunciation } from '@/features/audio';
+import {
+  ItalianVoiceNotice,
+  ListenButtons,
+  useItalianVoice,
+  usePronunciation,
+} from '@/features/audio';
 
 /** The whole conversation in context (spec §4), with optional translation. */
 export function FullDialogueScreen({ lessonId }: { lessonId: string }) {
@@ -23,6 +28,7 @@ export function FullDialogueScreen({ lessonId }: { lessonId: string }) {
 function Dialogue({ bundle }: { bundle: LessonBundle }) {
   const styles = useThemedStyles(createStyles);
   const player = usePronunciation();
+  const voice = useItalianVoice();
   const [showTranslation, setShowTranslation] = useState(true);
   const { lesson } = bundle;
   const speakers = new Map(lesson.speakers.map((speaker) => [speaker.id, speaker.label]));
@@ -30,14 +36,19 @@ function Dialogue({ bundle }: { bundle: LessonBundle }) {
 
   return (
     <>
+      <ItalianVoiceNotice />
       <View style={styles.toolbar}>
-        <Button
-          variant="tonal"
-          label={`▶ ${t('dialogue.playAll')}`}
-          onPress={() => {
-            player.playSequence(listSentencesInOrder(lesson).map((item) => item.sentence.italian));
-          }}
-        />
+        {voice.status !== 'missing' && (
+          <Button
+            variant="tonal"
+            label={`▶ ${t('dialogue.playAll')}`}
+            onPress={() => {
+              player.playSequence(
+                listSentencesInOrder(lesson).map((item) => item.sentence.italian),
+              );
+            }}
+          />
+        )}
         <Button
           variant="text"
           label={showTranslation ? t('dialogue.hideTranslation') : t('dialogue.showTranslation')}

@@ -1,0 +1,18 @@
+import * as Speech from 'expo-speech';
+
+/** Device text-to-speech in tests: an Italian voice is installed unless a test says otherwise. */
+export const ITALIAN_TEST_VOICE: Speech.Voice = {
+  identifier: 'it-it-test',
+  name: 'Italiano (test)',
+  quality: Speech.VoiceQuality.Default,
+  language: 'it-IT',
+};
+
+jest.mock('expo-speech', () => ({
+  ...jest.requireActual<typeof Speech>('expo-speech'),
+  getAvailableVoicesAsync: jest.fn(),
+}));
+
+beforeEach(() => {
+  jest.mocked(Speech.getAvailableVoicesAsync).mockResolvedValue([ITALIAN_TEST_VOICE]);
+});

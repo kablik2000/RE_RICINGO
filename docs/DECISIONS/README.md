@@ -14,3 +14,4 @@ Status values: **Proposed** (awaiting approval) · **Accepted** · **Superseded 
 | [0005](0005-update-and-release-strategy.md)        | EAS Build/Update, runtime versions, content delivery             | Accepted                          |
 | [0006](0006-teacher-studio-platform.md)            | Teacher Studio platform                                          | **Open — needs product decision** |
 | [0007](0007-monorepo-and-frontend-architecture.md) | Monorepo, feature modules, state, design system                  | Accepted                          |
+| [0008](0008-local-native-modules.md)               | Local Expo native modules for missing device APIs                | Accepted                          |

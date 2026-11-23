@@ -83,6 +83,8 @@ RE_RICINGO/
 │  │  ├─ src/core/               config, errors, i18n catalog, telemetry, app-level UI (providers,
 │  │  │                          error boundary, not-found)
 │  │  ├─ src/testing/            test-only helpers (render with providers)
+│  │  ├─ modules/                local Expo native modules (ADR-0008), e.g. tts-voice-data
+│  │  ├─ plugins/                local config plugins (e.g. Windows CMake for Android builds)
 │  │  ├─ app.config.ts           single source of app configuration (APP_ENV per EAS profile)
 │  │  └─ eas.json                build profiles and update channels
 │  └─ studio/                    Teacher Studio (later milestone; platform decision pending)

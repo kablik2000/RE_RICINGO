@@ -10,6 +10,9 @@ expo-env.d.ts
 # generated native folders (Continuous Native Generation)
 apps/*/ios/
 apps/*/android/
+# build output of local native modules
+apps/*/modules/*/android/build/
+apps/*/modules/*/android/.cxx/
 
 # Native signing material
 .kotlin/

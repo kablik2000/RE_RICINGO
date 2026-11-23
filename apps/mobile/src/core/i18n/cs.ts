@@ -56,6 +56,23 @@ export const cs = {
     playLabel: 'Přehrát výslovnost',
     playSlowLabel: 'Přehrát pomalu',
     sourceNote: 'Výslovnost zatím čte hlas zařízení; nahrávky doplní lektor.',
+    voiceMissing: {
+      title: 'Chybí italský hlas',
+      message:
+        'Zařízení nemá italský hlas pro předčítání, takže by výslovnost zněla špatně. Přehrávání je proto vypnuté, dokud hlas nestáhnete.',
+      androidHint:
+        'Otevře se stahování hlasů – vyberte Italština (Italiano), počkejte na stažení a vraťte se zpět.',
+      androidSteps:
+        'Stáhněte ho v Nastavení → Systém → Jazyky → Převod textu na řeč → nastavení hlasového modulu → Instalovat hlasová data → Italiano.',
+      iosSteps: 'Stáhněte ho v Nastavení → Zpřístupnění → Mluvený obsah → Hlasy → Italština.',
+      webSteps:
+        'Prohlížeč nenabízí italský hlas. Zkuste jiný prohlížeč nebo přidejte italský hlas v nastavení systému.',
+      download: 'Stáhnout italský hlas',
+      recheck: 'Zkontrolovat znovu',
+      checking: 'Kontroluji…',
+      openFailed:
+        'Stahování hlasů se nepodařilo otevřít. Najdete ho v Nastavení → Systém → Jazyky → Převod textu na řeč.',
+    },
   },
   vocabulary: {
     title: 'Slovník',

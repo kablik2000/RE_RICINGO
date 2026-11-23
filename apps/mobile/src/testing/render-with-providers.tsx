@@ -13,6 +13,10 @@ const TEST_SAFE_AREA_METRICS = {
 /** Test-only helper: renders UI with the same providers the app uses (fresh query cache). */
 export function renderWithProviders(ui: ReactElement) {
   const client = createQueryClient();
+  // No garbage-collection timers left running after a test (TanStack Query testing guidance).
+  client.setDefaultOptions({
+    queries: { ...client.getDefaultOptions().queries, gcTime: Infinity },
+  });
   function Providers({ children }: { children: ReactNode }) {
     return (
       <SafeAreaProvider initialMetrics={TEST_SAFE_AREA_METRICS}>

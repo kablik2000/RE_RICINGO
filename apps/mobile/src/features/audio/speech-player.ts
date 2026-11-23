@@ -1,4 +1,5 @@
 import * as Speech from 'expo-speech';
+import { Platform } from 'react-native';
 
 import { toAppError } from '@/core/errors';
 import { telemetry } from '@/core/telemetry';
@@ -16,7 +17,11 @@ export interface SpeechPlayer {
   stop(): void;
 }
 
-const ITALIAN = 'it-IT';
+/**
+ * Android's expo-speech builds a Java locale from the language *subtag* and treats "it-IT" as
+ * ill-formed, silently speaking in the device language instead. iOS and web expect a full tag.
+ */
+export const SPEECH_LANGUAGE = Platform.OS === 'android' ? 'it' : 'it-IT';
 const RATES: Readonly<Record<PlaybackSpeed, number>> = { normal: 0.95, slow: 0.6 };
 
 function report(error: unknown) {
@@ -28,7 +33,7 @@ function restartWith(texts: readonly string[], speed: PlaybackSpeed) {
   Speech.stop()
     .then(() => {
       for (const text of texts) {
-        Speech.speak(text, { language: ITALIAN, rate: RATES[speed], onError: report });
+        Speech.speak(text, { language: SPEECH_LANGUAGE, rate: RATES[speed], onError: report });
       }
     })
     .catch(report);

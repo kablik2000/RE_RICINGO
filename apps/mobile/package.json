@@ -46,6 +46,9 @@
   },
   "jest": {
     "preset": "jest-expo",
-    "restoreMocks": true
+    "restoreMocks": true,
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.ts"
+    ]
   }
 }

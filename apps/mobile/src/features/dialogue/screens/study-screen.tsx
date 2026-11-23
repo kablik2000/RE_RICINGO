@@ -15,7 +15,7 @@ import { StyleSheet, View } from 'react-native';
 import { t } from '@/core/i18n';
 import { QueryView } from '@/core/ui';
 import { useLessonBundle } from '@/data';
-import { ListenButtons } from '@/features/audio';
+import { ItalianVoiceNotice, ListenButtons } from '@/features/audio';
 import { SentenceAnalysis } from '@/features/sentence-analysis';
 
 /** Sentence-by-sentence walkthrough of a lesson dialogue (spec §3 "Průchod tematickým celkem"). */
@@ -65,6 +65,7 @@ function StudyWalkthrough({ bundle }: { bundle: LessonBundle }) {
         </Text>
         <ListenButtons text={current.sentence.italian} />
       </Card>
+      <ItalianVoiceNotice />
 
       <Text variant="title" accessibilityRole="header">
         {t('study.analysis')}

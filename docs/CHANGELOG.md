@@ -4,8 +4,21 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Fixed
+
+- 2026-11-23 — Android demo pronunciation was always English: `expo-speech` turns the tag `it-IT`
+  into an invalid Java locale and falls back to the device language. Android now passes `it`.
+- 2026-11-23 — Jest worker no longer leaks after tests (query cache GC timers disabled in
+  `renderWithProviders`).
+
 ### Added
 
+- 2026-11-23 — **Italian voice check for demo pronunciation.**
+  - When the device has no Italian text-to-speech voice, pronunciation controls are replaced by a
+    notice ("Chybí italský hlas") instead of playing English-accented Italian.
+  - Android: one tap opens the speech engine's voice download; the status is re-checked when the
+    app returns to the foreground or on "Zkontrolovat znovu". iOS/web: where to get the voice.
+  - First local native module `apps/mobile/modules/tts-voice-data` (ADR-0008).
 - 2026-11-22 — **Demo: "Al bar" lesson slice.**
   - `packages/domain`: lesson-bundle schema (zod) with layered explanations, grammar topics and
     lexemes; semantic content validator; reading-order and vocabulary queries.
@@ -36,6 +49,9 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
   ADRs 0001–0007 in `docs/DECISIONS/`, `README.md`.
 
 ### Changed
+
+- 2026-11-23 — Q-3 direction approved: hybrid audio (cloud neural TTS generated at publish time,
+  lecturer review, optional lecturer recordings). Provider still open.
 
 - 2026-11-22 — Repository moved to `C:\dev\ricingo`; pnpm uses a hoisted `node_modules`; config plugin selects a long-path-capable CMake for local Android builds on Windows; lesson routes no longer depend on generated typed-route definitions.
 
