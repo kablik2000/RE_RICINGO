@@ -1,16 +1,19 @@
 """Teacher Studio endpoints `/api/v1/studio/*` (ADR-0011).
 
-No authentication exists yet (M2), so `create_app` registers this blueprint only in the
-`development` and `test` environments.
+Every endpoint needs a signed-in teacher (ADR-0012) and sees only the lessons of the teacher's
+organization; another organization's lesson answers 404, like one that does not exist.
 """
 
+import uuid
 from collections.abc import Callable
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, g, jsonify, request
 from flask.typing import ResponseReturnValue
 from sqlalchemy.orm import Session
 
 from rici_api import lessons
+from rici_api.auth import Teacher
+from rici_api.auth_api import require_teacher
 from rici_api.content import SchemaIssue
 
 SessionFactory = Callable[[], Session]
@@ -44,6 +47,11 @@ def _error(code: str, message: str, status: int, **extra: object) -> ResponseRet
 
 def studio_blueprint(session_factory: SessionFactory) -> Blueprint:
     studio = Blueprint("studio", __name__)
+    studio.before_request(require_teacher(session_factory))
+
+    def organization() -> uuid.UUID:
+        teacher: Teacher = g.teacher
+        return teacher.organization_id
 
     @studio.errorhandler(lessons.LessonNotFoundError)
     def not_found(error: lessons.LessonNotFoundError) -> ResponseReturnValue:
@@ -56,7 +64,7 @@ def studio_blueprint(session_factory: SessionFactory) -> Blueprint:
     @studio.get("/overview")
     def overview() -> ResponseReturnValue:
         with session_factory() as session:
-            data = lessons.overview(session)
+            data = lessons.overview(session, organization())
         return jsonify(
             {
                 "lessons": {
@@ -74,7 +82,7 @@ def studio_blueprint(session_factory: SessionFactory) -> Blueprint:
     @studio.get("/lessons")
     def list_lessons() -> ResponseReturnValue:
         with session_factory() as session:
-            summaries = lessons.list_lessons(session)
+            summaries = lessons.list_lessons(session, organization())
         return jsonify({"lessons": [_summary_json(summary) for summary in summaries]})
 
     @studio.post("/lessons")
@@ -88,6 +96,7 @@ def studio_blueprint(session_factory: SessionFactory) -> Blueprint:
         with session_factory() as session, session.begin():
             lesson_id = lessons.create_lesson(
                 session,
+                organization(),
                 title_italian=str(body.get("titleItalian", "")),
                 title_czech=str(body.get("titleCzech", "")),
                 level=level,
@@ -97,8 +106,8 @@ def studio_blueprint(session_factory: SessionFactory) -> Blueprint:
     @studio.get("/lessons/<lesson_id>")
     def get_lesson(lesson_id: str) -> ResponseReturnValue:
         with session_factory() as session:
-            summary, draft = lessons.get_lesson(session, lesson_id)
-            issues = lessons.check_draft(session, lesson_id)
+            summary, draft = lessons.get_lesson(session, lesson_id, organization())
+            issues = lessons.check_draft(session, lesson_id, organization())
         return jsonify(
             {"lesson": _summary_json(summary), "draft": draft, "issues": _issues_json(issues)}
         )
@@ -109,25 +118,25 @@ def studio_blueprint(session_factory: SessionFactory) -> Blueprint:
         if not isinstance(body, dict) or "draft" not in body:
             return _error("validation", 'Expected {"draft": <lesson bundle>}.', 422)
         with session_factory() as session, session.begin():
-            summary, issues = lessons.save_draft(session, lesson_id, body["draft"])
+            summary, issues = lessons.save_draft(session, lesson_id, organization(), body["draft"])
         return jsonify({"lesson": _summary_json(summary), "issues": _issues_json(issues)})
 
     @studio.post("/lessons/<lesson_id>/publish")
     def publish_lesson(lesson_id: str) -> ResponseReturnValue:
         with session_factory() as session, session.begin():
-            summary = lessons.publish(session, lesson_id)
+            summary = lessons.publish(session, lesson_id, organization())
         return jsonify({"lesson": _summary_json(summary)})
 
     @studio.delete("/lessons/<lesson_id>")
     def delete_lesson(lesson_id: str) -> ResponseReturnValue:
         with session_factory() as session, session.begin():
-            lessons.delete_lesson(session, lesson_id)
+            lessons.delete_lesson(session, lesson_id, organization())
         return "", 204
 
     @studio.post("/lessons/<lesson_id>/unpublish")
     def unpublish_lesson(lesson_id: str) -> ResponseReturnValue:
         with session_factory() as session, session.begin():
-            summary = lessons.unpublish(session, lesson_id)
+            summary = lessons.unpublish(session, lesson_id, organization())
         return jsonify({"lesson": _summary_json(summary)})
 
     return studio

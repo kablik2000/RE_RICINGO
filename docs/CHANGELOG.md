@@ -26,6 +26,13 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-23 — **Sign-in to the Teacher Studio** (ADR-0012): operator-created teacher accounts in
+  organizations (`flask create-teacher`, VS Code task "Teacher Studio: create a teacher account"),
+  Argon2id passwords of at least 15 characters, sign-in throttling, server-side sessions (2 h idle,
+  12 h maximum) in an `httpOnly`, `SameSite=Strict` cookie, sign-out, lessons scoped to the
+  teacher's organization, Content Security Policy with nonces and security headers. The Studio
+  endpoints now need a session in every environment. API: `/api/v1/auth/login|logout|me`,
+  migration `0003_accounts`. `backend:seed` imports the demo lesson into organization "RICI".
 - 2026-11-23 — **Deleting lessons in the Studio** ("Smazat" in the editor, with a confirmation):
   a draft that was never published is deleted; a published lesson must be unpublished first and
   is then archived, its versions kept. API: `DELETE /api/v1/studio/lessons/<id>`.

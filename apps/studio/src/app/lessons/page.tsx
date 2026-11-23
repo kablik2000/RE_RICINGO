@@ -11,6 +11,7 @@ import { t } from '@/i18n';
 import { formatDate } from '@/lib/format';
 import { filterLessons, type LessonFilter, parseLessonFilter } from '@/lib/lesson-filter';
 import { listLessons, load, type LessonSummary } from '@/lib/studio-api';
+import { requireTeacher } from '@/lib/auth';
 
 import styles from './lessons.module.css';
 
@@ -32,6 +33,7 @@ export default async function LessonsPage({
   searchParams: Promise<{ status?: string; q?: string }>;
 }) {
   await connection();
+  const teacher = await requireTeacher();
   const params = await searchParams;
   const filter = parseLessonFilter(params.status);
   const query = params.q?.trim() ?? '';
@@ -48,7 +50,7 @@ export default async function LessonsPage({
   };
 
   return (
-    <AppShell variant="drawer" active="lessons">
+    <AppShell variant="drawer" active="lessons" teacher={teacher}>
       <main className={ui.page}>
         <div className={ui.pageHeader}>
           <div>

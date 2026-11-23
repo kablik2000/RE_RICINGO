@@ -5,6 +5,7 @@ import hashlib
 import json
 import re
 import unicodedata
+import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Literal
@@ -108,42 +109,55 @@ def _latest_version(session: Session, lesson_id: str) -> LessonVersion | None:
     ).first()
 
 
-def _get(session: Session, lesson_id: str) -> Lesson:
+def _get_any(session: Session, lesson_id: str) -> Lesson:
+    """A lesson of any organization (the student content API, development only)."""
     lesson = session.get(Lesson, lesson_id)
     if lesson is None or lesson.archived_at is not None:
         raise LessonNotFoundError(lesson_id)
     return lesson
 
 
-def list_lessons(session: Session) -> list[LessonSummary]:
+def _get(session: Session, lesson_id: str, organization_id: uuid.UUID) -> Lesson:
+    """A lesson of the teacher's organization; another organization's lesson does not exist."""
+    lesson = _get_any(session, lesson_id)
+    if lesson.organization_id != organization_id:
+        raise LessonNotFoundError(lesson_id)
+    return lesson
+
+
+def list_lessons(session: Session, organization_id: uuid.UUID) -> list[LessonSummary]:
     lessons = session.scalars(
-        select(Lesson).where(Lesson.archived_at.is_(None)).order_by(Lesson.updated_at.desc())
+        select(Lesson)
+        .where(Lesson.archived_at.is_(None), Lesson.organization_id == organization_id)
+        .order_by(Lesson.updated_at.desc())
     ).all()
     return [_summary(lesson, _latest_version(session, lesson.id)) for lesson in lessons]
 
 
-def get_lesson(session: Session, lesson_id: str) -> tuple[LessonSummary, JsonObject]:
-    lesson = _get(session, lesson_id)
+def get_lesson(
+    session: Session, lesson_id: str, organization_id: uuid.UUID
+) -> tuple[LessonSummary, JsonObject]:
+    lesson = _get(session, lesson_id, organization_id)
     return _summary(lesson, _latest_version(session, lesson_id)), lesson.draft
 
 
 def save_draft(
-    session: Session, lesson_id: str, draft: object
+    session: Session, lesson_id: str, organization_id: uuid.UUID, draft: object
 ) -> tuple[LessonSummary, list[SchemaIssue]]:
     """Stores the draft even when incomplete; returns what still blocks publishing."""
     if not isinstance(draft, dict) or not isinstance(draft.get("lesson"), dict):
         raise LessonContentError("The draft must be a lesson bundle object.")
     if draft["lesson"].get("id") != lesson_id:
         raise LessonContentError("The draft's lesson.id must match the lesson being saved.")
-    lesson = _get(session, lesson_id)
+    lesson = _get(session, lesson_id, organization_id)
     lesson.draft = draft
     lesson.updated_at = datetime.now(UTC)
     session.flush()
     return _summary(lesson, _latest_version(session, lesson_id)), validate_lesson_bundle(draft)
 
 
-def check_draft(session: Session, lesson_id: str) -> list[SchemaIssue]:
-    return validate_lesson_bundle(_get(session, lesson_id).draft)
+def check_draft(session: Session, lesson_id: str, organization_id: uuid.UUID) -> list[SchemaIssue]:
+    return validate_lesson_bundle(_get(session, lesson_id, organization_id).draft)
 
 
 def _unchanged(draft: JsonObject, version: LessonVersion | None) -> bool:
@@ -152,12 +166,12 @@ def _unchanged(draft: JsonObject, version: LessonVersion | None) -> bool:
     )
 
 
-def publish(session: Session, lesson_id: str) -> LessonSummary:
+def publish(session: Session, lesson_id: str, organization_id: uuid.UUID) -> LessonSummary:
     """Publishes the draft as the next immutable version; refuses a draft with problems.
 
     An unpublished lesson whose draft has not changed is published again as the same version.
     """
-    lesson = _get(session, lesson_id)
+    lesson = _get(session, lesson_id, organization_id)
     issues = validate_lesson_bundle(lesson.draft)
     if issues:
         raise LessonContentError("The lesson has problems that block publishing.", issues)
@@ -185,9 +199,9 @@ def publish(session: Session, lesson_id: str) -> LessonSummary:
     return _summary(lesson, published)
 
 
-def unpublish(session: Session, lesson_id: str) -> LessonSummary:
+def unpublish(session: Session, lesson_id: str, organization_id: uuid.UUID) -> LessonSummary:
     """Withdraws a published lesson from students; its draft and versions are kept."""
-    lesson = _get(session, lesson_id)
+    lesson = _get(session, lesson_id, organization_id)
     latest = _latest_version(session, lesson_id)
     if latest is None:
         raise LessonContentError("The lesson has never been published.")
@@ -198,13 +212,13 @@ def unpublish(session: Session, lesson_id: str) -> LessonSummary:
     return _summary(lesson, latest)
 
 
-def delete_lesson(session: Session, lesson_id: str) -> None:
+def delete_lesson(session: Session, lesson_id: str, organization_id: uuid.UUID) -> None:
     """Deletes a lesson from the Studio.
 
     A draft that was never published is deleted for good. A lesson with published versions must
     be unpublished first; it is then archived, because published versions are immutable (ADR-0003).
     """
-    lesson = _get(session, lesson_id)
+    lesson = _get(session, lesson_id, organization_id)
     if _latest_version(session, lesson_id) is None:
         session.delete(lesson)
     elif lesson.unpublished_at is None:
@@ -220,7 +234,13 @@ def _slug(text: str) -> str:
     return slug or "lekce"
 
 
-def create_lesson(session: Session, title_italian: str, title_czech: str, level: str) -> str:
+def create_lesson(
+    session: Session,
+    organization_id: uuid.UUID,
+    title_italian: str,
+    title_czech: str,
+    level: str,
+) -> str:
     """A new, still empty draft; returns its ID (a slug of the Italian title, made unique)."""
     if not title_italian.strip():
         raise LessonContentError("The Italian title is required.")
@@ -231,6 +251,7 @@ def create_lesson(session: Session, title_italian: str, title_czech: str, level:
     session.add(
         Lesson(
             id=lesson_id,
+            organization_id=organization_id,
             draft={
                 "contentSchemaVersion": CONTENT_SCHEMA_VERSION,
                 "lesson": {
@@ -255,7 +276,7 @@ def create_lesson(session: Session, title_italian: str, title_czech: str, level:
     return lesson_id
 
 
-def import_published_bundle(session: Session, bundle: object) -> str:
+def import_published_bundle(session: Session, bundle: object, organization_id: uuid.UUID) -> str:
     """Imports a complete bundle as a lesson with a published version (demo seed, import)."""
     issues = validate_lesson_bundle(bundle)
     if issues or not isinstance(bundle, dict):
@@ -263,7 +284,7 @@ def import_published_bundle(session: Session, bundle: object) -> str:
     lesson_id: str = bundle["lesson"]["id"]
     if session.get(Lesson, lesson_id) is not None:
         raise LessonContentError(f'A lesson with id "{lesson_id}" already exists.')
-    session.add(Lesson(id=lesson_id, draft=copy.deepcopy(bundle)))
+    session.add(Lesson(id=lesson_id, organization_id=organization_id, draft=copy.deepcopy(bundle)))
     session.flush()
     session.add(
         LessonVersion(
@@ -319,7 +340,7 @@ def list_published(session: Session) -> list[PublishedLesson]:
 
 def get_published_version(session: Session, lesson_id: str, version: int) -> LessonVersion:
     """One published version; unpublished and archived lessons are no longer served."""
-    if _get(session, lesson_id).unpublished_at is not None:
+    if _get_any(session, lesson_id).unpublished_at is not None:
         raise LessonNotFoundError(lesson_id)
     published = session.get(LessonVersion, (lesson_id, version))
     if published is None:
@@ -336,8 +357,8 @@ class Overview:
     published_grammar_topics: int
 
 
-def overview(session: Session) -> Overview:
-    summaries = list_lessons(session)
+def overview(session: Session, organization_id: uuid.UUID) -> Overview:
+    summaries = list_lessons(session, organization_id)
     live = [summary for summary in summaries if summary.status in ("published", "changed")]
     latest_versions = [
         version for summary in live if (version := _latest_version(session, summary.id)) is not None

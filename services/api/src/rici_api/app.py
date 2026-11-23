@@ -8,21 +8,26 @@ from pathlib import Path
 import click
 from flask import Blueprint, Flask, jsonify
 from flask.typing import ResponseReturnValue
-from sqlalchemy import Engine
+from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from werkzeug.exceptions import HTTPException
 
-from rici_api import lessons
+from rici_api import auth, lessons
+from rici_api.auth_api import auth_blueprint
 from rici_api.config import Settings, load_settings
 from rici_api.content_api import content_blueprint
 from rici_api.db import create_db_engine, database_is_reachable
 from rici_api.migrate import upgrade_database
+from rici_api.models import Organization
 from rici_api.studio_api import studio_blueprint
 
 DatabaseCheck = Callable[[], bool]
 
-# Environments where the unauthenticated Studio and content endpoints may run (ADR-0011).
-STUDIO_ENVIRONMENTS = ("development", "test")
+# Environments where the unauthenticated student content endpoints may run (ADR-0011). The
+# Studio endpoints need a signed-in teacher (ADR-0012) and run everywhere.
+CONTENT_ENVIRONMENTS = ("development", "test")
+# Largest request body accepted (a lesson draft is well below this).
+MAX_REQUEST_BYTES = 2 * 1024 * 1024
 
 
 def create_app(
@@ -34,14 +39,16 @@ def create_app(
     resolved = settings or load_settings()
     app = Flask(__name__)
     app.config["APP_ENV"] = resolved.app_env
+    app.config["MAX_CONTENT_LENGTH"] = MAX_REQUEST_BYTES
 
     db_engine = engine or create_db_engine(resolved.database_url)
     session_factory = sessionmaker(bind=db_engine, expire_on_commit=False)
     check = database_check or partial(database_is_reachable, db_engine)
 
     app.register_blueprint(_v1_blueprint(check), url_prefix="/api/v1")
-    if resolved.app_env in STUDIO_ENVIRONMENTS:
-        app.register_blueprint(studio_blueprint(session_factory), url_prefix="/api/v1/studio")
+    app.register_blueprint(auth_blueprint(session_factory), url_prefix="/api/v1/auth")
+    app.register_blueprint(studio_blueprint(session_factory), url_prefix="/api/v1/studio")
+    if resolved.app_env in CONTENT_ENVIRONMENTS:
         app.register_blueprint(content_blueprint(session_factory), url_prefix="/api/v1/content")
     _register_error_handlers(app)
     _register_commands(app, db_engine, session_factory)
@@ -82,9 +89,65 @@ def _register_commands(app: Flask, engine: Engine, session_factory: sessionmaker
 
     @app.cli.command("import-lesson")
     @click.argument("path", type=click.Path(exists=True, dir_okay=False, path_type=Path))
-    def import_lesson(path: Path) -> None:
+    @click.option("--organization", required=True, help="Organization (created if new).")
+    def import_lesson(path: Path, organization: str) -> None:
         """Imports a published lesson bundle (JSON file), e.g. the demo lesson."""
         bundle = json.loads(path.read_text("utf-8"))
         with session_factory() as session, session.begin():
-            lesson_id = lessons.import_published_bundle(session, bundle)
+            org = session.scalar(select(Organization).where(Organization.name == organization))
+            if org is None:
+                org = Organization(name=organization)
+                session.add(org)
+                session.flush()
+            lesson_id = lessons.import_published_bundle(session, bundle, org.id)
         click.echo(f"Imported lesson {lesson_id}.")
+
+    # Accounts are created by an operator; there is no public sign-up (ADR-0004, ADR-0012).
+    # Passwords are asked for interactively, so they never appear in the shell history.
+    @app.cli.command("create-teacher")
+    @click.argument("email")
+    @click.option("--name", required=True, help="Name shown in the Studio.")
+    @click.option("--organization", required=True, help="Organization (created if new).")
+    @click.password_option(help="Asked for when not given.")
+    def create_teacher(email: str, name: str, organization: str, password: str) -> None:
+        """Creates a Teacher Studio account."""
+        try:
+            with session_factory() as session, session.begin():
+                teacher = auth.create_teacher(session, email, name, organization, password)
+        except auth.AccountError as error:
+            raise click.ClickException(str(error)) from error
+        click.echo(f"Created teacher {teacher.email}.")
+
+    @app.cli.command("set-password")
+    @click.argument("email")
+    @click.password_option(help="Asked for when not given.")
+    def set_password(email: str, password: str) -> None:
+        """Sets a new password and signs the account out everywhere."""
+        try:
+            with session_factory() as session, session.begin():
+                auth.set_password(session, email, password)
+        except auth.AccountError as error:
+            raise click.ClickException(str(error)) from error
+        click.echo("Password changed; all sessions of the account ended.")
+
+    @app.cli.command("disable-teacher")
+    @click.argument("email")
+    def disable_teacher(email: str) -> None:
+        """Blocks an account and ends its sessions (enable again with enable-teacher)."""
+        try:
+            with session_factory() as session, session.begin():
+                auth.set_active(session, email, active=False)
+        except auth.AccountError as error:
+            raise click.ClickException(str(error)) from error
+        click.echo("Account disabled.")
+
+    @app.cli.command("enable-teacher")
+    @click.argument("email")
+    def enable_teacher(email: str) -> None:
+        """Allows a disabled account to sign in again."""
+        try:
+            with session_factory() as session, session.begin():
+                auth.set_active(session, email, active=True)
+        except auth.AccountError as error:
+            raise click.ClickException(str(error)) from error
+        click.echo("Account enabled.")

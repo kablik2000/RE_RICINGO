@@ -6,16 +6,18 @@ import { ServerUnavailable } from '@/components/server-unavailable';
 import { AppShell } from '@/components/shell/app-shell';
 import ui from '@/components/ui.module.css';
 import { getLesson, load } from '@/lib/studio-api';
+import { requireTeacher } from '@/lib/auth';
 
 export default async function LessonEditorPage({ params }: { params: Promise<{ id: string }> }) {
   await connection();
+  const teacher = await requireTeacher();
   const { id } = await params;
 
   const result = await load(getLesson(id));
   if (!result.ok && result.error.status === 404) notFound();
 
   return (
-    <AppShell variant="rail" active="lessons" topBar={false}>
+    <AppShell variant="rail" active="lessons" teacher={teacher} topBar={false}>
       {result.ok ? (
         <LessonEditor initial={result.data} />
       ) : (

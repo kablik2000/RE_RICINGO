@@ -182,6 +182,20 @@
       "problemMatcher": []
     },
     {
+      "label": "Teacher Studio: create a teacher account",
+      "detail": "Creates a sign-in for the Studio (backend must run). The password is asked for in the terminal and not shown; at least 15 characters.",
+      "type": "shell",
+      "command": "docker compose exec api flask --app rici_api.wsgi create-teacher ${input:teacherEmail} --name \"${input:teacherName}\" --organization \"${input:organization}\"",
+      "problemMatcher": []
+    },
+    {
+      "label": "Teacher Studio: set a new password",
+      "detail": "Replaces a teacher's password and signs the account out everywhere (backend must run).",
+      "type": "shell",
+      "command": "docker compose exec api flask --app rici_api.wsgi set-password ${input:teacherEmail}",
+      "problemMatcher": []
+    },
+    {
       "label": "Backend: tests and checks (Python)",
       "detail": "Ruff, mypy and pytest for services/api (no Docker needed).",
       "type": "shell",
@@ -190,6 +204,22 @@
     }
   ],
   "inputs": [
+    {
+      "id": "teacherEmail",
+      "type": "promptString",
+      "description": "Teacher's e-mail (the sign-in name)"
+    },
+    {
+      "id": "teacherName",
+      "type": "promptString",
+      "description": "Name shown in the Studio"
+    },
+    {
+      "id": "organization",
+      "type": "promptString",
+      "description": "Organization (school); created if new",
+      "default": "RICI"
+    },
     {
       "id": "androidAvd",
       "type": "promptString",

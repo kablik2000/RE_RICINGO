@@ -1,13 +1,17 @@
 import { filterLessons, parseLessonFilter } from './lesson-filter';
 import {
   deleteLesson,
+  fetchCurrentTeacher,
   listLessons,
   load,
   type LessonSummary,
   saveLesson,
+  signIn,
   StudioApiError,
   unpublishLesson,
 } from './studio-api';
+
+vi.mock('./session', () => ({ getSessionToken: () => Promise.resolve('session-token') }));
 
 const AL_BAR: LessonSummary = {
   id: 'al-bar',
@@ -78,6 +82,43 @@ describe('studio API client', () => {
       'http://localhost:8000/api/v1/studio/lessons/bar',
       expect.objectContaining({ method: 'DELETE' }),
     );
+  });
+
+  it('sends the session token to the API', async () => {
+    const fetchImpl = respondWith({ lessons: [] });
+
+    await listLessons(fetchImpl);
+
+    const init = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(new Headers(init[1].headers).get('Authorization')).toBe('Bearer session-token');
+  });
+
+  it('signs in without a token and reports throttling with its wait time', async () => {
+    const fetchImpl = respondWith(
+      { error: { code: 'too_many_attempts', message: 'Too many.', retryAfter: 600 } },
+      429,
+    );
+
+    const error = await signIn('lektorka@example.test', 'heslo', fetchImpl).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toMatchObject({ status: 429, retryAfter: 600 });
+    const init = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(init[0]).toBe('http://localhost:8000/api/v1/auth/login');
+    expect(new Headers(init[1].headers).has('Authorization')).toBe(false);
+  });
+
+  it('asks the API who is signed in', async () => {
+    const teacher = {
+      id: 'u1',
+      email: 'lektorka@example.test',
+      displayName: 'Lektorka',
+      organizationId: 'o1',
+    };
+    const fetchImpl = respondWith({ teacher });
+
+    await expect(fetchCurrentTeacher('abc', fetchImpl)).resolves.toEqual(teacher);
   });
 
   it('reports an unreachable backend as a value pages can render', async () => {

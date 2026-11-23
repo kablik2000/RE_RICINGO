@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
+import { logoutAction } from '@/app/login/actions';
 import { Icon } from '@/components/icon';
 import { t, type TranslationKey } from '@/i18n';
+import type { Teacher } from '@/lib/studio-api';
 
 import styles from './app-shell.module.css';
 
@@ -36,14 +38,18 @@ const SECONDARY: readonly NavItem[] = [
 export function AppShell({
   variant,
   active,
+  teacher,
   children,
   topBar = true,
 }: {
   variant: 'drawer' | 'rail';
   active: NavSection;
+  /** The signed-in teacher (pages get it from `requireTeacher`). */
+  teacher: Teacher;
   children: ReactNode;
   topBar?: boolean;
 }) {
+  const initial = teacher.displayName.trim().charAt(0).toLocaleUpperCase('cs') || '?';
   const isRail = variant === 'rail';
   const renderItem = (item: NavItem) => {
     const label = t(item.key);
@@ -101,6 +107,17 @@ export function AppShell({
         <div className={styles.items}>{PRIMARY.map(renderItem)}</div>
         {!isRail && <div className={styles.divider} />}
         {!isRail && <div className={styles.items}>{SECONDARY.map(renderItem)}</div>}
+        <form action={logoutAction} className={styles.signOut}>
+          <button
+            type="submit"
+            className={styles.item}
+            {...(isRail && { 'aria-label': t('topBar.signOut') })}>
+            <span className={styles.itemIcon}>
+              <Icon name="logout" />
+            </span>
+            <span className={styles.itemLabel}>{t('topBar.signOut')}</span>
+          </button>
+        </form>
       </nav>
 
       <div className={styles.body}>
@@ -116,8 +133,12 @@ export function AppShell({
               />
             </form>
             <span className={styles.spacer} />
-            <span className={styles.avatar} role="img" aria-label={t('topBar.account')}>
-              {t('topBar.accountInitial')}
+            <span
+              className={styles.avatar}
+              role="img"
+              aria-label={t('topBar.account', { name: teacher.displayName })}
+              title={t('topBar.account', { name: teacher.displayName })}>
+              {initial}
             </span>
           </header>
         )}

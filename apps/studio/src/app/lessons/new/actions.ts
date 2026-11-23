@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 
 import { t } from '@/i18n';
+import { requireTeacher } from '@/lib/auth';
 import { createLesson, StudioApiError } from '@/lib/studio-api';
 
 export interface CreateLessonState {
@@ -21,6 +22,7 @@ export async function createLessonAction(
   _previous: CreateLessonState,
   form: FormData,
 ): Promise<CreateLessonState> {
+  await requireTeacher();
   const titleItalian = formText(form, 'titleItalian');
   const titleCzech = formText(form, 'titleCzech');
   const levelValue = formText(form, 'level');

@@ -11,6 +11,7 @@ dependencies = [
   "gunicorn>=23.0",
   "jsonschema>=4.23",
   "alembic>=1.16",
+  "argon2-cffi>=25.1",
 ]
 
 [dependency-groups]
@@ -37,7 +38,7 @@ select = ["E", "F", "W", "I", "B", "UP", "N", "S", "SIM", "RUF"]
 ignore = []
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101"]
+"tests/**" = ["S101", "S105", "S106"]  # asserts; test-only passwords
 
 [tool.mypy]
 strict = true

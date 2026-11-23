@@ -2,18 +2,11 @@ from typing import Any
 
 from flask.testing import FlaskClient
 from sqlalchemy import Engine
-from sqlalchemy.orm import Session
 
-from rici_api import lessons
 from rici_api.app import create_app
 from rici_api.config import Settings
 
-from .conftest import TEST_DATABASE_URL, demo_bundle
-
-
-def import_demo(engine: Engine) -> None:
-    with Session(engine) as session, session.begin():
-        lessons.import_published_bundle(session, demo_bundle())
+from .conftest import TEST_DATABASE_URL, demo_bundle, import_demo
 
 
 def test_catalog_lists_the_newest_published_version(client: FlaskClient, engine: Engine) -> None:

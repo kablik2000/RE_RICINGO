@@ -1,0 +1,277 @@
+"""Studio accounts and sign-in (ADR-0012).
+
+- Passwords: Argon2id (argon2-cffi defaults, RFC 9106 low-memory profile), 15-128 characters
+  (NIST SP 800-63B-4 for single-factor passwords), no composition rules.
+- Sign-in answers the same for an unknown e-mail and a wrong password, and takes about as
+  long (a dummy hash is verified), so accounts cannot be discovered.
+- Throttling: after 5 failures for one e-mail within 15 minutes that e-mail is blocked for the
+  rest of the window, whether the account exists or not; one address is blocked after 50.
+- Sessions: a 256-bit random token; only its SHA-256 is stored. They end after 2 hours without
+  use or 12 hours after sign-in, on sign-out, and when the password changes.
+"""
+
+import hashlib
+import re
+import secrets
+import unicodedata
+import uuid
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
+from sqlalchemy import delete, func, select
+from sqlalchemy.orm import InstrumentedAttribute, Session
+
+from rici_api.models import AuthSession, LoginAttempt, Organization, User
+
+PASSWORD_MIN_LENGTH = 15
+PASSWORD_MAX_LENGTH = 128
+SESSION_IDLE_TIMEOUT = timedelta(hours=2)
+SESSION_LIFETIME = timedelta(hours=12)
+THROTTLE_WINDOW = timedelta(minutes=15)
+MAX_FAILURES_PER_EMAIL = 5
+MAX_FAILURES_PER_ADDRESS = 50
+# A session's last use is written at most this often (fewer writes on every request).
+LAST_SEEN_PRECISION = timedelta(minutes=1)
+ATTEMPT_RETENTION = timedelta(days=1)
+TEACHER = "teacher"
+
+_hasher = PasswordHasher()
+# Verified when the e-mail is unknown, so a failed sign-in always costs one Argon2 check.
+_DUMMY_HASH = _hasher.hash(secrets.token_urlsafe(32))
+_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+class AccountError(Exception):
+    """An account cannot be created or changed as asked (operator commands)."""
+
+
+class InvalidCredentialsError(Exception):
+    """Wrong e-mail or password, or an inactive account. Deliberately not more specific."""
+
+
+class TooManyAttemptsError(Exception):
+    """Sign-in is throttled for this e-mail or address."""
+
+    def __init__(self, retry_after: timedelta) -> None:
+        super().__init__("Too many failed sign-in attempts.")
+        self.retry_after_seconds = max(1, int(retry_after.total_seconds()) + 1)
+
+
+@dataclass(frozen=True)
+class Teacher:
+    id: uuid.UUID
+    organization_id: uuid.UUID
+    email: str
+    display_name: str
+
+
+@dataclass(frozen=True)
+class SignedIn:
+    token: str
+    expires_at: datetime
+    teacher: Teacher
+
+
+def normalize_email(email: str) -> str:
+    return unicodedata.normalize("NFKC", email).strip().lower()
+
+
+def _email_key(email: str) -> str:
+    return hashlib.sha256(normalize_email(email).encode("utf-8")).hexdigest()
+
+
+def _token_hash(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _normalize_password(password: str) -> str:
+    return unicodedata.normalize("NFKC", password)
+
+
+def password_problem(password: str, email: str) -> str | None:
+    """Why a new password is not acceptable, or None."""
+    normalized = _normalize_password(password)
+    if len(normalized) < PASSWORD_MIN_LENGTH:
+        return f"The password must have at least {PASSWORD_MIN_LENGTH} characters."
+    if len(normalized) > PASSWORD_MAX_LENGTH:
+        return f"The password must have at most {PASSWORD_MAX_LENGTH} characters."
+    if normalized.strip().lower() == normalize_email(email):
+        return "The password must not be the e-mail address."
+    if len(set(normalized)) < 4:
+        return "The password repeats too few characters."
+    return None
+
+
+def _teacher(user: User) -> Teacher:
+    return Teacher(
+        id=user.id,
+        organization_id=user.organization_id,
+        email=user.email,
+        display_name=user.display_name,
+    )
+
+
+def create_teacher(
+    session: Session, email: str, display_name: str, organization: str, password: str
+) -> Teacher:
+    """Creates a teacher account (operator command); the organization is created if new."""
+    normalized = normalize_email(email)
+    if not _EMAIL.match(normalized) or len(normalized) > 254:
+        raise AccountError("Not a valid e-mail address.")
+    if not display_name.strip() or not organization.strip():
+        raise AccountError("The name and the organization are required.")
+    if (problem := password_problem(password, normalized)) is not None:
+        raise AccountError(problem)
+    if session.scalar(select(User.id).where(User.email == normalized)) is not None:
+        raise AccountError("An account with this e-mail already exists.")
+    org = session.scalar(select(Organization).where(Organization.name == organization.strip()))
+    if org is None:
+        org = Organization(name=organization.strip())
+        session.add(org)
+        session.flush()
+    user = User(
+        organization_id=org.id,
+        email=normalized,
+        display_name=display_name.strip(),
+        role=TEACHER,
+        password_hash=_hasher.hash(_normalize_password(password)),
+    )
+    session.add(user)
+    session.flush()
+    return _teacher(user)
+
+
+def set_password(session: Session, email: str, password: str) -> None:
+    """Replaces a password (operator command) and ends all of the account's sessions."""
+    user = session.scalar(select(User).where(User.email == normalize_email(email)))
+    if user is None:
+        raise AccountError("No account with this e-mail.")
+    if (problem := password_problem(password, user.email)) is not None:
+        raise AccountError(problem)
+    user.password_hash = _hasher.hash(_normalize_password(password))
+    user.password_changed_at = datetime.now(UTC)
+    session.execute(delete(AuthSession).where(AuthSession.user_id == user.id))
+    session.flush()
+
+
+def set_active(session: Session, email: str, active: bool) -> None:
+    """Enables or disables an account (operator command); disabling ends its sessions."""
+    user = session.scalar(select(User).where(User.email == normalize_email(email)))
+    if user is None:
+        raise AccountError("No account with this e-mail.")
+    user.is_active = active
+    if not active:
+        session.execute(delete(AuthSession).where(AuthSession.user_id == user.id))
+    session.flush()
+
+
+def _recent_failures(
+    session: Session, column: InstrumentedAttribute[str], value: str, since: datetime
+) -> list[datetime]:
+    """Failure times for one e-mail key or address since `since`, newest first."""
+    return list(
+        session.scalars(
+            select(LoginAttempt.created_at)
+            .where(column == value, LoginAttempt.succeeded.is_(False))
+            .where(LoginAttempt.created_at > since)
+            .order_by(LoginAttempt.created_at.desc())
+        )
+    )
+
+
+def _throttle(session: Session, email_key: str, address: str, now: datetime) -> None:
+    """Raises TooManyAttemptsError while the e-mail or the address is over its limit."""
+    since = now - THROTTLE_WINDOW
+    last_success = session.scalar(
+        select(func.max(LoginAttempt.created_at)).where(
+            LoginAttempt.email_key == email_key, LoginAttempt.succeeded.is_(True)
+        )
+    )
+    email_since = max(since, last_success) if last_success is not None else since
+    for failures, limit in (
+        (
+            _recent_failures(session, LoginAttempt.email_key, email_key, email_since),
+            MAX_FAILURES_PER_EMAIL,
+        ),
+        (_recent_failures(session, LoginAttempt.address, address, since), MAX_FAILURES_PER_ADDRESS),
+    ):
+        if len(failures) >= limit:
+            # Blocked until the oldest failure that counts towards the limit leaves the window.
+            raise TooManyAttemptsError(failures[limit - 1] + THROTTLE_WINDOW - now)
+
+
+def sign_in(session: Session, email: str, password: str, address: str) -> SignedIn:
+    """Checks the credentials and opens a session. Commit the session even when this raises
+    InvalidCredentialsError: the failed attempt must be recorded."""
+    now = datetime.now(UTC)
+    email_key = _email_key(email)
+    address = address[:64]
+    session.execute(delete(LoginAttempt).where(LoginAttempt.created_at < now - ATTEMPT_RETENTION))
+    _throttle(session, email_key, address, now)
+
+    user = session.scalar(select(User).where(User.email == normalize_email(email)))
+    normalized_password = _normalize_password(password)[: PASSWORD_MAX_LENGTH + 1]
+    valid = False
+    try:
+        valid = _hasher.verify(user.password_hash if user else _DUMMY_HASH, normalized_password)
+    except (VerifyMismatchError, VerificationError, InvalidHashError):
+        valid = False
+    succeeded = valid and user is not None and user.is_active and user.role == TEACHER
+    session.add(
+        LoginAttempt(email_key=email_key, address=address, succeeded=succeeded, created_at=now)
+    )
+    if not succeeded or user is None:
+        session.flush()
+        raise InvalidCredentialsError
+
+    if _hasher.check_needs_rehash(user.password_hash):
+        user.password_hash = _hasher.hash(normalized_password)
+    session.execute(
+        delete(AuthSession).where(AuthSession.user_id == user.id, AuthSession.expires_at < now)
+    )
+    token = secrets.token_urlsafe(32)
+    expires_at = now + SESSION_LIFETIME
+    session.add(
+        AuthSession(
+            user_id=user.id,
+            token_hash=_token_hash(token),
+            created_at=now,
+            last_seen_at=now,
+            expires_at=expires_at,
+        )
+    )
+    session.flush()
+    return SignedIn(token=token, expires_at=expires_at, teacher=_teacher(user))
+
+
+def authenticate(session: Session, token: str) -> Teacher | None:
+    """The teacher a session token belongs to, or None (unknown, expired or idle session)."""
+    if not token or len(token) > 128:
+        return None
+    now = datetime.now(UTC)
+    found = session.execute(
+        select(AuthSession, User)
+        .join(User, User.id == AuthSession.user_id)
+        .where(AuthSession.token_hash == _token_hash(token))
+    ).first()
+    if found is None:
+        return None
+    auth_session, user = found
+    expired = now >= auth_session.expires_at or now - auth_session.last_seen_at >= (
+        SESSION_IDLE_TIMEOUT
+    )
+    if expired or not user.is_active or user.role != TEACHER:
+        session.delete(auth_session)
+        session.flush()
+        return None
+    if now - auth_session.last_seen_at >= LAST_SEEN_PRECISION:
+        auth_session.last_seen_at = now
+        session.flush()
+    return _teacher(user)
+
+
+def sign_out(session: Session, token: str) -> None:
+    session.execute(delete(AuthSession).where(AuthSession.token_hash == _token_hash(token)))
+    session.flush()

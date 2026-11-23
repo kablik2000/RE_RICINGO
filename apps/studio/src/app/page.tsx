@@ -10,6 +10,7 @@ import ui from '@/components/ui.module.css';
 import { t } from '@/i18n';
 import { apiBaseUrl, fetchApiStatus } from '@/lib/api-status';
 import { formatDate, formatLongDate } from '@/lib/format';
+import { requireTeacher } from '@/lib/auth';
 import {
   getOverview,
   type LessonSummary,
@@ -25,12 +26,13 @@ const RECENT_LESSONS = 5;
 export default async function OverviewPage() {
   // Rendered per request: counts and backend status must be current.
   await connection();
+  const teacher = await requireTeacher();
   const status = await fetchApiStatus(apiBaseUrl());
 
   const result = await load(Promise.all([getOverview(), listLessons()]));
 
   return (
-    <AppShell variant="drawer" active="overview">
+    <AppShell variant="drawer" active="overview" teacher={teacher}>
       <main className={ui.page}>
         <div className={ui.pageHeader}>
           <div>

@@ -1,9 +1,16 @@
 import type { LessonBundle } from '@ricingo/domain';
+import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
-import { apiBaseUrl } from './api-status';
+import 'server-only';
 
-/** Teacher Studio endpoints of the Flask API (`/api/v1/studio`, ADR-0011). Server-side only. */
+import { apiBaseUrl } from './api-status';
+import { getSessionToken } from './session';
+
+/**
+ * Teacher Studio endpoints of the Flask API (`/api/v1/studio`, ADR-0011) and sign-in
+ * (`/api/v1/auth`, ADR-0012). Server-side only: requests carry the lecturer's session token.
+ */
 
 export const lessonStatusSchema = z.enum(['draft', 'published', 'changed', 'unpublished']);
 export type LessonStatus = z.infer<typeof lessonStatusSchema>;
@@ -48,14 +55,25 @@ const errorSchema = z.object({
     code: z.string(),
     message: z.string(),
     issues: z.array(issueSchema).optional(),
+    retryAfter: z.number().optional(),
   }),
 });
+
+const teacherSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  displayName: z.string(),
+  organizationId: z.string(),
+});
+export type Teacher = z.infer<typeof teacherSchema>;
 
 export class StudioApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
     readonly issues: readonly LessonIssue[] = [],
+    /** Seconds until sign-in may be tried again (HTTP 429). */
+    readonly retryAfter?: number,
   ) {
     super(message);
     this.name = 'StudioApiError';
@@ -63,17 +81,24 @@ export class StudioApiError extends Error {
 }
 
 /** Parses a successful response body; `null` stands for "no content" (204). */
-async function request<T>(
+/**
+ * Calls `/api/v1{path}`. `token` is the session token to send; `undefined` reads it from the
+ * session cookie (Studio endpoints), `null` sends none (sign-in).
+ */
+async function apiRequest<T>(
   path: string,
   schema: z.ZodType<T>,
   init: RequestInit = {},
   fetchImpl: typeof fetch = fetch,
+  token?: string | null,
 ): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set('Content-Type', 'application/json');
+  const sessionToken = token === undefined ? await getSessionToken() : token;
+  if (sessionToken !== null) headers.set('Authorization', `Bearer ${sessionToken}`);
   let response: Response;
   try {
-    response = await fetchImpl(`${apiBaseUrl()}/api/v1/studio${path}`, {
+    response = await fetchImpl(`${apiBaseUrl()}/api/v1${path}`, {
       ...init,
       cache: 'no-store',
       headers,
@@ -88,9 +113,59 @@ async function request<T>(
       parsed.success ? parsed.data.error.message : `HTTP ${String(response.status)}`,
       response.status,
       parsed.success ? (parsed.data.error.issues ?? []) : [],
+      parsed.success ? parsed.data.error.retryAfter : undefined,
     );
   }
   return schema.parse(body);
+}
+
+function request<T>(
+  path: string,
+  schema: z.ZodType<T>,
+  init: RequestInit = {},
+  fetchImpl: typeof fetch = fetch,
+): Promise<T> {
+  return apiRequest(`/studio${path}`, schema, init, fetchImpl);
+}
+
+const signedInSchema = z.object({
+  token: z.string().min(1),
+  expiresAt: z.string(),
+  teacher: teacherSchema,
+});
+export type SignedIn = z.infer<typeof signedInSchema>;
+
+/** Checks the credentials with the API; rejects with status 401 (wrong) or 429 (throttled). */
+export function signIn(
+  email: string,
+  password: string,
+  fetchImpl?: typeof fetch,
+): Promise<SignedIn> {
+  return apiRequest(
+    '/auth/login',
+    signedInSchema,
+    { method: 'POST', body: JSON.stringify({ email, password }) },
+    fetchImpl,
+    null,
+  );
+}
+
+export async function signOut(token: string, fetchImpl?: typeof fetch): Promise<void> {
+  await apiRequest('/auth/logout', z.null(), { method: 'POST' }, fetchImpl, token);
+}
+
+export async function fetchCurrentTeacher(
+  token: string,
+  fetchImpl?: typeof fetch,
+): Promise<Teacher> {
+  const body = await apiRequest(
+    '/auth/me',
+    z.object({ teacher: teacherSchema }),
+    {},
+    fetchImpl,
+    token,
+  );
+  return body.teacher;
 }
 
 export function getOverview(fetchImpl?: typeof fetch): Promise<StudioOverview> {
@@ -185,7 +260,11 @@ export async function load<T>(promise: Promise<T>): Promise<Loaded<T>> {
   try {
     return { ok: true, data: await promise };
   } catch (error) {
-    if (error instanceof StudioApiError) return { ok: false, error };
+    if (error instanceof StudioApiError) {
+      // The session ended (idle, signed out elsewhere, password changed): sign in again.
+      if (error.status === 401) redirect('/login');
+      return { ok: false, error };
+    }
     throw error;
   }
 }

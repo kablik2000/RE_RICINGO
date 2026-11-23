@@ -219,3 +219,19 @@
   flex: 1;
   min-width: 0;
 }
+
+/* Sign-out at the bottom of the navigation */
+.signOut {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.signOut button {
+  border: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  text-align: start;
+  width: 100%;
+}

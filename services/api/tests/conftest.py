@@ -7,6 +7,7 @@ reachable, those tests are skipped locally but fail in CI (`REQUIRE_DATABASE=1`)
 
 import json
 import os
+import uuid
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -14,16 +15,23 @@ from typing import Any
 import pytest
 from flask import Flask
 from flask.testing import FlaskClient
-from sqlalchemy import Engine, create_engine, make_url, text
+from sqlalchemy import Engine, create_engine, make_url, select, text
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
+from rici_api import auth, lessons
 from rici_api.app import create_app
 from rici_api.config import Settings
 from rici_api.migrate import upgrade_database
+from rici_api.models import Organization
 
 TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL", "postgresql+psycopg://rici:rici_dev_password@localhost:5432/rici_test"
 )
+ORGANIZATION = "RICI"
+TEACHER_EMAIL = "lektorka@example.test"
+# Test-only password (at least 15 characters, ADR-0012).
+TEACHER_PASSWORD = "testovaci-heslo-pro-lektorku"
 DEMO_LESSON = (
     Path(__file__).resolve().parents[3]
     / "apps"
@@ -66,7 +74,12 @@ def engine(database_engine: Engine) -> Iterator[Engine]:
     """A clean database for each test (published versions cannot be deleted row by row)."""
     with database_engine.begin() as connection:
         connection.execute(text("ALTER TABLE lesson_versions DISABLE TRIGGER USER"))
-        connection.execute(text("TRUNCATE lesson_versions, lessons"))
+        connection.execute(
+            text(
+                "TRUNCATE lesson_versions, lessons, auth_sessions, login_attempts, users, "
+                "organizations"
+            )
+        )
         connection.execute(text("ALTER TABLE lesson_versions ENABLE TRIGGER USER"))
     yield database_engine
 
@@ -79,6 +92,55 @@ def studio_app(engine: Engine) -> Flask:
     )
 
 
+def organization_id(engine: Engine, name: str = ORGANIZATION) -> uuid.UUID:
+    """The organization's ID, created if needed."""
+    with Session(engine) as session, session.begin():
+        org = session.scalar(select(Organization).where(Organization.name == name))
+        if org is None:
+            org = Organization(name=name)
+            session.add(org)
+            session.flush()
+        return org.id
+
+
+def import_demo(engine: Engine, organization: str = ORGANIZATION) -> str:
+    """The demo lesson as a published lesson of `organization`."""
+    org_id = organization_id(engine, organization)
+    with Session(engine) as session, session.begin():
+        return lessons.import_published_bundle(session, demo_bundle(), org_id)
+
+
+def create_teacher(
+    engine: Engine, email: str = TEACHER_EMAIL, organization: str = ORGANIZATION
+) -> auth.Teacher:
+    with Session(engine) as session, session.begin():
+        return auth.create_teacher(session, email, "Lektorka", organization, TEACHER_PASSWORD)
+
+
+def sign_in(client: FlaskClient, email: str = TEACHER_EMAIL) -> str:
+    """Signs in and makes the client send the session token with every request."""
+    response = client.post(
+        "/api/v1/auth/login", json={"email": email, "password": TEACHER_PASSWORD}
+    )
+    assert response.status_code == 200, response.get_json()
+    token: str = response.get_json()["token"]
+    client.environ_base["HTTP_AUTHORIZATION"] = f"Bearer {token}"
+    return token
+
+
 @pytest.fixture
-def client(studio_app: Flask) -> FlaskClient:
+def teacher(engine: Engine) -> auth.Teacher:
+    return create_teacher(engine)
+
+
+@pytest.fixture
+def anonymous_client(studio_app: Flask) -> FlaskClient:
     return studio_app.test_client()
+
+
+@pytest.fixture
+def client(studio_app: Flask, teacher: auth.Teacher) -> FlaskClient:
+    """A client signed in as the teacher of organization "RICI"."""
+    signed_in = studio_app.test_client()
+    sign_in(signed_in)
+    return signed_in

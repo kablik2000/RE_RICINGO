@@ -361,7 +361,17 @@ editable student data appears (e.g. personal notes edited on two devices).
 
 ## 7. Authentication & authorization
 
-[ADR-0004](DECISIONS/0004-authentication-and-authorization.md)
+[ADR-0004](DECISIONS/0004-authentication-and-authorization.md),
+[ADR-0012](DECISIONS/0012-teacher-studio-sign-in.md)
+
+**Implemented (Teacher Studio, ADR-0012):** operator-created teacher accounts in organizations;
+Argon2id passwords (15–128 characters); sign-in throttling per e-mail and address; opaque
+session tokens stored hashed (2 h idle, 12 h maximum); the Studio keeps the token in an
+`httpOnly`, `SameSite=Strict` cookie and forwards it to the API; every page, Server Action and
+API request checks the session; lessons are scoped to the teacher's organization; CSP with nonces
+and security headers. No two-factor yet.
+
+**Planned (students, M2):**
 
 - Implemented by the Flask API (ADR-0010). **Invite-only** (no public sign-up): the lecturer
   invites a student by email; the student sets a password (Argon2) or uses an email one-time code.
@@ -371,7 +381,7 @@ editable student data appears (e.g. personal notes edited on two devices).
 - Tenancy: every row carries `organization_id` (one organization initially). Cheap now,
   very expensive to retrofit if a second lecturer/school is added.
 - Teacher ↔ student relationship table; a teacher sees only own students' data.
-- Mobile keeps tokens in `expo-secure-store`; the Studio uses HTTP-only, secure cookies.
+- Mobile keeps tokens in `expo-secure-store`; the Studio uses HTTP-only, secure cookies (done).
 - In-app account deletion (App Store requirement) + data export (GDPR).
 
 ---
@@ -443,4 +453,7 @@ checks (Ruff, mypy, pytest) and the API Docker image on every PR; E2E on release
 - Input validation at boundaries (zod on clients, JSON Schema + checks in the API, constraints
   in PostgreSQL).
 - Secrets only in the hosting environment configuration (never in git or client bundles).
-- Dependency auditing in CI; minimal dependency policy.
+- Dependency auditing in CI; minimal dependency policy. Manual audit 2026-11-23 (`pnpm audit
+--prod`, `pip-audit`): Studio and API clean.
+- Teacher Studio: CSP with per-request nonces, `frame-ancestors 'none'`, security headers, no
+  open redirects, sessions verified on every page, action and API call (ADR-0012).

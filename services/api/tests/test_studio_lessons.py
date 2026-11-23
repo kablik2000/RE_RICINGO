@@ -5,18 +5,11 @@ import pytest
 from flask.testing import FlaskClient
 from sqlalchemy import Engine, text
 from sqlalchemy.exc import DBAPIError
-from sqlalchemy.orm import Session
 
-from rici_api import lessons
 from rici_api.app import create_app
 from rici_api.config import Settings
 
-from .conftest import TEST_DATABASE_URL, demo_bundle
-
-
-def import_demo(engine: Engine) -> str:
-    with Session(engine) as session, session.begin():
-        return lessons.import_published_bundle(session, demo_bundle())
+from .conftest import TEST_DATABASE_URL, demo_bundle, import_demo
 
 
 def test_imported_demo_lesson_is_listed_as_published(client: FlaskClient, engine: Engine) -> None:
@@ -208,7 +201,7 @@ def test_published_versions_are_immutable_in_the_database(engine: Engine) -> Non
         connection.execute(text("UPDATE lesson_versions SET checksum = 'x'"))
 
 
-def test_studio_endpoints_do_not_exist_outside_development(engine: Engine) -> None:
+def test_studio_endpoints_need_a_signed_in_teacher_in_production(engine: Engine) -> None:
     app = create_app(Settings(app_env="production", database_url=TEST_DATABASE_URL), engine=engine)
 
-    assert app.test_client().get("/api/v1/studio/lessons").status_code == 404
+    assert app.test_client().get("/api/v1/studio/lessons").status_code == 401

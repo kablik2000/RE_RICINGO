@@ -20,8 +20,20 @@ export const cs = {
   topBar: {
     search: 'Hledat lekce, studenty, slovíčka',
     searchLabel: 'Hledat ve Studiu',
-    account: 'Účet lektorky',
-    accountInitial: 'L',
+    account: 'Přihlášen(a): {name}',
+    signOut: 'Odhlásit se',
+  },
+  login: {
+    title: 'Přihlášení',
+    intro: 'Přihlaste se účtem, který vám založil správce Studia.',
+    email: 'E-mail',
+    password: 'Heslo',
+    submit: 'Přihlásit se',
+    submitting: 'Přihlašuji…',
+    invalid: 'Nesprávný e-mail nebo heslo.',
+    tooManyAttempts: 'Příliš mnoho neúspěšných pokusů. Zkuste to znovu za {minutes} min.',
+    unavailable: 'Přihlášení teď nefunguje, server není dostupný. Zkuste to za chvíli.',
+    missing: 'Vyplňte e-mail i heslo.',
   },
   common: {
     back: 'Zpět',
