@@ -25,6 +25,8 @@ export interface LocalStore {
   saveLessons(lessons: readonly StoredLesson[]): Promise<void>;
   /** Inserts lessons that are not installed yet; installed ones are left alone. */
   seedLessons(lessons: readonly StoredLesson[]): Promise<void>;
+  /** Deletes the lessons with these IDs (unknown IDs are ignored). */
+  removeLessons(lessonIds: readonly string[]): Promise<void>;
   readSetting(key: string): Promise<string | null>;
   writeSetting(key: string, value: string): Promise<void>;
 }
@@ -50,6 +52,12 @@ export function createMemoryLocalStore(): LocalStore {
         if (!lessons.has(lesson.id)) {
           lessons.set(lesson.id, lesson);
         }
+      }
+      return Promise.resolve();
+    },
+    removeLessons(lessonIds) {
+      for (const id of lessonIds) {
+        lessons.delete(id);
       }
       return Promise.resolve();
     },

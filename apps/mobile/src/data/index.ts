@@ -15,5 +15,5 @@ export {
   type LessonUpdates,
 } from './content-hooks';
 export { ContentSyncDriver } from './content-sync-driver';
-export type { ContentSync, ContentSyncState } from './content/content-sync';
+export type { ContentSync, ContentSyncState, LessonChange } from './content/content-sync';
 export { UPDATE_POLICIES, type LessonUpdate, type UpdatePolicy } from './content/update-rules';

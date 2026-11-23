@@ -231,8 +231,12 @@ The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for t
 - [x] Lesson editor per design: dialogue tree, sentence + segment editing, layered explanations, vocabulary and grammar links, lesson info, live phone preview, autosave, check, publish (checked in the browser 2026-11-23 on the demo lesson).
 - [x] Student app reads published lessons from the API instead of the bundled demo (offline cache, M7 update rules). Development only until auth; verified on the Android emulator against the Docker API.
 - [ ] Content API for real builds: authentication, assigned lessons only, production URL (`RICI_API_URL`), HTTPS — with M2 auth and hosting (Q-19).
-- [ ] Lessons removed from the catalog (archived, unassigned) stay on the device; define removal with assignments.
-- [ ] Studio: drag-and-drop reordering of turns/sentences; selecting segment text with the mouse (now typed); archive / delete lessons; lesson import from file.
+- [x] Unpublish lessons (Studio "Zrušit zveřejnění", `POST …/unpublish`): the lesson leaves the content catalog, its draft and versions stay, "Znovu zveřejnit" restores the same version. Verified in the browser and on the Android emulator 2026-11-23.
+- [x] Lessons no longer in the catalog are removed from the device on the next check (also the bundled demo; an open lesson is removed when the student leaves it).
+- [ ] With assignments: an unassigned lesson leaves the student's catalog and is removed the same way; decide what happens to the student's progress in a removed lesson.
+- [x] Delete lessons in the Studio ("Smazat"): a never-published draft is deleted; a published lesson must be unpublished first and is then archived (its versions stay). Verified in the browser 2026-11-23.
+- [x] Student app tells what an automatic update changed ("Lekce jsou aktualizované": new, changed, removed lessons, until the student taps OK) and checks again on every return to the app (30 s guard). Verified on the Android emulator 2026-11-23.
+- [ ] Studio: drag-and-drop reordering of turns/sentences; selecting segment text with the mouse (now typed); lesson import from file.
 - [ ] Studio validation messages: the API's schema messages are translated for known patterns only; unknown ones show in English.
 - [ ] Teacher auth (with M2 auth).
 - [ ] Students: list, invite, profile, level.

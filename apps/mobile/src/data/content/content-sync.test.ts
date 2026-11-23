@@ -76,6 +76,87 @@ describe('content sync', () => {
     expect((await library.getLessonBundle('al-bar')).lesson.version).toBe(2);
   });
 
+  it('removes lessons the lecturer unpublished, on any connection and policy', async () => {
+    const { server, contentSync, library, ready } = createTestServices({
+      connection: 'metered',
+      policy: 'ask',
+    });
+    await ready;
+    server.publish(lessonBundle('alla-stazione', 1, 'Alla stazione'));
+    await contentSync.check();
+    await contentSync.downloadOffered();
+    const changed = jest.fn();
+    library.onInstalled(changed);
+
+    server.unpublish('alla-stazione');
+    await contentSync.check();
+
+    expect((await library.listLessons()).map((lesson) => lesson.id)).toEqual(['al-bar']);
+    expect(changed).toHaveBeenCalledWith(['alla-stazione']);
+  });
+
+  it('lists what it changed until the student acknowledges it', async () => {
+    const { server, contentSync } = createTestServices();
+    server.publish(lessonBundle('al-bar', 2, 'Al bar (nuovo)'));
+    server.publish(lessonBundle('alla-stazione', 1, 'Alla stazione'));
+    await contentSync.check();
+    expect(contentSync.getState().changes).toEqual([
+      { kind: 'updated', lessonId: 'al-bar', title: 'Al bar (nuovo)' },
+      { kind: 'added', lessonId: 'alla-stazione', title: 'Alla stazione' },
+    ]);
+
+    server.unpublish('alla-stazione');
+    await contentSync.check();
+    expect(contentSync.getState().changes).toEqual([
+      { kind: 'updated', lessonId: 'al-bar', title: 'Al bar (nuovo)' },
+      { kind: 'removed', lessonId: 'alla-stazione', title: 'Alla stazione' },
+    ]);
+
+    contentSync.acknowledgeChanges();
+    expect(contentSync.getState().changes).toEqual([]);
+  });
+
+  it('removes the bundled lesson too when the server withdraws it', async () => {
+    const { server, contentSync, library } = createTestServices();
+
+    server.unpublish('al-bar');
+    await contentSync.check();
+
+    expect(await library.listLessons()).toEqual([]);
+  });
+
+  it('keeps an open lesson until the student leaves it, then removes it', async () => {
+    const { server, contentSync, library, holds } = createTestServices();
+    const release = holds.hold('al-bar');
+
+    server.unpublish('al-bar');
+    await contentSync.check();
+    expect(await library.listLessons()).toHaveLength(1);
+
+    expect(contentSync.getState().changes).toEqual([]);
+
+    release();
+    await new Promise<void>((resolve) => {
+      setImmediate(resolve);
+    });
+    expect(await library.listLessons()).toEqual([]);
+    expect(contentSync.getState().changes).toEqual([
+      { kind: 'removed', lessonId: 'al-bar', title: 'Al bar' },
+    ]);
+  });
+
+  it('withdraws a pending offer for a lesson that was unpublished meanwhile', async () => {
+    const { server, contentSync } = createTestServices({ connection: 'metered' });
+    server.publish(lessonBundle('al-bar', 2));
+    await contentSync.check();
+    expect(contentSync.getState().offered).toHaveLength(1);
+
+    server.unpublish('al-bar');
+    await contentSync.check();
+
+    expect(contentSync.getState().offered).toEqual([]);
+  });
+
   it('rejects downloaded content that fails validation and keeps the installed lesson', async () => {
     const { server, contentSync, library, telemetry } = createTestServices();
     const broken = lessonBundle('al-bar', 2);

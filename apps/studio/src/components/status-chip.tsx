@@ -8,22 +8,20 @@ const STYLE: Readonly<Record<LessonStatus, string | undefined>> = {
   published: ui.statusPublished,
   changed: ui.statusChanged,
   draft: ui.statusDraft,
+  unpublished: ui.statusDraft,
 };
 
 const ICON: Readonly<Record<LessonStatus, string>> = {
   published: 'check_circle',
   changed: 'edit',
   draft: 'draft',
+  unpublished: 'visibility_off',
 };
 
-/** Publication state of a lesson: draft, published version, or unpublished changes. */
+/** Publication state: draft, published version, unpublished changes, or hidden from students. */
 export function StatusChip({ status, version }: { status: LessonStatus; version: number | null }) {
   const label =
-    status === 'draft'
-      ? t('status.draft')
-      : t(status === 'published' ? 'status.published' : 'status.changed', {
-          version: version ?? 0,
-        });
+    status === 'draft' ? t('status.draft') : t(`status.${status}`, { version: version ?? 0 });
   return (
     <span className={`${ui.chip ?? ''} ${STYLE[status] ?? ''}`}>
       <Icon name={ICON[status]} size={16} />

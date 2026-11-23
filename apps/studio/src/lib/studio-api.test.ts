@@ -1,5 +1,13 @@
 import { filterLessons, parseLessonFilter } from './lesson-filter';
-import { listLessons, load, type LessonSummary, saveLesson, StudioApiError } from './studio-api';
+import {
+  deleteLesson,
+  listLessons,
+  load,
+  type LessonSummary,
+  saveLesson,
+  StudioApiError,
+  unpublishLesson,
+} from './studio-api';
 
 const AL_BAR: LessonSummary = {
   id: 'al-bar',
@@ -51,6 +59,27 @@ describe('studio API client', () => {
     expect(error).toMatchObject({ status: 422, issues: [{ path: '$.lexemes[0]' }] });
   });
 
+  it('unpublishes a lesson', async () => {
+    const hidden = { ...AL_BAR, status: 'unpublished' };
+    const fetchImpl = respondWith({ lesson: hidden });
+
+    await expect(unpublishLesson('al-bar', fetchImpl)).resolves.toEqual(hidden);
+    expect(fetchImpl).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/studio/lessons/al-bar/unpublish',
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  it('deletes a lesson (204 No Content)', async () => {
+    const fetchImpl = vi.fn(() => Promise.resolve(new Response(null, { status: 204 })));
+
+    await expect(deleteLesson('bar', fetchImpl)).resolves.toBeUndefined();
+    expect(fetchImpl).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/studio/lessons/bar',
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
   it('reports an unreachable backend as a value pages can render', async () => {
     const unreachable = vi.fn(() => Promise.reject(new TypeError('fetch failed')));
 
@@ -78,5 +107,6 @@ describe('lesson filter', () => {
       'alla-stazione',
     ]);
     expect(parseLessonFilter('nonsense')).toBe('all');
+    expect(parseLessonFilter('unpublished')).toBe('unpublished');
   });
 });

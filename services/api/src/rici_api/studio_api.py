@@ -118,4 +118,16 @@ def studio_blueprint(session_factory: SessionFactory) -> Blueprint:
             summary = lessons.publish(session, lesson_id)
         return jsonify({"lesson": _summary_json(summary)})
 
+    @studio.delete("/lessons/<lesson_id>")
+    def delete_lesson(lesson_id: str) -> ResponseReturnValue:
+        with session_factory() as session, session.begin():
+            lessons.delete_lesson(session, lesson_id)
+        return "", 204
+
+    @studio.post("/lessons/<lesson_id>/unpublish")
+    def unpublish_lesson(lesson_id: str) -> ResponseReturnValue:
+        with session_factory() as session, session.begin():
+            summary = lessons.unpublish(session, lesson_id)
+        return jsonify({"lesson": _summary_json(summary)})
+
     return studio

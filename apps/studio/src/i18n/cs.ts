@@ -87,6 +87,7 @@ export const cs = {
       published: 'Zveřejněné · {count}',
       changed: 'S neveřejnými změnami · {count}',
       draft: 'Koncepty · {count}',
+      unpublished: 'Skryté · {count}',
     },
     columns: {
       lesson: 'Lekce',
@@ -104,6 +105,7 @@ export const cs = {
     draft: 'Koncept',
     published: 'Zveřejněno · v{version}',
     changed: 'Neveřejné změny oproti v{version}',
+    unpublished: 'Skryto studentům · v{version}',
   },
   newLesson: {
     title: 'Nová lekce',
@@ -130,6 +132,19 @@ export const cs = {
     publishing: 'Zveřejňuji…',
     published: 'Zveřejněno jako v{version}.',
     publishFailed: 'Zveřejnění se nepodařilo: {message}',
+    republish: 'Znovu zveřejnit',
+    unpublish: 'Zrušit zveřejnění',
+    unpublishing: 'Ruším zveřejnění…',
+    unpublishConfirm:
+      'Zrušit zveřejnění lekce „{title}“? Studenti ji přestanou vidět a při příští kontrole aktualizací zmizí z jejich telefonů. Koncept i zveřejněné verze zůstanou a lekci můžete kdykoli zveřejnit znovu.',
+    unpublished: 'Zveřejnění zrušeno. Studenti lekci neuvidí, dokud ji znovu nezveřejníte.',
+    unpublishFailed: 'Zrušení zveřejnění se nepodařilo: {message}',
+    delete: 'Smazat',
+    deleting: 'Mažu…',
+    deleteConfirmDraft: 'Smazat koncept „{title}“? Tuto akci nelze vrátit.',
+    deleteConfirmUnpublished:
+      'Smazat lekci „{title}“ ze Studia? Studenti ji už nemají. Zveřejněné verze zůstanou archivované v databázi, ve Studiu ale lekce zmizí.',
+    deleteFailed: 'Smazání se nepodařilo: {message}',
     tabs: {
       label: 'Části lekce',
       dialog: 'Dialog',

@@ -105,6 +105,14 @@ export function openSqliteLocalStore(): LocalStore {
       ),
     saveLessons: (lessons) => run('save lessons', (db) => write(db, UPSERT, lessons)),
     seedLessons: (lessons) => run('seed lessons', (db) => write(db, INSERT_IF_MISSING, lessons)),
+    removeLessons: (lessonIds) =>
+      run('remove lessons', (db) =>
+        db.withTransactionAsync(async () => {
+          for (const id of lessonIds) {
+            await db.runAsync('DELETE FROM lessons WHERE id = ?', id);
+          }
+        }),
+      ),
     readSetting: (key) =>
       run('read a setting', async (db) => {
         const row = await db.getFirstAsync<{ value: string }>(

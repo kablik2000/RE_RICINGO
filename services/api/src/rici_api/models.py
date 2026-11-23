@@ -26,6 +26,8 @@ class Lesson(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Set while the lecturer has withdrawn the lesson from students; its versions are kept.
+    unpublished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     versions: Mapped[list["LessonVersion"]] = relationship(
         back_populates="lesson", order_by="LessonVersion.version"

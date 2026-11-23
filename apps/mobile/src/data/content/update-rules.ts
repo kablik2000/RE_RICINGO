@@ -78,6 +78,18 @@ export function findLessonUpdates(
   });
 }
 
+/**
+ * Installed lessons the server no longer publishes (the lecturer unpublished or archived them).
+ * The catalog is the source of truth, so this includes lessons bundled with the app.
+ */
+export function findWithdrawnLessons(
+  installed: readonly InstalledVersion[],
+  catalog: readonly CatalogEntry[],
+): string[] {
+  const published = new Set(catalog.map((lesson) => lesson.id));
+  return installed.filter((lesson) => !published.has(lesson.id)).map((lesson) => lesson.id);
+}
+
 /** Identifies one offered version, so a dismissed offer is not repeated for the same content. */
 export function updateKey(update: LessonUpdate): string {
   return `${update.lesson.id}@${update.lesson.checksum}`;

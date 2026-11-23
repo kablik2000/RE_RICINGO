@@ -41,6 +41,25 @@ describe('LessonUpdateSettings', () => {
     expect(screen.getByText(/Všechny lekce jsou aktuální\./)).toBeOnTheScreen();
   });
 
+  it('tells the student what an automatic update changed until they confirm it', async () => {
+    const test = createTestServices({ connection: 'unmetered' });
+    test.server.publish(lessonBundle('alla-stazione', 1, 'Alla stazione'));
+    test.server.unpublish('al-bar');
+    await renderWithProviders(<LessonUpdateSettings />, { services: test.services });
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Zkontrolovat aktualizace' }));
+
+    expect(await screen.findByText('Lekce jsou aktualizované')).toBeOnTheScreen();
+    expect(screen.getByText('Nové: Alla stazione')).toBeOnTheScreen();
+    expect(screen.getByText('Odebrané: Al bar')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'OK' }));
+
+    await waitFor(() => {
+      expect(screen.queryByText('Lekce jsou aktualizované')).toBeNull();
+    });
+  });
+
   it('shows why a manual check failed', async () => {
     const test = createTestServices({ connection: 'offline' });
     await renderWithProviders(<LessonUpdateSettings />, { services: test.services });

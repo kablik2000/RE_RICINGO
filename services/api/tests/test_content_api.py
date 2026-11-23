@@ -41,6 +41,22 @@ def test_unpublished_drafts_are_not_in_the_catalog(client: FlaskClient, engine: 
     assert body["lessons"] == []
 
 
+def test_unpublished_lessons_leave_the_catalog_until_published_again(
+    client: FlaskClient, engine: Engine
+) -> None:
+    import_demo(engine)
+
+    client.post("/api/v1/studio/lessons/al-bar/unpublish")
+
+    assert client.get("/api/v1/content/lessons").get_json()["lessons"] == []
+    assert client.get("/api/v1/content/lessons/al-bar/versions/1").status_code == 404
+
+    client.post("/api/v1/studio/lessons/al-bar/publish")
+
+    [lesson] = client.get("/api/v1/content/lessons").get_json()["lessons"]
+    assert lesson["version"] == 1
+
+
 def test_a_published_version_is_served_as_immutable(client: FlaskClient, engine: Engine) -> None:
     import_demo(engine)
 

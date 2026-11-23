@@ -1,8 +1,8 @@
 import type { LessonSummary } from './studio-api';
 
-export type LessonFilter = 'all' | 'published' | 'changed' | 'draft';
+export type LessonFilter = 'all' | 'published' | 'changed' | 'draft' | 'unpublished';
 
-const FILTERS: readonly LessonFilter[] = ['all', 'published', 'changed', 'draft'];
+const FILTERS: readonly LessonFilter[] = ['all', 'published', 'changed', 'draft', 'unpublished'];
 
 export function parseLessonFilter(value: string | undefined): LessonFilter {
   return FILTERS.find((filter) => filter === value) ?? 'all';

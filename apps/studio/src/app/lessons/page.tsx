@@ -14,13 +14,7 @@ import { listLessons, load, type LessonSummary } from '@/lib/studio-api';
 
 import styles from './lessons.module.css';
 
-const FILTERS: readonly { value: LessonFilter; key: 'all' | 'published' | 'changed' | 'draft' }[] =
-  [
-    { value: 'all', key: 'all' },
-    { value: 'published', key: 'published' },
-    { value: 'changed', key: 'changed' },
-    { value: 'draft', key: 'draft' },
-  ];
+const FILTERS: readonly LessonFilter[] = ['all', 'published', 'changed', 'draft', 'unpublished'];
 
 function filterHref(filter: LessonFilter, query: string) {
   return {
@@ -50,6 +44,7 @@ export default async function LessonsPage({
     published: filterLessons(lessons, 'published', '').length,
     changed: filterLessons(lessons, 'changed', '').length,
     draft: filterLessons(lessons, 'draft', '').length,
+    unpublished: filterLessons(lessons, 'unpublished', '').length,
   };
 
   return (
@@ -72,15 +67,17 @@ export default async function LessonsPage({
           <>
             <nav aria-label={t('lessons.filtersLabel')} className={styles.filters}>
               {FILTERS.map((item) => {
-                const selected = item.value === filter;
+                const selected = item === filter;
+                // Hidden lessons are rare: their filter appears only when there are some.
+                if (item === 'unpublished' && counts.unpublished === 0 && !selected) return null;
                 return (
                   <Link
-                    key={item.value}
-                    href={filterHref(item.value, query)}
+                    key={item}
+                    href={filterHref(item, query)}
                     className={`${ui.filterChip ?? ''} ${selected ? (ui.filterChipSelected ?? '') : ''}`}
                     {...(selected && { 'aria-current': 'page' as const })}>
                     {selected && <Icon name="check" size={18} />}
-                    {t(`lessons.filters.${item.key}`, { count: counts[item.value] })}
+                    {t(`lessons.filters.${item}`, { count: counts[item] })}
                   </Link>
                 );
               })}

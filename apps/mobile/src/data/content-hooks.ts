@@ -9,6 +9,7 @@ import { useDataServices } from './query-provider';
 const DISABLED_STATE: ContentSyncState = {
   phase: 'idle',
   offered: [],
+  changes: [],
   lastCheckedAt: null,
   error: null,
 };
@@ -23,6 +24,7 @@ export interface LessonUpdates {
   check: () => void;
   downloadOffered: () => void;
   dismissOffer: () => void;
+  acknowledgeChanges: () => void;
 }
 
 /** Lesson update state for banners and settings, plus the student's actions. */
@@ -47,6 +49,9 @@ export function useLessonUpdates(): LessonUpdates {
     downloadOffered: act((sync) => void sync.downloadOffered()),
     dismissOffer: act((sync) => {
       sync.dismissOffer();
+    }),
+    acknowledgeChanges: act((sync) => {
+      sync.acknowledgeChanges();
     }),
   };
 }

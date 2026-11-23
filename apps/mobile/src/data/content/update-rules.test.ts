@@ -1,5 +1,10 @@
 import type { CatalogEntry } from './content-api';
-import { decideUpdateAction, findLessonUpdates, toConnectionKind } from './update-rules';
+import {
+  decideUpdateAction,
+  findLessonUpdates,
+  findWithdrawnLessons,
+  toConnectionKind,
+} from './update-rules';
 
 function entry(id: string, version: number, checksum: string): CatalogEntry {
   return {
@@ -43,6 +48,18 @@ describe('toConnectionKind', () => {
       'offline',
     );
     expect(toConnectionKind({ type: 'NONE' })).toBe('offline');
+  });
+});
+
+describe('findWithdrawnLessons', () => {
+  it('lists installed lessons that are no longer in the catalog', () => {
+    const installed = [
+      { id: 'al-bar', version: 1, checksum: null },
+      { id: 'alla-stazione', version: 1, checksum: 'a' },
+    ];
+
+    expect(findWithdrawnLessons(installed, [entry('al-bar', 1, 'b')])).toEqual(['alla-stazione']);
+    expect(findWithdrawnLessons(installed, [])).toEqual(['al-bar', 'alla-stazione']);
   });
 });
 

@@ -8,16 +8,27 @@ import type { LessonHolds } from './lesson-holds';
 import {
   decideUpdateAction,
   findLessonUpdates,
+  findWithdrawnLessons,
   updateKey,
   type ConnectionKind,
   type LessonUpdate,
   type UpdatePolicy,
 } from './update-rules';
 
+/** A lesson that was installed, replaced or removed on the device. */
+export interface LessonChange {
+  kind: 'added' | 'updated' | 'removed';
+  lessonId: string;
+  /** Italian title, to tell the student which lesson it was. */
+  title: string;
+}
+
 export interface ContentSyncState {
   phase: 'idle' | 'checking' | 'downloading';
   /** Updates waiting for the student's confirmation (mobile data, or the "ask" policy). */
   offered: readonly LessonUpdate[];
+  /** Changes made on the device the student has not acknowledged yet (newest last). */
+  changes: readonly LessonChange[];
   /** When the server was last asked successfully (ms since epoch). */
   lastCheckedAt: number | null;
   /** The last check or download the student started themselves failed with this. */
@@ -39,6 +50,8 @@ export interface ContentSync {
   downloadOffered: () => Promise<void>;
   /** Hides the current offer until the server has something else. */
   dismissOffer: () => void;
+  /** The student has seen the list of changes. */
+  acknowledgeChanges: () => void;
 }
 
 export interface ContentSyncDeps {
@@ -51,16 +64,24 @@ export interface ContentSyncDeps {
   now?: () => number;
 }
 
+/** A downloaded lesson and how it changes the device's lessons. */
+interface Downloaded {
+  lesson: StoredLesson;
+  change: LessonChange;
+}
+
 const INITIAL_STATE: ContentSyncState = {
   phase: 'idle',
   offered: [],
+  changes: [],
   lastCheckedAt: null,
   error: null,
 };
 
 /**
  * Keeps the offline lessons up to date (Q-18): checks the server's catalog, downloads updates
- * automatically or offers them, and installs each lesson only while it is not open.
+ * automatically or offers them, removes lessons the server no longer publishes, and changes each
+ * lesson only while it is not open.
  */
 export function createContentSync(deps: ContentSyncDeps): ContentSync {
   const { api, library, holds, telemetry } = deps;
@@ -69,7 +90,9 @@ export function createContentSync(deps: ContentSyncDeps): ContentSync {
   const listeners = new Set<() => void>();
   const dismissed = new Set<string>();
   /** Downloaded while the lesson was open; installed when it closes. */
-  const staged = new Map<string, StoredLesson>();
+  const staged = new Map<string, Downloaded>();
+  /** Withdrawn by the server while the lesson was open (ID → title); removed when it closes. */
+  const stagedRemovals = new Map<string, string>();
 
   function update(patch: Partial<ContentSyncState>) {
     state = { ...state, ...patch };
@@ -78,23 +101,53 @@ export function createContentSync(deps: ContentSyncDeps): ContentSync {
     });
   }
 
-  async function installNow(lessons: readonly StoredLesson[]) {
-    const ready = lessons.filter((lesson) => !holds.isHeld(lesson.id));
-    lessons
-      .filter((lesson) => holds.isHeld(lesson.id))
-      .forEach((lesson) => staged.set(lesson.id, lesson));
-    await library.install(ready);
+  /** Adds changes to the list the student sees; a lesson keeps only its latest change. */
+  function recordChanges(changes: readonly LessonChange[]) {
+    if (changes.length === 0) {
+      return;
+    }
+    const ids = new Set(changes.map((change) => change.lessonId));
+    update({
+      changes: [...state.changes.filter((change) => !ids.has(change.lessonId)), ...changes],
+    });
+  }
+
+  async function installNow(items: readonly Downloaded[]) {
+    const ready = items.filter((item) => !holds.isHeld(item.lesson.id));
+    items
+      .filter((item) => holds.isHeld(item.lesson.id))
+      .forEach((item) => staged.set(item.lesson.id, item));
+    await library.install(ready.map((item) => item.lesson));
+    recordChanges(ready.map((item) => item.change));
   }
 
   holds.onReleased((lessonId) => {
-    const lesson = staged.get(lessonId);
-    if (lesson === undefined) {
+    const removedTitle = stagedRemovals.get(lessonId);
+    if (removedTitle !== undefined) {
+      stagedRemovals.delete(lessonId);
+      library
+        .remove([lessonId])
+        .then(() => {
+          recordChanges([{ kind: 'removed', lessonId, title: removedTitle }]);
+        })
+        .catch((error: unknown) => {
+          telemetry.captureError(toAppError(error), { lessonId, step: 'remove-staged' });
+        });
+      return;
+    }
+    const item = staged.get(lessonId);
+    if (item === undefined) {
       return;
     }
     staged.delete(lessonId);
-    library.install([lesson]).catch((error: unknown) => {
-      telemetry.captureError(toAppError(error), { lessonId, step: 'install-staged' });
-    });
+    library
+      .install([item.lesson])
+      .then(() => {
+        recordChanges([item.change]);
+      })
+      .catch((error: unknown) => {
+        telemetry.captureError(toAppError(error), { lessonId, step: 'install-staged' });
+      });
   });
 
   /** Downloads and validates each update; installs those that arrived intact. */
@@ -103,9 +156,9 @@ export function createContentSync(deps: ContentSyncDeps): ContentSync {
       return;
     }
     update({ phase: 'downloading' });
-    const downloaded: StoredLesson[] = [];
+    const downloaded: Downloaded[] = [];
     let firstError: AppError | null = null;
-    for (const { lesson } of updates) {
+    for (const { kind, lesson } of updates) {
       try {
         const { checksum, bundle } = await api.fetchLessonVersion(lesson.id, lesson.version);
         const parsed = parseLessonBundle(bundle, `"${lesson.id}" v${lesson.version}`);
@@ -115,7 +168,14 @@ export function createContentSync(deps: ContentSyncDeps): ContentSync {
             `Downloaded lesson is "${parsed.lesson.id}", expected "${lesson.id}".`,
           );
         }
-        downloaded.push({ id: lesson.id, version: lesson.version, checksum, bundle });
+        downloaded.push({
+          lesson: { id: lesson.id, version: lesson.version, checksum, bundle },
+          change: {
+            kind: kind === 'new' ? 'added' : 'updated',
+            lessonId: lesson.id,
+            title: parsed.lesson.titleItalian,
+          },
+        });
       } catch (error) {
         const appError = toAppError(error);
         telemetry.captureError(appError, { lessonId: lesson.id, step: 'download' });
@@ -123,11 +183,30 @@ export function createContentSync(deps: ContentSyncDeps): ContentSync {
       }
     }
     await installNow(downloaded);
-    const done = new Set(downloaded.map((lesson) => lesson.id));
+    const done = new Set(downloaded.map((item) => item.lesson.id));
     update({ offered: state.offered.filter((offer) => !done.has(offer.lesson.id)) });
     if (firstError !== null) {
       throw firstError;
     }
+  }
+
+  /** Removing costs no data, so it does not wait for Wi-Fi or the student's confirmation. */
+  async function removeWithdrawn(lessonIds: readonly string[]) {
+    stagedRemovals.clear();
+    if (lessonIds.length === 0) {
+      return;
+    }
+    const withdrawn = new Set(lessonIds);
+    const titles = new Map(
+      (await library.listLessons()).map((lesson) => [lesson.id, lesson.titleItalian]),
+    );
+    const titleOf = (id: string) => titles.get(id) ?? id;
+    lessonIds.filter((id) => holds.isHeld(id)).forEach((id) => stagedRemovals.set(id, titleOf(id)));
+    withdrawn.forEach((id) => staged.delete(id));
+    update({ offered: state.offered.filter((offer) => !withdrawn.has(offer.lesson.id)) });
+    const now = lessonIds.filter((id) => !holds.isHeld(id));
+    await library.remove(now);
+    recordChanges(now.map((id) => ({ kind: 'removed', lessonId: id, title: titleOf(id) })));
   }
 
   async function run(manual: boolean, task: () => Promise<void>) {
@@ -177,9 +256,11 @@ export function createContentSync(deps: ContentSyncDeps): ContentSync {
           deps.getPolicy(),
         ]);
         const pending = findLessonUpdates(installed, catalog).filter(
-          (candidate) => staged.get(candidate.lesson.id)?.checksum !== candidate.lesson.checksum,
+          (candidate) =>
+            staged.get(candidate.lesson.id)?.lesson.checksum !== candidate.lesson.checksum,
         );
         update({ lastCheckedAt: now() });
+        await removeWithdrawn(findWithdrawnLessons(installed, catalog));
         if (manual) {
           dismissed.clear();
         }
@@ -199,6 +280,10 @@ export function createContentSync(deps: ContentSyncDeps): ContentSync {
     dismissOffer() {
       state.offered.forEach((offer) => dismissed.add(updateKey(offer)));
       update({ offered: [] });
+    },
+
+    acknowledgeChanges() {
+      update({ changes: [] });
     },
   };
 }

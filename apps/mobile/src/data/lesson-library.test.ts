@@ -66,6 +66,16 @@ describe('lesson library', () => {
     expect(error).toMatchObject({ kind: 'validation' });
   });
 
+  it('does not bring back a bundled lesson that was removed', async () => {
+    const store = createMemoryLocalStore();
+    const library = createLessonLibrary(store, () => [toSeed(alBar, 0)]);
+    await library.remove(['al-bar']);
+
+    const afterRestart = createLessonLibrary(store, () => [toSeed(alBar, 0)]);
+
+    expect(await afterRestart.listLessons()).toEqual([]);
+  });
+
   it('serves installed updates and never lets the bundled seed overwrite them', async () => {
     const store = createMemoryLocalStore();
     await store.saveLessons([

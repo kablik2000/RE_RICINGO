@@ -80,7 +80,7 @@ docker compose up --build   # PostgreSQL :5432, API :8000, Mailpit :8025
 ```
 
 - Demo lesson into the database (once): `corepack pnpm backend:seed`
-- Teacher Studio: VS Code task `Studio: start (dev server)` → http://localhost:3000
+- Teacher Studio: VS Code task `Teacher Studio (web administrace): start` → http://localhost:3000
 - API health: http://localhost:8000/api/v1/health
 - E-mails sent by the API (invitations): http://localhost:8025
 - VS Code tasks: `Backend: start (Docker)`, `Backend: stop`, `Backend: reset database`, `Backend: tests and checks`

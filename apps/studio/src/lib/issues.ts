@@ -29,14 +29,26 @@ const FIELD_NAMES: Readonly<Record<string, string>> = {
 
 const INDEXED = /^(\w+)\[(\d+)\]$/;
 
-/** Turns the API's English schema messages into short Czech ones where the pattern is known. */
-export function translateIssueMessage(message: string): string {
+/** What to say when a list must not be empty, by the list's field name. */
+const EMPTY_LISTS: Readonly<Record<string, string>> = {
+  segments:
+    'Věta nemá žádné části. V poli „Části věty“ napište úsek italské věty a klikněte na Přidat část.',
+  sentences: 'Replika nemá žádnou větu.',
+  turns: 'Dialog nemá žádnou repliku.',
+};
+
+/**
+ * Turns the API's English schema messages into short Czech ones where the pattern is known.
+ * `field` is the field the issue is about (the last name in its path), when known.
+ */
+export function translateIssueMessage(message: string, field?: string): string {
   const required = /^'(\w+)' is a required property$/.exec(message);
   if (required?.[1] !== undefined) {
     return `Chybí ${FIELD_NAMES[required[1]] ?? required[1]}.`;
   }
   if (/should be non-empty|is too short|does not have enough properties/.test(message)) {
-    return message.startsWith('[]') ? 'Seznam je prázdný.' : 'Pole je prázdné.';
+    if (!message.startsWith('[]')) return 'Pole je prázdné.';
+    return (field !== undefined && EMPTY_LISTS[field]) || 'Seznam je prázdný.';
   }
   const notFound = /^segment "(.+)" is not found in "(.+)" after position \d+$/.exec(message);
   if (notFound?.[1] !== undefined) {
@@ -65,7 +77,8 @@ export function describeIssue(issue: LessonIssue, bundle: LessonBundle): Describ
     .replace(/^\$\.?/, '')
     .split('.')
     .filter(Boolean);
-  const message = translateIssueMessage(issue.message);
+  const field = parts.at(-1)?.replace(/\[\d+\]$/, '');
+  const message = translateIssueMessage(issue.message, field);
   const [first, second, third, fourth] = parts;
 
   const lexeme = first === undefined ? null : INDEXED.exec(first);

@@ -334,12 +334,18 @@ Asymmetric data makes a general sync engine unnecessary at the start:
 - **Down (content):** read-only, versioned bundles → simple fetch-if-newer + cache.
   Implemented in `src/data/content/` against `GET /api/v1/content/lessons` (catalog: newest
   published version + checksum per lesson) and `…/lessons/<id>/versions/<n>` (immutable bundle):
-  - checks at start, when the app returns after 15 min, and when the connection changes;
+  - checks at start, whenever the app returns to the foreground (at most every 30 s), and when
+    the connection changes;
+  - changes made without asking (downloads on Wi-Fi, removals) are listed to the student
+    ("Lekce jsou aktualizované") until acknowledged;
   - the student's policy (Q-18, Profile → Aktualizace lekcí) decides: automatic on Wi-Fi and
     offered on mobile data (default), always automatic, or always offered;
   - every download is validated with the domain schema before it is installed; a broken one is
     skipped and the installed version stays;
   - a lesson open on screen is never replaced: its update waits until the student leaves it;
+  - the catalog is the source of truth: an installed lesson that is no longer in it (the
+    lecturer unpublished it) is removed on any connection and policy, the bundled demo included
+    (it is seeded only once, so it does not come back); an open lesson goes when it closes;
   - first start works offline: the store is seeded with the lessons bundled in the app.
     Until authentication exists the catalog lists every published lesson and runs only in
     development; it becomes "assigned lessons" with M2 auth.

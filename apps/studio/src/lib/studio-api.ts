@@ -5,7 +5,7 @@ import { apiBaseUrl } from './api-status';
 
 /** Teacher Studio endpoints of the Flask API (`/api/v1/studio`, ADR-0011). Server-side only. */
 
-export const lessonStatusSchema = z.enum(['draft', 'published', 'changed']);
+export const lessonStatusSchema = z.enum(['draft', 'published', 'changed', 'unpublished']);
 export type LessonStatus = z.infer<typeof lessonStatusSchema>;
 
 export const lessonSummarySchema = z.object({
@@ -62,6 +62,7 @@ export class StudioApiError extends Error {
   }
 }
 
+/** Parses a successful response body; `null` stands for "no content" (204). */
 async function request<T>(
   path: string,
   schema: z.ZodType<T>,
@@ -80,7 +81,7 @@ async function request<T>(
   } catch (error) {
     throw new StudioApiError(error instanceof Error ? error.message : String(error), 0);
   }
-  const body: unknown = await response.json().catch(() => null);
+  const body: unknown = response.status === 204 ? null : await response.json().catch(() => null);
   if (!response.ok) {
     const parsed = errorSchema.safeParse(body);
     throw new StudioApiError(
@@ -138,6 +139,25 @@ export function saveLesson(
 export async function publishLesson(id: string, fetchImpl?: typeof fetch): Promise<LessonSummary> {
   const body = await request(
     `/lessons/${encodeURIComponent(id)}/publish`,
+    z.object({ lesson: lessonSummarySchema }),
+    { method: 'POST' },
+    fetchImpl,
+  );
+  return body.lesson;
+}
+
+/** Deletes a draft, or archives an unpublished lesson (published versions are immutable). */
+export async function deleteLesson(id: string, fetchImpl?: typeof fetch): Promise<void> {
+  await request(`/lessons/${encodeURIComponent(id)}`, z.null(), { method: 'DELETE' }, fetchImpl);
+}
+
+/** Withdraws a published lesson from students; its draft and versions are kept. */
+export async function unpublishLesson(
+  id: string,
+  fetchImpl?: typeof fetch,
+): Promise<LessonSummary> {
+  const body = await request(
+    `/lessons/${encodeURIComponent(id)}/unpublish`,
     z.object({ lesson: lessonSummarySchema }),
     { method: 'POST' },
     fetchImpl,

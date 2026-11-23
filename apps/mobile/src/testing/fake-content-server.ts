@@ -52,6 +52,10 @@ export function createFakeContentServer() {
         },
       });
     },
+    /** The lecturer unpublished the lesson: it leaves the catalog. */
+    unpublish(lessonId: string) {
+      published.delete(lessonId);
+    },
     failDownloadsOf(lessonId: string) {
       failing.add(lessonId);
     },
@@ -63,9 +67,13 @@ export interface TestServicesOptions {
   policy?: UpdatePolicy;
 }
 
-/** Data services over memory storage, the bundled demo lesson and a fake lesson server. */
+/**
+ * Data services over memory storage, the bundled demo lesson and a fake lesson server that
+ * publishes the same demo lesson (as the development server does).
+ */
 export function createTestServices({ connection = 'unmetered', policy }: TestServicesOptions = {}) {
   const server = createFakeContentServer();
+  server.publish(lessonBundle());
   const store = createMemoryLocalStore();
   const library = createLessonLibrary(store, () => [toSeed(alBar, 0)]);
   const holds = createLessonHolds();

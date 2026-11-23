@@ -144,6 +144,14 @@ export const cs = {
       download: 'Stáhnout',
       later: 'Později',
     },
+    changes: {
+      title: 'Lekce jsou aktualizované',
+      added: 'Nové: {titles}',
+      updated: 'Upravené: {titles}',
+      removed: 'Odebrané: {titles}',
+      removedHint: 'Odebrané lekce lektorka stáhla z výuky.',
+      dismiss: 'OK',
+    },
     settings: {
       title: 'Aktualizace lekcí',
       description:

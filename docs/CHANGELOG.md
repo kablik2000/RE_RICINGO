@@ -6,6 +6,16 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Fixed
 
+- 2026-11-23 — Root scripts (`verify`, `test`, `typecheck`, `studio:dev`) failed with
+  "'pnpm' is not recognized" when pnpm was only available through Corepack; they now call
+  `corepack pnpm`. The VS Code task for the Studio is now named
+  "Teacher Studio (web administrace): start".
+- 2026-11-23 — Teacher Studio opened from another device (`http://<PC IP>:3000`) rendered but
+  did not react to clicks: the Next.js dev server blocks its scripts for other hosts than
+  localhost. `next.config.ts` now allows this PC's local network addresses (`allowedDevOrigins`).
+- 2026-11-23 — Studio lesson check said only "Seznam je prázdný." for a sentence without parts;
+  it now says that the sentence has no parts and how to add them (also for an empty dialogue
+  or turn).
 - 2026-11-23 — Android demo pronunciation was always English: `expo-speech` turns the tag `it-IT`
   into an invalid Java locale and falls back to the device language. Android now passes `it`.
 - 2026-11-23 — Jest worker no longer leaks after tests (query cache GC timers disabled in
@@ -13,6 +23,19 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-23 — **Deleting lessons in the Studio** ("Smazat" in the editor, with a confirmation):
+  a draft that was never published is deleted; a published lesson must be unpublished first and
+  is then archived, its versions kept. API: `DELETE /api/v1/studio/lessons/<id>`.
+- 2026-11-23 — **Student app shows what an update changed**: after lessons were downloaded or
+  removed without asking (Wi-Fi), Home, Lessons and Profile show "Lekce jsou aktualizované" with
+  the new, changed and removed lessons until the student taps OK. The app now checks for updates
+  on every return to the foreground (previously only after 15 minutes).
+- 2026-11-23 — **Unpublishing lessons**: the Studio editor has "Zrušit zveřejnění" (with a
+  confirmation); the lesson is hidden from students ("Skryto studentům · vN", filter "Skryté"),
+  its draft and published versions stay, and "Znovu zveřejnit" restores it (the same version if
+  the draft did not change). API: `POST /api/v1/studio/lessons/<id>/unpublish`, migration
+  `0002_lesson_unpublished_at`. The student app removes lessons that are no longer in the
+  catalog at the next update check (an open lesson after the student leaves it).
 - 2026-11-23 — **Student app downloads published lessons and works offline** (M7 start, Q-18):
   lessons live in an on-device SQLite store (seeded with the bundled demo lesson); the app
   checks the API's new content catalog (`/api/v1/content`) at start, on return and when the

@@ -151,5 +151,6 @@ const createStyles = (theme: Theme) =>
     },
     banner: {
       alignSelf: 'stretch',
+      gap: theme.spacing.md,
     },
   });

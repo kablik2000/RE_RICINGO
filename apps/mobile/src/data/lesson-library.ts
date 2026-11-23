@@ -50,8 +50,14 @@ export interface LessonLibrary extends LessonRepository {
   installedVersions(): Promise<readonly InstalledVersion[]>;
   /** Installs downloaded lessons (already validated) and tells listeners which ones changed. */
   install(lessons: readonly StoredLesson[]): Promise<void>;
+  /** Deletes lessons the server no longer publishes and tells listeners which ones changed. */
+  remove(lessonIds: readonly string[]): Promise<void>;
+  /** Called with the IDs of lessons that were installed, replaced or removed. */
   onInstalled(listener: InstalledListener): () => void;
 }
+
+/** Set once the bundled lessons were stored, so a lesson the server withdrew stays removed. */
+const SEEDED_SETTING = 'lessons.seeded';
 
 /**
  * Lessons from the device's offline store. On first use the store is seeded with the lessons
@@ -63,8 +69,14 @@ export function createLessonLibrary(
 ): LessonLibrary {
   let seeding: Promise<void> | null = null;
   const ready = () => {
-    seeding ??= Promise.resolve()
-      .then(() => store.seedLessons(seeds()))
+    seeding ??= store
+      .readSetting(SEEDED_SETTING)
+      .then(async (seeded) => {
+        if (seeded === null) {
+          await store.seedLessons(seeds());
+          await store.writeSetting(SEEDED_SETTING, '1');
+        }
+      })
       .catch((error: unknown) => {
         seeding = null;
         throw error;
@@ -96,6 +108,12 @@ export function createLessonLibrary(
   };
 
   const listeners = new Set<InstalledListener>();
+  const changed = (lessonIds: readonly string[]) => {
+    loading = null;
+    listeners.forEach((listener) => {
+      listener(lessonIds);
+    });
+  };
 
   return {
     listLessons: async () => (await bundles()).map(toSummary),
@@ -132,11 +150,16 @@ export function createLessonLibrary(
       }
       await ready();
       await store.saveLessons(lessons);
-      loading = null;
-      const ids = lessons.map((lesson) => lesson.id);
-      listeners.forEach((listener) => {
-        listener(ids);
-      });
+      changed(lessons.map((lesson) => lesson.id));
+    },
+
+    async remove(lessonIds) {
+      if (lessonIds.length === 0) {
+        return;
+      }
+      await ready();
+      await store.removeLessons(lessonIds);
+      changed(lessonIds);
     },
 
     onInstalled(listener) {

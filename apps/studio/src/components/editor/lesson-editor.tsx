@@ -2,9 +2,15 @@
 
 import type { LessonBundle } from '@ricingo/domain';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useTransition } from 'react';
 
-import { publishAction, saveDraftAction } from '@/app/lessons/[id]/actions';
+import {
+  deleteLessonAction,
+  publishAction,
+  saveDraftAction,
+  unpublishAction,
+} from '@/app/lessons/[id]/actions';
 import { Icon } from '@/components/icon';
 import { StatusChip } from '@/components/status-chip';
 import ui from '@/components/ui.module.css';
@@ -37,6 +43,9 @@ export function LessonEditor({ initial }: { initial: LessonDetail }) {
   const [showIssues, setShowIssues] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [publishing, startPublishing] = useTransition();
+  const [unpublishing, startUnpublishing] = useTransition();
+  const [deleting, startDeleting] = useTransition();
+  const router = useRouter();
   // What the server has; a draft equal to it (initial load, after publishing) is not saved again.
   const lastSaved = useRef(JSON.stringify(initial.draft));
 
@@ -71,8 +80,43 @@ export function LessonEditor({ initial }: { initial: LessonDetail }) {
   }, [draft, summary.id]);
 
   const nextVersion = (summary.publishedVersion ?? 0) + 1;
+  const busy = publishing || unpublishing || deleting;
   const canPublish =
-    saveState === 'saved' && issues.length === 0 && summary.status !== 'published' && !publishing;
+    saveState === 'saved' && issues.length === 0 && summary.status !== 'published' && !busy;
+  const canUnpublish = summary.status === 'published' || summary.status === 'changed';
+  // A published lesson is unpublished first, so students never lose a lesson by a stray click.
+  const canDelete = summary.status === 'draft' || summary.status === 'unpublished';
+
+  const deleteLesson = () => {
+    const question =
+      summary.status === 'draft' ? 'editor.deleteConfirmDraft' : 'editor.deleteConfirmUnpublished';
+    if (!window.confirm(t(question, { title: draft.lesson.titleItalian }))) {
+      return;
+    }
+    startDeleting(async () => {
+      const result = await deleteLessonAction(summary.id);
+      if (result.ok) {
+        router.replace('/lessons');
+      } else {
+        setNotice(t('editor.deleteFailed', { message: result.message }));
+      }
+    });
+  };
+
+  const unpublish = () => {
+    if (!window.confirm(t('editor.unpublishConfirm', { title: draft.lesson.titleItalian }))) {
+      return;
+    }
+    startUnpublishing(async () => {
+      const result = await unpublishAction(summary.id);
+      if (result.ok) {
+        setSummary(result.lesson);
+        setNotice(t('editor.unpublished'));
+      } else {
+        setNotice(t('editor.unpublishFailed', { message: result.message }));
+      }
+    });
+  };
 
   const publish = () => {
     startPublishing(async () => {
@@ -141,13 +185,37 @@ export function LessonEditor({ initial }: { initial: LessonDetail }) {
             <Icon name="fact_check" size={18} />
             {t('editor.check')}
           </button>
+          {canDelete && (
+            <button
+              type="button"
+              className={`${ui.button ?? ''} ${ui.outlined ?? ''}`}
+              disabled={busy}
+              onClick={deleteLesson}>
+              <Icon name="delete" size={18} />
+              {deleting ? t('editor.deleting') : t('editor.delete')}
+            </button>
+          )}
+          {canUnpublish && (
+            <button
+              type="button"
+              className={`${ui.button ?? ''} ${ui.outlined ?? ''}`}
+              disabled={busy}
+              onClick={unpublish}>
+              <Icon name="visibility_off" size={18} />
+              {unpublishing ? t('editor.unpublishing') : t('editor.unpublish')}
+            </button>
+          )}
           <button
             type="button"
             className={`${ui.button ?? ''} ${ui.filled ?? ''}`}
             disabled={!canPublish}
             onClick={publish}>
             <Icon name="publish" size={18} />
-            {publishing ? t('editor.publishing') : t('editor.publish', { version: nextVersion })}
+            {publishing
+              ? t('editor.publishing')
+              : summary.status === 'unpublished'
+                ? t('editor.republish')
+                : t('editor.publish', { version: nextVersion })}
           </button>
         </div>
         <div role="tablist" aria-label={t('editor.tabs.label')} className={styles.tabs}>

@@ -140,8 +140,28 @@ describe('issue descriptions', () => {
     expect(describeIssue({ path: '$.lesson.goal', message: 'x' }, bundle).tab).toBe('info');
   });
 
+  it('explains a sentence without parts', () => {
+    const { bundle, sentenceId } = addTurn(emptyLesson());
+
+    expect(
+      describeIssue(
+        { path: '$.lesson.turns[0].sentences[0].segments', message: '[] should be non-empty' },
+        bundle,
+      ),
+    ).toEqual({
+      location: 'Replika 1 · věta 1',
+      message:
+        'Věta nemá žádné části. V poli „Části věty“ napište úsek italské věty a klikněte na Přidat část.',
+      tab: 'dialog',
+      sentenceId,
+    });
+  });
+
   it('translates known messages and keeps unknown ones', () => {
     expect(translateIssueMessage('[] should be non-empty')).toBe('Seznam je prázdný.');
+    expect(translateIssueMessage('[] should be non-empty', 'turns')).toBe(
+      'Dialog nemá žádnou repliku.',
+    );
     expect(translateIssueMessage('unknown lexeme "volere"')).toBe(
       'Odkaz na neexistující slovíčko „volere“.',
     );

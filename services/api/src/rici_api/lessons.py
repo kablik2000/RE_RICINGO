@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from rici_api.content import JsonObject, SchemaIssue, validate_lesson_bundle
 from rici_api.models import Lesson, LessonVersion
 
-LessonStatus = Literal["draft", "published", "changed"]
+LessonStatus = Literal["draft", "published", "changed", "unpublished"]
 CONTENT_SCHEMA_VERSION = 1
 
 
@@ -77,6 +77,8 @@ def _summary(lesson: Lesson, latest: LessonVersion | None) -> LessonSummary:
     sentences = sum(len(_list(turn.get("sentences"))) for turn in turns if isinstance(turn, dict))
     if latest is None:
         status: LessonStatus = "draft"
+    elif lesson.unpublished_at is not None:
+        status = "unpublished"
     elif canonical_json(_without_version(draft)) == canonical_json(_without_version(latest.bundle)):
         status = "published"
     else:
@@ -144,17 +146,29 @@ def check_draft(session: Session, lesson_id: str) -> list[SchemaIssue]:
     return validate_lesson_bundle(_get(session, lesson_id).draft)
 
 
+def _unchanged(draft: JsonObject, version: LessonVersion | None) -> bool:
+    return version is not None and canonical_json(_without_version(draft)) == canonical_json(
+        _without_version(version.bundle)
+    )
+
+
 def publish(session: Session, lesson_id: str) -> LessonSummary:
-    """Publishes the draft as the next immutable version; refuses a draft with problems."""
+    """Publishes the draft as the next immutable version; refuses a draft with problems.
+
+    An unpublished lesson whose draft has not changed is published again as the same version.
+    """
     lesson = _get(session, lesson_id)
     issues = validate_lesson_bundle(lesson.draft)
     if issues:
         raise LessonContentError("The lesson has problems that block publishing.", issues)
     latest = _latest_version(session, lesson_id)
-    if latest is not None and canonical_json(_without_version(lesson.draft)) == canonical_json(
-        _without_version(latest.bundle)
-    ):
-        raise LessonContentError("Nothing changed since the last published version.")
+    if _unchanged(lesson.draft, latest):
+        if lesson.unpublished_at is None:
+            raise LessonContentError("Nothing changed since the last published version.")
+        lesson.unpublished_at = None
+        lesson.updated_at = datetime.now(UTC)
+        session.flush()
+        return _summary(lesson, latest)
     version = (latest.version if latest else 0) + 1
     bundle = copy.deepcopy(lesson.draft)
     bundle["lesson"]["version"] = version
@@ -166,8 +180,38 @@ def publish(session: Session, lesson_id: str) -> LessonSummary:
         checksum=hashlib.sha256(canonical_json(bundle).encode("utf-8")).hexdigest(),
     )
     session.add(published)
+    lesson.unpublished_at = None
     session.flush()
     return _summary(lesson, published)
+
+
+def unpublish(session: Session, lesson_id: str) -> LessonSummary:
+    """Withdraws a published lesson from students; its draft and versions are kept."""
+    lesson = _get(session, lesson_id)
+    latest = _latest_version(session, lesson_id)
+    if latest is None:
+        raise LessonContentError("The lesson has never been published.")
+    if lesson.unpublished_at is not None:
+        raise LessonContentError("The lesson is already unpublished.")
+    lesson.unpublished_at = lesson.updated_at = datetime.now(UTC)
+    session.flush()
+    return _summary(lesson, latest)
+
+
+def delete_lesson(session: Session, lesson_id: str) -> None:
+    """Deletes a lesson from the Studio.
+
+    A draft that was never published is deleted for good. A lesson with published versions must
+    be unpublished first; it is then archived, because published versions are immutable (ADR-0003).
+    """
+    lesson = _get(session, lesson_id)
+    if _latest_version(session, lesson_id) is None:
+        session.delete(lesson)
+    elif lesson.unpublished_at is None:
+        raise LessonContentError("A published lesson must be unpublished before it is deleted.")
+    else:
+        lesson.archived_at = datetime.now(UTC)
+    session.flush()
 
 
 def _slug(text: str) -> str:
@@ -247,9 +291,11 @@ class PublishedLesson:
 
 
 def list_published(session: Session) -> list[PublishedLesson]:
-    """Newest version of every published, not archived lesson (oldest lesson first)."""
+    """Newest version of every published lesson that is not unpublished or archived."""
     lessons = session.scalars(
-        select(Lesson).where(Lesson.archived_at.is_(None)).order_by(Lesson.created_at, Lesson.id)
+        select(Lesson)
+        .where(Lesson.archived_at.is_(None), Lesson.unpublished_at.is_(None))
+        .order_by(Lesson.created_at, Lesson.id)
     ).all()
     catalog = []
     for lesson in lessons:
@@ -272,8 +318,9 @@ def list_published(session: Session) -> list[PublishedLesson]:
 
 
 def get_published_version(session: Session, lesson_id: str, version: int) -> LessonVersion:
-    """One published version; archived lessons are no longer served."""
-    _get(session, lesson_id)
+    """One published version; unpublished and archived lessons are no longer served."""
+    if _get(session, lesson_id).unpublished_at is not None:
+        raise LessonNotFoundError(lesson_id)
     published = session.get(LessonVersion, (lesson_id, version))
     if published is None:
         raise LessonNotFoundError(f"{lesson_id} v{version}")
@@ -291,15 +338,14 @@ class Overview:
 
 def overview(session: Session) -> Overview:
     summaries = list_lessons(session)
+    live = [summary for summary in summaries if summary.status in ("published", "changed")]
     latest_versions = [
-        version
-        for summary in summaries
-        if (version := _latest_version(session, summary.id)) is not None
+        version for summary in live if (version := _latest_version(session, summary.id)) is not None
     ]
     return Overview(
         lessons_total=len(summaries),
-        lessons_published=sum(1 for s in summaries if s.published_version is not None),
-        lessons_with_draft_changes=sum(1 for s in summaries if s.status != "published"),
+        lessons_published=len(live),
+        lessons_with_draft_changes=sum(1 for s in summaries if s.status in ("draft", "changed")),
         published_lexemes=sum(len(_list(v.bundle.get("lexemes"))) for v in latest_versions),
         published_grammar_topics=sum(
             len(_list(v.bundle.get("grammarTopics"))) for v in latest_versions

@@ -110,6 +110,75 @@ def test_publishing_refuses_problems_and_unchanged_content(
     )
 
 
+def test_unpublishing_keeps_the_lesson_and_its_versions(
+    client: FlaskClient, engine: Engine
+) -> None:
+    import_demo(engine)
+
+    response = client.post("/api/v1/studio/lessons/al-bar/unpublish")
+
+    assert response.status_code == 200
+    lesson: Any = response.get_json()["lesson"]
+    assert (lesson["status"], lesson["publishedVersion"]) == ("unpublished", 1)
+    overview: Any = client.get("/api/v1/studio/overview").get_json()
+    assert overview["lessons"] == {"total": 1, "published": 0, "withDraftChanges": 0}
+    assert overview["publishedLexemes"] == 0
+    assert client.post("/api/v1/studio/lessons/al-bar/unpublish").status_code == 422
+
+
+def test_publishing_an_unpublished_lesson_again(client: FlaskClient, engine: Engine) -> None:
+    import_demo(engine)
+    client.post("/api/v1/studio/lessons/al-bar/unpublish")
+
+    same: Any = client.post("/api/v1/studio/lessons/al-bar/publish").get_json()["lesson"]
+    assert (same["status"], same["publishedVersion"]) == ("published", 1)
+
+    client.post("/api/v1/studio/lessons/al-bar/unpublish")
+    draft = demo_bundle()
+    draft["lesson"]["goal"] = "Objednat si kávu."
+    changed: Any = client.put("/api/v1/studio/lessons/al-bar", json={"draft": draft}).get_json()
+    assert changed["lesson"]["status"] == "unpublished"
+    new: Any = client.post("/api/v1/studio/lessons/al-bar/publish").get_json()["lesson"]
+    assert (new["status"], new["publishedVersion"]) == ("published", 2)
+
+
+def test_drafts_that_were_never_published_cannot_be_unpublished(client: FlaskClient) -> None:
+    client.post("/api/v1/studio/lessons", json={"titleItalian": "Alla stazione"})
+
+    assert client.post("/api/v1/studio/lessons/alla-stazione/unpublish").status_code == 422
+    assert client.post("/api/v1/studio/lessons/nope/unpublish").status_code == 404
+
+
+def test_deleting_a_draft_removes_it(client: FlaskClient) -> None:
+    client.post("/api/v1/studio/lessons", json={"titleItalian": "Alla stazione"})
+
+    response = client.delete("/api/v1/studio/lessons/alla-stazione")
+
+    assert response.status_code == 204
+    assert client.get("/api/v1/studio/lessons/alla-stazione").status_code == 404
+    assert client.get("/api/v1/studio/lessons").get_json()["lessons"] == []
+
+
+def test_a_published_lesson_is_deleted_only_after_unpublishing(
+    client: FlaskClient, engine: Engine
+) -> None:
+    import_demo(engine)
+
+    assert client.delete("/api/v1/studio/lessons/al-bar").status_code == 422
+
+    client.post("/api/v1/studio/lessons/al-bar/unpublish")
+    assert client.delete("/api/v1/studio/lessons/al-bar").status_code == 204
+
+    assert client.get("/api/v1/studio/lessons").get_json()["lessons"] == []
+    assert client.get("/api/v1/content/lessons").get_json()["lessons"] == []
+    with engine.connect() as connection:
+        kept = connection.execute(text("SELECT count(*) FROM lesson_versions")).scalar_one()
+    assert kept == 1
+    # Its ID stays taken, so a new lesson with the same title gets another one.
+    created = client.post("/api/v1/studio/lessons", json={"titleItalian": "Al bar"})
+    assert created.get_json() == {"id": "al-bar-2"}
+
+
 def test_new_lessons_get_a_unique_slug(client: FlaskClient) -> None:
     first = client.post("/api/v1/studio/lessons", json={"titleItalian": "Alla stazione"})
     second = client.post("/api/v1/studio/lessons", json={"titleItalian": "Alla stazione"})
