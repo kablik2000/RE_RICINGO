@@ -34,7 +34,7 @@ export const cs = {
     allLessons: 'Všechny lekce',
     count: { one: '{count} lekce', few: '{count} lekce', other: '{count} lekcí' },
     sentenceCount: { one: '{count} věta', few: '{count} věty', other: '{count} vět' },
-    upcoming: 'Další lekce připravuje vaše lektorka. Objeví se tady, jakmile vám je přidělí.',
+    upcoming: 'Další lekce připravujeme. Objeví se tady, jakmile budou hotové.',
     loading: 'Načítám lekce…',
     openHint: 'Otevře úvod lekce',
     empty: {
@@ -149,13 +149,13 @@ export const cs = {
       added: 'Nové: {titles}',
       updated: 'Upravené: {titles}',
       removed: 'Odebrané: {titles}',
-      removedHint: 'Odebrané lekce lektorka stáhla z výuky.',
+      removedHint: 'Odebrané lekce už nejsou v nabídce.',
       dismiss: 'OK',
     },
     settings: {
       title: 'Aktualizace lekcí',
       description:
-        'Když lektorka přidá nebo upraví lekci, aplikace ji stáhne do telefonu. Lekce pak fungují i bez internetu.',
+        'Když přibude nebo se změní lekce, aplikace ji stáhne do telefonu. Lekce pak fungují i bez internetu.',
       policies: {
         wifi: {
           label: 'Automaticky přes Wi-Fi',

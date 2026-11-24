@@ -6,6 +6,7 @@ import { LessonThumbnail } from '@/components/lesson-thumbnail';
 import { ServerUnavailable } from '@/components/server-unavailable';
 import { AppShell } from '@/components/shell/app-shell';
 import { StatusChip } from '@/components/status-chip';
+import { VisibilityChip } from '@/components/visibility-chip';
 import ui from '@/components/ui.module.css';
 import { t } from '@/i18n';
 import { formatDate } from '@/lib/format';
@@ -109,6 +110,7 @@ function LessonTable({ lessons, total }: { lessons: LessonSummary[]; total: numb
               {t('lessons.columns.lexemes')}
             </th>
             <th scope="col">{t('lessons.columns.status')}</th>
+            <th scope="col">{t('lessons.columns.visibility')}</th>
             <th scope="col">{t('lessons.columns.updated')}</th>
             <th scope="col">
               <span className={ui.visuallyHidden}>{t('common.none')}</span>
@@ -136,6 +138,9 @@ function LessonTable({ lessons, total }: { lessons: LessonSummary[]; total: numb
               <td className={styles.numeric}>{lesson.lexemeCount}</td>
               <td>
                 <StatusChip status={lesson.status} version={lesson.publishedVersion} />
+              </td>
+              <td>
+                <VisibilityChip visibility={lesson.visibility} />
               </td>
               <td className={ui.muted}>{formatDate(lesson.updatedAt)}</td>
               <td>

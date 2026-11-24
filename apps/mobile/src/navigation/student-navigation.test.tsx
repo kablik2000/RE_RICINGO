@@ -28,7 +28,7 @@ describe('student navigation shell', () => {
   });
 
   it.each([
-    ['/lessons', 'Další lekce připravuje vaše lektorka. Objeví se tady, jakmile vám je přidělí.'],
+    ['/lessons', 'Další lekce připravujeme. Objeví se tady, jakmile budou hotové.'],
     ['/vocabulary', 'volere'],
     ['/practice', 'Zatím není co procvičovat'],
     ['/profile', 'Verze aplikace'],

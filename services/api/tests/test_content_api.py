@@ -71,7 +71,59 @@ def test_unknown_versions_are_not_found(client: FlaskClient, engine: Engine) -> 
     assert client.get("/api/v1/content/lessons/nope/versions/1").status_code == 404
 
 
-def test_content_endpoints_are_not_served_in_production(engine: Engine) -> None:
+def test_the_public_catalog_needs_no_account_in_production(engine: Engine) -> None:
+    import_demo(engine)
     app = create_app(Settings(app_env="production", database_url=TEST_DATABASE_URL), engine=engine)
+    anonymous = app.test_client()
 
-    assert app.test_client().get("/api/v1/content/lessons").status_code == 404
+    [lesson] = anonymous.get("/api/v1/content/lessons").get_json()["lessons"]
+    assert lesson["id"] == "al-bar"
+    assert anonymous.get("/api/v1/content/lessons/al-bar/versions/1").status_code == 200
+
+
+def test_lessons_for_students_only_are_not_public(engine: Engine, client: FlaskClient) -> None:
+    import_demo(engine, visibility="students")
+
+    assert client.get("/api/v1/content/lessons").get_json()["lessons"] == []
+    assert client.get("/api/v1/content/lessons/al-bar/versions/1").status_code == 404
+
+
+def test_changing_visibility_applies_to_the_catalog_at_once(
+    engine: Engine, client: FlaskClient
+) -> None:
+    import_demo(engine, visibility="students")
+
+    response = client.put("/api/v1/studio/lessons/al-bar/visibility", json={"visibility": "public"})
+
+    assert response.status_code == 200
+    assert response.get_json()["lesson"]["visibility"] == "public"
+    assert len(client.get("/api/v1/content/lessons").get_json()["lessons"]) == 1
+
+    client.put("/api/v1/studio/lessons/al-bar/visibility", json={"visibility": "students"})
+    assert client.get("/api/v1/content/lessons").get_json()["lessons"] == []
+
+
+def test_visibility_must_be_known(engine: Engine, client: FlaskClient) -> None:
+    import_demo(engine)
+
+    for body in ({"visibility": "everyone"}, {"visibility": 1}, {}):
+        response = client.put("/api/v1/studio/lessons/al-bar/visibility", json=body)
+        assert response.status_code == 422, body
+
+
+def test_new_lessons_are_for_students_only(client: FlaskClient) -> None:
+    client.post("/api/v1/studio/lessons", json={"titleItalian": "Alla stazione"})
+
+    lesson = client.get("/api/v1/studio/lessons/alla-stazione").get_json()["lesson"]
+    assert lesson["visibility"] == "students"
+
+
+def test_a_teacher_cannot_change_another_organizations_lesson(
+    engine: Engine, client: FlaskClient
+) -> None:
+    import_demo(engine, organization="Jina skola", visibility="students")
+
+    response = client.put("/api/v1/studio/lessons/al-bar/visibility", json={"visibility": "public"})
+
+    assert response.status_code == 404
+    assert client.get("/api/v1/content/lessons").get_json()["lessons"] == []

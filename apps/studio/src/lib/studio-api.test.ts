@@ -25,6 +25,7 @@ const AL_BAR: LessonSummary = {
   grammarTopicCount: 7,
   status: 'published',
   publishedVersion: 1,
+  visibility: 'public',
   updatedAt: '2026-11-23T10:00:00+00:00',
 };
 

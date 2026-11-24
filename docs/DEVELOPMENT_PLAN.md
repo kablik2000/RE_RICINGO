@@ -221,6 +221,17 @@ The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for t
 - [ ] Progress overview screen.
 - [ ] Multi-device verification.
 
+### Public app & lecturer recommendations (ADR-0013, decided 2026-11-24)
+
+Order: each step is usable on its own.
+
+- [x] 1. Lesson visibility: Studio switch "Veřejná / Jen pro mé studenty" (default: students only); public catalog of all organizations' public lessons without sign-in; content API for public lessons leaves development-only. Done 2026-11-24 (migration `0004_lesson_visibility`; already published lessons stay public); verified in the browser, the student app on a device not re-checked (its removal logic is unchanged).
+- [ ] 2. Students and invitations in the Studio: student list, invite by e-mail (Mailpit in development), parental-consent confirmation for students under 15, revoke access.
+- [ ] 3. Student sign-in in the app: accept invitation, set password, sign in/out, tokens in `expo-secure-store`; the app keeps working without an account.
+- [ ] 4. Recommendations per student: Studio student detail → recommend lessons and topics ("okruhy"); recommended private lessons download for that student.
+- [ ] 5. Home block "Od vaší lektorky" for signed-in students (part of the Home design).
+- [ ] 6. Server-side progress for signed-in students (with M7 progress sync); keep anonymous progress after signing in.
+
 ### M8 — Teacher Studio MVP (Next.js `apps/studio`, ADR-0010)
 
 - [x] Studio shell (2026-11-23): Next.js 16 App Router, TypeScript strict, ESLint (own config), Vitest, Roboto + Noto Serif, design tokens from `@ricingo/design-system/web` as CSS variables; overview page with backend status; in `pnpm verify`, CI build, VS Code task, preview config.
@@ -275,7 +286,7 @@ Tasks to be broken down when M9 is near completion (see roadmap).
 
 - **Demo content is not lecturer-reviewed.** Italian sentences follow the spec's example; Czech explanations are developer drafts (spec §8 requires lecturer approval).
 - **Demo audio is device text-to-speech** (quality depends on the device's Italian voice); real audio is open question Q-3.
-- **Lesson downloads are development-only**: without authentication the content catalog lists every published lesson and is served only by a development API; release builds use the bundled demo lesson.
+- **Release builds have no API URL yet** (hosting, Q-19): they use the bundled demo lesson. The public catalog itself is served in every environment (ADR-0013).
 - **Application ID is provisional** (`com.ricingo.mobile`); it cannot change after store publishing (Q-16).
 - iOS has not been built (requires EAS cloud build or a Mac).
 - Local Android builds fail inside the AI assistant's sandbox (Java cannot open its loopback socket); run them from a normal terminal or VS Code task.
@@ -314,7 +325,7 @@ Tasks to be broken down when M9 is near completion (see roadmap).
 | Q-2  | One lecturer only, or several lecturers/schools in future? **Answered 2026-11-23:** several lecturers → organizations and teacher accounts (ADR-0012).                                                                                                                                                                                                   | Tenancy, roles, pricing       | M2 schema           |
 | Q-3  | Audio source: lecturer/native-speaker recordings, neural TTS reviewed by lecturer, or hybrid? **Direction approved 2026-11-23: hybrid** — cloud neural TTS generated server-side when a lesson is published (normal + slow), reviewed by the lecturer, any line replaceable by her recording; files cached offline. Open: TTS provider and budget (Q-9). | Cost, quality, pipeline       | M3 audio (provider) |
 | Q-4  | Student platforms: iOS + Android only, or also web?                                                                                                                                                                                                                                                                                                      | Testing scope, offline on web | M1                  |
-| Q-5  | Distribution: public store listing with invite-only login, or private/unlisted distribution?                                                                                                                                                                                                                                                             | Store review, discoverability | M9                  |
+| Q-5  | Distribution: public store listing with invite-only login, or private/unlisted distribution? **Answered 2026-11-24:** public listing; usable without an account, accounts by invitation (ADR-0013).                                                                                                                                                      | Store review, discoverability | M9                  |
 | Q-6  | Level framework (CEFR A1–B2?) and grammar-topic taxonomy — will the lecturer provide it?                                                                                                                                                                                                                                                                 | Content model fields          | M3                  |
 | Q-7  | Can students be minors (under 15 in CZ)? **Answered 2026-11-23:** yes → student accounts need GDPR parental consent and child-appropriate data handling (M2 student sign-in, M9).                                                                                                                                                                        | GDPR parental consent         | M2/M9               |
 | Q-8  | Speaking and free-writing exercises: speech recognition, AI grading or teacher grading — and when?                                                                                                                                                                                                                                                       | Scope, cost, privacy          | M10+                |

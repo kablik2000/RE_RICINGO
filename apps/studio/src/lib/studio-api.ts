@@ -15,6 +15,10 @@ import { getSessionToken } from './session';
 export const lessonStatusSchema = z.enum(['draft', 'published', 'changed', 'unpublished']);
 export type LessonStatus = z.infer<typeof lessonStatusSchema>;
 
+/** Who sees a published lesson in the app (ADR-0013). */
+export const visibilitySchema = z.enum(['public', 'students']);
+export type Visibility = z.infer<typeof visibilitySchema>;
+
 export const lessonSummarySchema = z.object({
   id: z.string(),
   titleItalian: z.string(),
@@ -27,6 +31,7 @@ export const lessonSummarySchema = z.object({
   grammarTopicCount: z.number(),
   status: lessonStatusSchema,
   publishedVersion: z.number().nullable(),
+  visibility: visibilitySchema,
   updatedAt: z.string(),
 });
 export type LessonSummary = z.infer<typeof lessonSummarySchema>;
@@ -216,6 +221,21 @@ export async function publishLesson(id: string, fetchImpl?: typeof fetch): Promi
     `/lessons/${encodeURIComponent(id)}/publish`,
     z.object({ lesson: lessonSummarySchema }),
     { method: 'POST' },
+    fetchImpl,
+  );
+  return body.lesson;
+}
+
+/** Makes a lesson public or students-only; the public catalog follows at once. */
+export async function setLessonVisibility(
+  id: string,
+  visibility: Visibility,
+  fetchImpl?: typeof fetch,
+): Promise<LessonSummary> {
+  const body = await request(
+    `/lessons/${encodeURIComponent(id)}/visibility`,
+    z.object({ lesson: lessonSummarySchema }),
+    { method: 'PUT', body: JSON.stringify({ visibility }) },
     fetchImpl,
   );
   return body.lesson;

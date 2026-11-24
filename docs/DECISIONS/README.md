@@ -19,3 +19,4 @@ Status values: **Proposed** (awaiting approval) · **Accepted** · **Superseded 
 | [0010](0010-flask-postgresql-backend-and-nextjs-studio.md) | Flask + PostgreSQL backend, Next.js Studio, monorepo             | Accepted                  |
 | [0011](0011-lesson-drafts-as-documents.md)                 | Lesson drafts as validated JSON documents (Studio MVP)           | Accepted                  |
 | [0012](0012-teacher-studio-sign-in.md)                     | Teacher Studio sign-in: accounts, sessions, organizations        | Accepted                  |
+| [0013](0013-public-app-and-invited-students.md)            | Public app, invited students, lesson visibility, recommendations | Accepted                  |

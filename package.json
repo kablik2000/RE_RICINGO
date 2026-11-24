@@ -17,7 +17,7 @@
     "backend:up": "docker compose up --build --detach",
     "backend:down": "docker compose down",
     "studio:dev": "corepack pnpm --filter @ricingo/studio dev",
-    "backend:seed": "docker compose exec api flask --app rici_api.wsgi import-lesson /demo/al-bar.lesson.json --organization RICI"
+    "backend:seed": "docker compose exec api flask --app rici_api.wsgi import-lesson /demo/al-bar.lesson.json --organization RICI --public"
   },
   "devDependencies": {
     "eslint": "^10.15.0",

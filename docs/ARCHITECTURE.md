@@ -332,8 +332,8 @@ un-synced outbox, which is never dropped silently.
 Asymmetric data makes a general sync engine unnecessary at the start:
 
 - **Down (content):** read-only, versioned bundles → simple fetch-if-newer + cache.
-  Implemented in `src/data/content/` against `GET /api/v1/content/lessons` (catalog: newest
-  published version + checksum per lesson) and `…/lessons/<id>/versions/<n>` (immutable bundle):
+  Implemented in `src/data/content/` against `GET /api/v1/content/lessons` (public catalog,
+  no account: newest version + checksum of every public published lesson, ADR-0013) and `…/lessons/<id>/versions/<n>` (immutable bundle):
   - checks at start, whenever the app returns to the foreground (at most every 30 s), and when
     the connection changes;
   - changes made without asking (downloads on Wi-Fi, removals) are listed to the student
@@ -347,8 +347,8 @@ Asymmetric data makes a general sync engine unnecessary at the start:
     lecturer unpublished it) is removed on any connection and policy, the bundled demo included
     (it is seeded only once, so it does not come back); an open lesson goes when it closes;
   - first start works offline: the store is seeded with the lessons bundled in the app.
-    Until authentication exists the catalog lists every published lesson and runs only in
-    development; it becomes "assigned lessons" with M2 auth.
+    A signed-in student will additionally get the lessons their lecturer recommends
+    (ADR-0013, student sign-in and recommendations).
 - **Up (progress):** append-only events with client UUIDs → upload outbox; server upsert by
   `id` ignores duplicates; no conflicts possible.
 - **Derived state:** recomputed on server; client pulls the latest snapshot.

@@ -53,6 +53,14 @@
   color: var(--rici-color-error);
 }
 
+.tabsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--rici-space-md);
+  flex-wrap: wrap;
+}
+
 .tabs {
   display: flex;
   gap: var(--rici-space-sm);
@@ -686,4 +694,41 @@
   display: flex;
   flex-direction: column;
   gap: var(--rici-space-sm);
+}
+
+/* Visibility: Material 3 segmented button */
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--rici-color-outline);
+  border-radius: var(--rici-radius-full);
+  overflow: hidden;
+}
+
+.segment {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rici-space-xs);
+  height: 32px;
+  padding: 0 var(--rici-space-md);
+  border: none;
+  background: transparent;
+  color: var(--rici-color-on-surface);
+  font: inherit;
+  font-size: var(--rici-type-label-size);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.segment + .segment {
+  border-left: 1px solid var(--rici-color-outline);
+}
+
+.segment[aria-checked='true'] {
+  background: var(--rici-color-primary-container);
+  color: var(--rici-color-on-primary-container);
+}
+
+.segment:disabled {
+  cursor: default;
+  opacity: 0.6;
 }

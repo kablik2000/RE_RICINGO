@@ -11,6 +11,7 @@ import {
   type LessonSummary,
   publishLesson,
   saveLesson,
+  setLessonVisibility,
   StudioApiError,
   unpublishLesson,
 } from '@/lib/studio-api';
@@ -66,6 +67,25 @@ export async function unpublishAction(id: string): Promise<UnpublishResult> {
   await authorize(id);
   try {
     return { ok: true, lesson: await unpublishLesson(id) };
+  } catch (error) {
+    if (error instanceof StudioApiError) return { ok: false, message: error.message };
+    throw error;
+  }
+}
+
+export type VisibilityResult = { ok: true; lesson: LessonSummary } | { ok: false; message: string };
+
+/** Makes the lesson public or students-only (ADR-0013). */
+export async function setVisibilityAction(
+  id: string,
+  visibility: unknown,
+): Promise<VisibilityResult> {
+  await authorize(id);
+  if (visibility !== 'public' && visibility !== 'students') {
+    throw new Error('Invalid visibility.');
+  }
+  try {
+    return { ok: true, lesson: await setLessonVisibility(id, visibility) };
   } catch (error) {
     if (error instanceof StudioApiError) return { ok: false, message: error.message };
     throw error;

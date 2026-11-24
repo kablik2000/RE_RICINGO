@@ -33,6 +33,7 @@ def _summary_json(summary: lessons.LessonSummary) -> dict[str, object]:
         "grammarTopicCount": summary.grammar_topic_count,
         "status": summary.status,
         "publishedVersion": summary.published_version,
+        "visibility": summary.visibility,
         "updatedAt": summary.updated_at.isoformat(),
     }
 
@@ -125,6 +126,16 @@ def studio_blueprint(session_factory: SessionFactory) -> Blueprint:
     def publish_lesson(lesson_id: str) -> ResponseReturnValue:
         with session_factory() as session, session.begin():
             summary = lessons.publish(session, lesson_id, organization())
+        return jsonify({"lesson": _summary_json(summary)})
+
+    @studio.put("/lessons/<lesson_id>/visibility")
+    def set_visibility(lesson_id: str) -> ResponseReturnValue:
+        body = request.get_json(silent=True)
+        visibility = body.get("visibility") if isinstance(body, dict) else None
+        if not isinstance(visibility, str):
+            return _error("validation", 'Expected {"visibility": "public" | "students"}.', 422)
+        with session_factory() as session, session.begin():
+            summary = lessons.set_visibility(session, lesson_id, organization(), visibility)
         return jsonify({"lesson": _summary_json(summary)})
 
     @studio.delete("/lessons/<lesson_id>")

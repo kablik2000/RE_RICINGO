@@ -1,8 +1,8 @@
-"""Published lesson content for the student app, `/api/v1/content/*`.
+"""Public lesson content for the student app, `/api/v1/content/*` (ADR-0013).
 
-The app keeps lessons offline and asks this catalog what is new (DEVELOPMENT_PLAN M7, Q-18).
-Until authentication and assignments exist (M2), every published lesson is listed and
-`create_app` registers this blueprint only where the Studio endpoints run.
+Anyone may use the app without an account: this catalog lists the public published lessons of all
+organizations, and the app keeps them offline and asks it what is new (Q-18). Lessons for
+students only are never served here (they come with student sign-in and recommendations).
 """
 
 from flask import Blueprint, jsonify

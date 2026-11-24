@@ -23,9 +23,6 @@ from rici_api.studio_api import studio_blueprint
 
 DatabaseCheck = Callable[[], bool]
 
-# Environments where the unauthenticated student content endpoints may run (ADR-0011). The
-# Studio endpoints need a signed-in teacher (ADR-0012) and run everywhere.
-CONTENT_ENVIRONMENTS = ("development", "test")
 # Largest request body accepted (a lesson draft is well below this).
 MAX_REQUEST_BYTES = 2 * 1024 * 1024
 
@@ -48,8 +45,8 @@ def create_app(
     app.register_blueprint(_v1_blueprint(check), url_prefix="/api/v1")
     app.register_blueprint(auth_blueprint(session_factory), url_prefix="/api/v1/auth")
     app.register_blueprint(studio_blueprint(session_factory), url_prefix="/api/v1/studio")
-    if resolved.app_env in CONTENT_ENVIRONMENTS:
-        app.register_blueprint(content_blueprint(session_factory), url_prefix="/api/v1/content")
+    # Public lessons for everyone, without an account (ADR-0013).
+    app.register_blueprint(content_blueprint(session_factory), url_prefix="/api/v1/content")
     _register_error_handlers(app)
     _register_commands(app, db_engine, session_factory)
     return app
@@ -90,7 +87,8 @@ def _register_commands(app: Flask, engine: Engine, session_factory: sessionmaker
     @app.cli.command("import-lesson")
     @click.argument("path", type=click.Path(exists=True, dir_okay=False, path_type=Path))
     @click.option("--organization", required=True, help="Organization (created if new).")
-    def import_lesson(path: Path, organization: str) -> None:
+    @click.option("--public", is_flag=True, help="Visible to everyone (default: students only).")
+    def import_lesson(path: Path, organization: str, public: bool) -> None:
         """Imports a published lesson bundle (JSON file), e.g. the demo lesson."""
         bundle = json.loads(path.read_text("utf-8"))
         with session_factory() as session, session.begin():
@@ -99,7 +97,9 @@ def _register_commands(app: Flask, engine: Engine, session_factory: sessionmaker
                 org = Organization(name=organization)
                 session.add(org)
                 session.flush()
-            lesson_id = lessons.import_published_bundle(session, bundle, org.id)
+            lesson_id = lessons.import_published_bundle(
+                session, bundle, org.id, "public" if public else "students"
+            )
         click.echo(f"Imported lesson {lesson_id}.")
 
     # Accounts are created by an operator; there is no public sign-up (ADR-0004, ADR-0012).

@@ -99,6 +99,9 @@ class Lesson(Base):
     """A lesson being authored. `draft` is the whole lesson bundle as JSON (ADR-0011)."""
 
     __tablename__ = "lessons"
+    __table_args__ = (
+        CheckConstraint("visibility IN ('public', 'students')", name="lessons_visibility_known"),
+    )
 
     id: Mapped[str] = mapped_column(String(100), primary_key=True)
     organization_id: Mapped[uuid.UUID] = mapped_column(
@@ -114,6 +117,11 @@ class Lesson(Base):
     archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Set while the lecturer has withdrawn the lesson from students; its versions are kept.
     unpublished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Who sees the published lesson (ADR-0013): "public" = everyone, "students" = only students
+    # it is recommended to. A property of the lesson, not of a version: changes apply at once.
+    visibility: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="students", default="students"
+    )
 
     versions: Mapped[list["LessonVersion"]] = relationship(
         back_populates="lesson", order_by="LessonVersion.version"

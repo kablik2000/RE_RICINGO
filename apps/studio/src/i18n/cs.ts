@@ -23,6 +23,29 @@ export const cs = {
     account: 'Přihlášen(a): {name}',
     signOut: 'Odhlásit se',
   },
+  visibility: {
+    label: 'Kdo lekci uvidí',
+    failed: 'Změna se nepodařila: {message}',
+    public: {
+      short: 'Pro všechny',
+      hint: 'Zveřejněnou lekci uvidí v aplikaci kdokoli, i bez účtu.',
+      confirmTitle: 'Zpřístupnit lekci „{title}“ všem?',
+      confirmMessage:
+        'Jakmile je lekce zveřejněná, uvidí ji v aplikaci kdokoli, i bez účtu, a stáhne si ji do telefonu. Zpět na „Jen pro mé studenty“ ji můžete přepnout kdykoli.',
+      confirm: 'Zpřístupnit všem',
+      changed:
+        'Lekce je pro všechny. Pokud je zveřejněná, objeví se v aplikaci při příští kontrole aktualizací.',
+    },
+    students: {
+      short: 'Jen studenti',
+      hint: 'Lekci uvidí jen přihlášení studenti, kterým ji doporučíte (doporučení připravujeme).',
+      confirmTitle: 'Omezit lekci „{title}“ jen na vaše studenty?',
+      confirmMessage:
+        'Lidem bez účtu lekce zmizí z aplikace při příští kontrole aktualizací. Vašim studentům se ukáže, až jim ji doporučíte (doporučení připravujeme).',
+      confirm: 'Jen pro mé studenty',
+      changed: 'Lekce je jen pro vaše studenty.',
+    },
+  },
   login: {
     title: 'Přihlášení',
     intro: 'Přihlaste se účtem, který vám založil správce Studia.',
@@ -107,6 +130,7 @@ export const cs = {
       sentences: 'Věty',
       lexemes: 'Slovíčka',
       status: 'Stav',
+      visibility: 'Pro koho',
       updated: 'Upraveno',
     },
     empty: 'Žádná lekce neodpovídá filtru.',

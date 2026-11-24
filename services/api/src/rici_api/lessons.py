@@ -10,13 +10,15 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Literal
 
-from sqlalchemy import select
+from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
 from rici_api.content import JsonObject, SchemaIssue, validate_lesson_bundle
 from rici_api.models import Lesson, LessonVersion
 
 LessonStatus = Literal["draft", "published", "changed", "unpublished"]
+Visibility = Literal["public", "students"]
+VISIBILITIES: tuple[Visibility, ...] = ("public", "students")
 CONTENT_SCHEMA_VERSION = 1
 
 
@@ -45,6 +47,7 @@ class LessonSummary:
     grammar_topic_count: int
     status: LessonStatus
     published_version: int | None
+    visibility: Visibility
     updated_at: datetime
 
 
@@ -96,6 +99,7 @@ def _summary(lesson: Lesson, latest: LessonVersion | None) -> LessonSummary:
         grammar_topic_count=len(_list(draft.get("grammarTopics"))),
         status=status,
         published_version=latest.version if latest else None,
+        visibility="public" if lesson.visibility == "public" else "students",
         updated_at=lesson.updated_at,
     )
 
@@ -212,6 +216,19 @@ def unpublish(session: Session, lesson_id: str, organization_id: uuid.UUID) -> L
     return _summary(lesson, latest)
 
 
+def set_visibility(
+    session: Session, lesson_id: str, organization_id: uuid.UUID, visibility: str
+) -> LessonSummary:
+    """Who sees the lesson once it is published (ADR-0013); applies to the catalog at once."""
+    if visibility not in VISIBILITIES:
+        raise LessonContentError(f"Visibility must be one of {', '.join(VISIBILITIES)}.")
+    lesson = _get(session, lesson_id, organization_id)
+    lesson.visibility = visibility
+    lesson.updated_at = datetime.now(UTC)
+    session.flush()
+    return _summary(lesson, _latest_version(session, lesson_id))
+
+
 def delete_lesson(session: Session, lesson_id: str, organization_id: uuid.UUID) -> None:
     """Deletes a lesson from the Studio.
 
@@ -276,7 +293,12 @@ def create_lesson(
     return lesson_id
 
 
-def import_published_bundle(session: Session, bundle: object, organization_id: uuid.UUID) -> str:
+def import_published_bundle(
+    session: Session,
+    bundle: object,
+    organization_id: uuid.UUID,
+    visibility: Visibility = "students",
+) -> str:
     """Imports a complete bundle as a lesson with a published version (demo seed, import)."""
     issues = validate_lesson_bundle(bundle)
     if issues or not isinstance(bundle, dict):
@@ -284,7 +306,14 @@ def import_published_bundle(session: Session, bundle: object, organization_id: u
     lesson_id: str = bundle["lesson"]["id"]
     if session.get(Lesson, lesson_id) is not None:
         raise LessonContentError(f'A lesson with id "{lesson_id}" already exists.')
-    session.add(Lesson(id=lesson_id, organization_id=organization_id, draft=copy.deepcopy(bundle)))
+    session.add(
+        Lesson(
+            id=lesson_id,
+            organization_id=organization_id,
+            visibility=visibility,
+            draft=copy.deepcopy(bundle),
+        )
+    )
     session.flush()
     session.add(
         LessonVersion(
@@ -311,13 +340,18 @@ class PublishedLesson:
     level: str
 
 
+def _public_lessons() -> Select[Lesson]:
+    """Lessons everyone may see: public, not unpublished, not archived (any organization)."""
+    return select(Lesson).where(
+        Lesson.archived_at.is_(None),
+        Lesson.unpublished_at.is_(None),
+        Lesson.visibility == "public",
+    )
+
+
 def list_published(session: Session) -> list[PublishedLesson]:
-    """Newest version of every published lesson that is not unpublished or archived."""
-    lessons = session.scalars(
-        select(Lesson)
-        .where(Lesson.archived_at.is_(None), Lesson.unpublished_at.is_(None))
-        .order_by(Lesson.created_at, Lesson.id)
-    ).all()
+    """The public catalog (ADR-0013): newest version of every public published lesson."""
+    lessons = session.scalars(_public_lessons().order_by(Lesson.created_at, Lesson.id)).all()
     catalog = []
     for lesson in lessons:
         latest = _latest_version(session, lesson.id)
@@ -339,8 +373,8 @@ def list_published(session: Session) -> list[PublishedLesson]:
 
 
 def get_published_version(session: Session, lesson_id: str, version: int) -> LessonVersion:
-    """One published version; unpublished and archived lessons are no longer served."""
-    if _get_any(session, lesson_id).unpublished_at is not None:
+    """One published version of a public lesson; others answer as if they did not exist."""
+    if session.scalar(_public_lessons().where(Lesson.id == lesson_id)) is None:
         raise LessonNotFoundError(lesson_id)
     published = session.get(LessonVersion, (lesson_id, version))
     if published is None:

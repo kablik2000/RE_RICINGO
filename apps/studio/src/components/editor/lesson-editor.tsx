@@ -9,6 +9,7 @@ import {
   deleteLessonAction,
   publishAction,
   saveDraftAction,
+  setVisibilityAction,
   unpublishAction,
 } from '@/app/lessons/[id]/actions';
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -17,13 +18,14 @@ import { StatusChip } from '@/components/status-chip';
 import ui from '@/components/ui.module.css';
 import { t } from '@/i18n';
 import { describeIssue } from '@/lib/issues';
-import type { LessonDetail, LessonIssue, LessonSummary } from '@/lib/studio-api';
+import type { LessonDetail, LessonIssue, LessonSummary, Visibility } from '@/lib/studio-api';
 
 import { DialogTab } from './dialog-tab';
 import styles from './editor.module.css';
 import { GrammarTab } from './grammar-tab';
 import { InfoTab } from './info-tab';
 import { IssuesPanel } from './issues-panel';
+import { VisibilitySwitch } from './visibility-switch';
 import { VocabularyTab } from './vocabulary-tab';
 
 export type EditorTab = 'dialog' | 'vocabulary' | 'grammar' | 'info';
@@ -46,6 +48,8 @@ export function LessonEditor({ initial }: { initial: LessonDetail }) {
   const [publishing, startPublishing] = useTransition();
   const [unpublishing, startUnpublishing] = useTransition();
   const [deleting, startDeleting] = useTransition();
+  const [changingVisibility, startChangingVisibility] = useTransition();
+  const [pendingVisibility, setPendingVisibility] = useState<Visibility | null>(null);
   const router = useRouter();
   const [confirming, setConfirming] = useState<'delete' | 'unpublish' | null>(null);
   // What the server has; a draft equal to it (initial load, after publishing) is not saved again.
@@ -82,7 +86,22 @@ export function LessonEditor({ initial }: { initial: LessonDetail }) {
   }, [draft, summary.id]);
 
   const nextVersion = (summary.publishedVersion ?? 0) + 1;
-  const busy = publishing || unpublishing || deleting;
+  const busy = publishing || unpublishing || deleting || changingVisibility;
+
+  const changeVisibility = () => {
+    const visibility = pendingVisibility;
+    setPendingVisibility(null);
+    if (visibility === null) return;
+    startChangingVisibility(async () => {
+      const result = await setVisibilityAction(summary.id, visibility);
+      if (result.ok) {
+        setSummary(result.lesson);
+        setNotice(t(`visibility.${visibility}.changed`));
+      } else {
+        setNotice(t('visibility.failed', { message: result.message }));
+      }
+    });
+  };
   const canPublish =
     saveState === 'saved' && issues.length === 0 && summary.status !== 'published' && !busy;
   const canUnpublish = summary.status === 'published' || summary.status === 'changed';
@@ -218,22 +237,29 @@ export function LessonEditor({ initial }: { initial: LessonDetail }) {
                 : t('editor.publish', { version: nextVersion })}
           </button>
         </div>
-        <div role="tablist" aria-label={t('editor.tabs.label')} className={styles.tabs}>
-          {tabs.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              role="tab"
-              id={`tab-${item.id}`}
-              aria-selected={tab === item.id}
-              aria-controls={`panel-${item.id}`}
-              className={styles.tab}
-              onClick={() => {
-                setTab(item.id);
-              }}>
-              {item.label}
-            </button>
-          ))}
+        <div className={styles.tabsRow}>
+          <div role="tablist" aria-label={t('editor.tabs.label')} className={styles.tabs}>
+            {tabs.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                id={`tab-${item.id}`}
+                aria-selected={tab === item.id}
+                aria-controls={`panel-${item.id}`}
+                className={styles.tab}
+                onClick={() => {
+                  setTab(item.id);
+                }}>
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <VisibilitySwitch
+            value={summary.visibility}
+            disabled={busy}
+            onChange={setPendingVisibility}
+          />
         </div>
       </header>
 
@@ -269,6 +295,18 @@ export function LessonEditor({ initial }: { initial: LessonDetail }) {
         onConfirm={deleteLesson}
         onCancel={() => {
           setConfirming(null);
+        }}
+      />
+      <ConfirmDialog
+        open={pendingVisibility !== null}
+        title={t(`visibility.${pendingVisibility ?? 'public'}.confirmTitle`, {
+          title: draft.lesson.titleItalian,
+        })}
+        message={t(`visibility.${pendingVisibility ?? 'public'}.confirmMessage`)}
+        confirmLabel={t(`visibility.${pendingVisibility ?? 'public'}.confirm`)}
+        onConfirm={changeVisibility}
+        onCancel={() => {
+          setPendingVisibility(null);
         }}
       />
       <ConfirmDialog

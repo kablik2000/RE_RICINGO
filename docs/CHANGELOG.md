@@ -26,6 +26,16 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-24 — **Lesson visibility** (ADR-0013, step 1): the Studio editor has "Pro všechny /
+  Jen studenti" next to the tabs (with a confirmation) and the lesson list a "Pro koho" column.
+  The content API serves only public lessons, in every environment and without an account; a
+  lesson switched to students only leaves the catalog at once (and the app removes it). New
+  lessons are for students only; lessons already published stay public. API:
+  `PUT /api/v1/studio/lessons/<id>/visibility`, migration `0004_lesson_visibility`. Student-app
+  texts no longer assume a lecturer.
+- 2026-11-24 — Product decision recorded (ADR-0013): the app is for everyone without an account;
+  students sign in only by invitation and see their lecturer's recommendations; the lecturer
+  chooses per lesson whether it is public. Plan section "Public app & lecturer recommendations".
 - 2026-11-23 — **Sign-in to the Teacher Studio** (ADR-0012): operator-created teacher accounts in
   organizations (`flask create-teacher`, VS Code task "Teacher Studio: create a teacher account"),
   Argon2id passwords of at least 15 characters, sign-in throttling, server-side sessions (2 h idle,

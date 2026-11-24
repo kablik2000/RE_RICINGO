@@ -103,11 +103,13 @@ def organization_id(engine: Engine, name: str = ORGANIZATION) -> uuid.UUID:
         return org.id
 
 
-def import_demo(engine: Engine, organization: str = ORGANIZATION) -> str:
-    """The demo lesson as a published lesson of `organization`."""
+def import_demo(
+    engine: Engine, organization: str = ORGANIZATION, visibility: lessons.Visibility = "public"
+) -> str:
+    """The demo lesson as a published lesson of `organization` (public unless told otherwise)."""
     org_id = organization_id(engine, organization)
     with Session(engine) as session, session.begin():
-        return lessons.import_published_bundle(session, demo_bundle(), org_id)
+        return lessons.import_published_bundle(session, demo_bundle(), org_id, visibility)
 
 
 def create_teacher(
