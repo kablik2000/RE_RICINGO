@@ -17,6 +17,7 @@ from rici_api.auth_api import auth_blueprint
 from rici_api.config import Settings, load_settings
 from rici_api.content_api import content_blueprint
 from rici_api.db import create_db_engine, database_is_reachable
+from rici_api.mailer import Mailer, SmtpMailer, UnconfiguredMailer
 from rici_api.migrate import upgrade_database
 from rici_api.models import Organization
 from rici_api.studio_api import studio_blueprint
@@ -31,8 +32,10 @@ def create_app(
     settings: Settings | None = None,
     database_check: DatabaseCheck | None = None,
     engine: Engine | None = None,
+    mailer: Mailer | None = None,
 ) -> Flask:
-    """Creates the API. Tests inject `settings`, `database_check` and/or a test `engine`."""
+    """Creates the API. Tests inject `settings`, `database_check`, a test `engine` and/or a
+    `mailer` that records e-mails instead of sending them."""
     resolved = settings or load_settings()
     app = Flask(__name__)
     app.config["APP_ENV"] = resolved.app_env
@@ -44,12 +47,27 @@ def create_app(
 
     app.register_blueprint(_v1_blueprint(check), url_prefix="/api/v1")
     app.register_blueprint(auth_blueprint(session_factory), url_prefix="/api/v1/auth")
-    app.register_blueprint(studio_blueprint(session_factory), url_prefix="/api/v1/studio")
+    app.register_blueprint(
+        studio_blueprint(session_factory, mailer or _mailer(resolved)), url_prefix="/api/v1/studio"
+    )
     # Public lessons for everyone, without an account (ADR-0013).
     app.register_blueprint(content_blueprint(session_factory), url_prefix="/api/v1/content")
     _register_error_handlers(app)
     _register_commands(app, db_engine, session_factory)
     return app
+
+
+def _mailer(settings: Settings) -> Mailer:
+    if settings.smtp_host is None:
+        return UnconfiguredMailer()
+    return SmtpMailer(
+        host=settings.smtp_host,
+        port=settings.smtp_port,
+        sender=settings.mail_from,
+        username=settings.smtp_username,
+        password=settings.smtp_password,
+        starttls=settings.smtp_starttls,
+    )
 
 
 def _v1_blueprint(database_check: DatabaseCheck) -> Blueprint:

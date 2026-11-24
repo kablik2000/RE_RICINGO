@@ -11,10 +11,11 @@ from flask import Blueprint, g, jsonify, request
 from flask.typing import ResponseReturnValue
 from sqlalchemy.orm import Session
 
-from rici_api import lessons
+from rici_api import lessons, students
 from rici_api.auth import Teacher
 from rici_api.auth_api import require_teacher
 from rici_api.content import SchemaIssue
+from rici_api.mailer import Mailer
 
 SessionFactory = Callable[[], Session]
 LEVELS = ("A1", "A2", "B1", "B2", "C1", "C2")
@@ -42,17 +43,32 @@ def _issues_json(issues: list[SchemaIssue]) -> list[dict[str, str]]:
     return [{"path": issue.path, "message": issue.message} for issue in issues]
 
 
+def _invitation_json(invitation: students.InvitationSummary) -> dict[str, object]:
+    return {
+        "id": str(invitation.id),
+        "email": invitation.email,
+        "displayName": invitation.display_name,
+        "isMinor": invitation.is_minor,
+        "status": invitation.status,
+        "sentAt": invitation.sent_at.isoformat(),
+        "expiresAt": invitation.expires_at.isoformat(),
+    }
+
+
 def _error(code: str, message: str, status: int, **extra: object) -> ResponseReturnValue:
     return jsonify({"error": {"code": code, "message": message, **extra}}), status
 
 
-def studio_blueprint(session_factory: SessionFactory) -> Blueprint:
+def studio_blueprint(session_factory: SessionFactory, mailer: Mailer) -> Blueprint:
     studio = Blueprint("studio", __name__)
     studio.before_request(require_teacher(session_factory))
 
-    def organization() -> uuid.UUID:
+    def current_teacher() -> Teacher:
         teacher: Teacher = g.teacher
-        return teacher.organization_id
+        return teacher
+
+    def organization() -> uuid.UUID:
+        return current_teacher().organization_id
 
     @studio.errorhandler(lessons.LessonNotFoundError)
     def not_found(error: lessons.LessonNotFoundError) -> ResponseReturnValue:
@@ -66,6 +82,7 @@ def studio_blueprint(session_factory: SessionFactory) -> Blueprint:
     def overview() -> ResponseReturnValue:
         with session_factory() as session:
             data = lessons.overview(session, organization())
+            student_count = students.count_students(session, current_teacher())
         return jsonify(
             {
                 "lessons": {
@@ -75,8 +92,7 @@ def studio_blueprint(session_factory: SessionFactory) -> Blueprint:
                 },
                 "publishedLexemes": data.published_lexemes,
                 "publishedGrammarTopics": data.published_grammar_topics,
-                # Students arrive with authentication and invitations (M2).
-                "students": 0,
+                "students": student_count,
             }
         )
 
@@ -127,6 +143,86 @@ def studio_blueprint(session_factory: SessionFactory) -> Blueprint:
         with session_factory() as session, session.begin():
             summary = lessons.publish(session, lesson_id, organization())
         return jsonify({"lesson": _summary_json(summary)})
+
+    @studio.errorhandler(students.InvitationNotFoundError)
+    def no_invitation(error: students.InvitationNotFoundError) -> ResponseReturnValue:
+        return _error("not_found", "No such invitation or student.", 404)
+
+    @studio.errorhandler(students.InvitationError)
+    def bad_invitation(error: students.InvitationError) -> ResponseReturnValue:
+        return _error(error.code, str(error), 422)
+
+    @studio.errorhandler(students.DeliveryError)
+    def not_delivered(error: students.DeliveryError) -> ResponseReturnValue:
+        return _error("mail_failed", "The invitation e-mail could not be sent.", 502)
+
+    @studio.get("/students")
+    def list_students() -> ResponseReturnValue:
+        with session_factory() as session:
+            found, invitations = students.list_students(session, current_teacher())
+        return jsonify(
+            {
+                "students": [
+                    {
+                        "id": str(student.id),
+                        "email": student.email,
+                        "displayName": student.display_name,
+                        "isMinor": student.is_minor,
+                        "since": student.since.isoformat(),
+                    }
+                    for student in found
+                ],
+                "invitations": [_invitation_json(invitation) for invitation in invitations],
+            }
+        )
+
+    @studio.post("/invitations")
+    def invite() -> ResponseReturnValue:
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict):
+            return _error("validation", "Expected a JSON object.", 422)
+        email, name = body.get("email"), body.get("displayName")
+        is_minor, consent = body.get("isMinor", False), body.get("parentalConsent", False)
+        if not (
+            isinstance(email, str)
+            and isinstance(name, str)
+            and isinstance(is_minor, bool)
+            and isinstance(consent, bool)
+        ):
+            return _error(
+                "validation",
+                'Expected {"email", "displayName", "isMinor": bool, "parentalConsent": bool}.',
+                422,
+            )
+        with session_factory() as session, session.begin():
+            invitation = students.invite(
+                session,
+                mailer,
+                current_teacher(),
+                email=email,
+                display_name=name,
+                is_minor=is_minor,
+                parental_consent=consent,
+            )
+        return jsonify({"invitation": _invitation_json(invitation)}), 201
+
+    @studio.post("/invitations/<uuid:invitation_id>/resend")
+    def resend_invitation(invitation_id: uuid.UUID) -> ResponseReturnValue:
+        with session_factory() as session, session.begin():
+            invitation = students.resend(session, mailer, current_teacher(), invitation_id)
+        return jsonify({"invitation": _invitation_json(invitation)})
+
+    @studio.delete("/invitations/<uuid:invitation_id>")
+    def revoke_invitation(invitation_id: uuid.UUID) -> ResponseReturnValue:
+        with session_factory() as session, session.begin():
+            students.revoke(session, current_teacher(), invitation_id)
+        return "", 204
+
+    @studio.delete("/students/<uuid:student_id>")
+    def remove_student(student_id: uuid.UUID) -> ResponseReturnValue:
+        with session_factory() as session, session.begin():
+            students.remove_student(session, current_teacher(), student_id)
+        return "", 204
 
     @studio.put("/lessons/<lesson_id>/visibility")
     def set_visibility(lesson_id: str) -> ResponseReturnValue:

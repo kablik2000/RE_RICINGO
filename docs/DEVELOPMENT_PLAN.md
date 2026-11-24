@@ -160,7 +160,7 @@ The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for t
 - [x] `services/api` skeleton: Flask app factory, settings from environment, `/api/v1/health` (database check), JSON errors, Dockerfile (gunicorn), uv + Ruff + mypy (strict) + pytest; part of `pnpm verify` and a CI job that also builds the Docker image.
 - [ ] SQLAlchemy 2 models + Alembic migrations; constraints/triggers for immutability and idempotency. (Lessons + immutable lesson versions done with ADR-0011; idempotency comes with learning events.)
 - [x] Organizations and teacher accounts (`users`, role `teacher`), sessions, sign-in throttling; lessons scoped to an organization (ADR-0012, migration `0003_accounts`).
-- [ ] Schema v1: student profiles, `teacher_students`, invitations.
+- [x] Student accounts (role `student`), `teacher_students`, invitations (ADR-0013, migration `0005`).
 - [ ] Schema v1: content authoring tables (lessons, turns, sentences, segments, explanation layers, lexemes, grammar topics, exercises).
 - [ ] Schema v1: lesson_versions (immutable), assignments, learning_events, derived progress tables.
 - [ ] Auth: invitations, password (Argon2) + email one-time code, access + rotating refresh tokens, role/organisation checks, tests for every endpoint's access rules.
@@ -226,7 +226,7 @@ The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for t
 Order: each step is usable on its own.
 
 - [x] 1. Lesson visibility: Studio switch "Veřejná / Jen pro mé studenty" (default: students only); public catalog of all organizations' public lessons without sign-in; content API for public lessons leaves development-only. Done 2026-11-24 (migration `0004_lesson_visibility`; already published lessons stay public); verified in the browser, the student app on a device not re-checked (its removal logic is unchanged).
-- [ ] 2. Students and invitations in the Studio: student list, invite by e-mail (Mailpit in development), parental-consent confirmation for students under 15, revoke access.
+- [x] 2. Students and invitations in the Studio: student list, invite by e-mail (Mailpit in development), parental-consent confirmation for students under 15, revoke access. Done 2026-11-24: page Studenti, invitation e-mail with a 12-character one-time code (valid 14 days, stored hashed), resend, revoke, remove a student (a student without any teacher is disabled), max 50 invitations per teacher a day; migration `0005_students_and_invitations`. Verified in the browser with Mailpit.
 - [ ] 3. Student sign-in in the app: accept invitation, set password, sign in/out, tokens in `expo-secure-store`; the app keeps working without an account.
 - [ ] 4. Recommendations per student: Studio student detail → recommend lessons and topics ("okruhy"); recommended private lessons download for that student.
 - [ ] 5. Home block "Od vaší lektorky" for signed-in students (part of the Home design).
@@ -254,7 +254,8 @@ Order: each step is usable on its own.
 - [ ] Two-factor sign-in for teachers (postponed by the owner, ADR-0012) and a breached-password check.
 - [ ] Self-service password reset by e-mail (with invitations); until then the operator command `set-password`.
 - [ ] Pass the real client address from the Studio to the API over a trusted channel (sign-in throttling per address), with hosting (Q-19).
-- [ ] Students: list, invite, profile, level.
+- [ ] Production e-mail: SMTP provider and sender domain for invitations (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_STARTTLS`, `MAIL_FROM`; Q-10).
+- [x] Students: list, invite, resend, revoke, remove (ADR-0013 step 2). Student profile and level: later.
 - [ ] Assignments: assign/reorder lessons per student.
 - [ ] Authoring: edit lesson drafts, preview, publish (reusing compiler/validator).
 - [ ] Results: per-student progress and frequent mistakes.

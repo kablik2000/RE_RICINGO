@@ -371,6 +371,11 @@ session tokens stored hashed (2 h idle, 12 h maximum); the Studio keeps the toke
 API request checks the session; lessons are scoped to the teacher's organization; CSP with nonces
 and security headers. No two-factor yet.
 
+**Implemented (students, ADR-0013 step 2):** a teacher invites a student from the Studio; the
+e-mail carries a one-time code (60 bits, 14 days, stored as SHA-256); students under 15 need the
+teacher's confirmation of the parents' consent (only a flag and the time are stored); a teacher
+sees and manages only their own students (`teacher_students`).
+
 **Planned (students, M2):**
 
 - Implemented by the Flask API (ADR-0010). **Invite-only** (no public sign-up): the lecturer

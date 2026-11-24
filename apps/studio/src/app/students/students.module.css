@@ -1,0 +1,118 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rici-space-md);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: var(--rici-type-title-size);
+  line-height: var(--rici-type-title-line-height);
+  font-weight: 500;
+}
+
+.tableCard {
+  overflow-x: auto;
+  padding: 0;
+}
+
+.table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  font-size: var(--rici-type-body-size);
+}
+
+.table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--rici-color-on-surface-variant);
+  background: var(--rici-color-surface-container-low);
+  padding: 14px var(--rici-space-lg);
+}
+
+.table td {
+  padding: var(--rici-space-md) var(--rici-space-lg);
+  border-top: 1px solid var(--rici-color-surface-container-high);
+  vertical-align: middle;
+}
+
+.table th:first-child,
+.table td:first-child {
+  padding-left: var(--rici-space-xl);
+}
+
+.person {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.personName {
+  font-weight: 500;
+}
+
+.empty {
+  margin: 0;
+  padding: var(--rici-space-xl);
+}
+
+.notice {
+  margin: 0;
+  padding: var(--rici-space-md) var(--rici-space-lg);
+  border-radius: var(--rici-radius-md);
+  background: var(--rici-color-success-container);
+  color: var(--rici-color-on-success-container);
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--rici-space-xs);
+  flex-wrap: wrap;
+}
+
+.rowMessage {
+  flex-basis: 100%;
+  text-align: right;
+  font-size: var(--rici-type-body-small-size);
+  color: var(--rici-color-on-surface-variant);
+}
+
+/* Invitation form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rici-space-lg);
+  max-width: 560px;
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--rici-space-sm);
+  cursor: pointer;
+}
+
+.check input {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--rici-color-primary);
+}
+
+.consent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rici-space-sm);
+  padding: var(--rici-space-lg);
+  border-radius: var(--rici-radius-md);
+  background: var(--rici-color-warning-container);
+  color: var(--rici-color-on-warning-container);
+}
+
+.error {
+  margin: 0;
+  color: var(--rici-color-error);
+}

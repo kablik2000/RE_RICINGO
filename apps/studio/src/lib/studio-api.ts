@@ -79,6 +79,8 @@ export class StudioApiError extends Error {
     readonly issues: readonly LessonIssue[] = [],
     /** Seconds until sign-in may be tried again (HTTP 429). */
     readonly retryAfter?: number,
+    /** The API's error code, e.g. `consent_required`. */
+    readonly code?: string,
   ) {
     super(message);
     this.name = 'StudioApiError';
@@ -119,6 +121,7 @@ async function apiRequest<T>(
       response.status,
       parsed.success ? (parsed.data.error.issues ?? []) : [],
       parsed.success ? parsed.data.error.retryAfter : undefined,
+      parsed.success ? parsed.data.error.code : undefined,
     );
   }
   return schema.parse(body);
@@ -271,6 +274,83 @@ export async function createLesson(
     fetchImpl,
   );
   return body.id;
+}
+
+const studentSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  displayName: z.string(),
+  isMinor: z.boolean(),
+  since: z.string(),
+});
+export type Student = z.infer<typeof studentSchema>;
+
+const invitationSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  displayName: z.string(),
+  isMinor: z.boolean(),
+  status: z.enum(['pending', 'expired']),
+  sentAt: z.string(),
+  expiresAt: z.string(),
+});
+export type Invitation = z.infer<typeof invitationSchema>;
+
+/** The teacher's students and open invitations (ADR-0013). */
+export function listStudents(
+  fetchImpl?: typeof fetch,
+): Promise<{ students: Student[]; invitations: Invitation[] }> {
+  return request(
+    '/students',
+    z.object({ students: z.array(studentSchema), invitations: z.array(invitationSchema) }),
+    {},
+    fetchImpl,
+  );
+}
+
+export interface InvitationInput {
+  email: string;
+  displayName: string;
+  isMinor: boolean;
+  parentalConsent: boolean;
+}
+
+/** Creates an invitation; the API e-mails the code. Rejects with the API's error `code`. */
+export async function inviteStudent(
+  input: InvitationInput,
+  fetchImpl?: typeof fetch,
+): Promise<Invitation> {
+  const body = await request(
+    '/invitations',
+    z.object({ invitation: invitationSchema }),
+    { method: 'POST', body: JSON.stringify(input) },
+    fetchImpl,
+  );
+  return body.invitation;
+}
+
+/** Sends a new code (the old one stops working) and renews the validity. */
+export async function resendInvitation(id: string, fetchImpl?: typeof fetch): Promise<void> {
+  await request(
+    `/invitations/${encodeURIComponent(id)}/resend`,
+    z.object({ invitation: invitationSchema }),
+    { method: 'POST' },
+    fetchImpl,
+  );
+}
+
+export async function revokeInvitation(id: string, fetchImpl?: typeof fetch): Promise<void> {
+  await request(
+    `/invitations/${encodeURIComponent(id)}`,
+    z.null(),
+    { method: 'DELETE' },
+    fetchImpl,
+  );
+}
+
+/** Ends the teacher-student link (a student without any teacher is disabled). */
+export async function removeStudent(id: string, fetchImpl?: typeof fetch): Promise<void> {
+  await request(`/students/${encodeURIComponent(id)}`, z.null(), { method: 'DELETE' }, fetchImpl);
 }
 
 export type Loaded<T> = { ok: true; data: T } | { ok: false; error: StudioApiError };

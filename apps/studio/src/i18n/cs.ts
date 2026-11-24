@@ -46,6 +46,70 @@ export const cs = {
       changed: 'Lekce je jen pro vaše studenty.',
     },
   },
+  students: {
+    title: 'Studenti',
+    intro:
+      'Studenty zvete e-mailem. Po přijetí pozvánky se přihlásí v aplikaci a uvidí lekce, které jim doporučíte.',
+    invite: 'Pozvat studenta',
+    invited: 'Pozvánka je odeslaná. Student v e-mailu najde kód, který zadá v aplikaci.',
+    listTitle: 'Moji studenti · {count}',
+    invitationsTitle: 'Odeslané pozvánky · {count}',
+    empty:
+      'Zatím tu nikdo není. Studenti se tu objeví, jakmile přijmou pozvánku v aplikaci (přijetí pozvánky v aplikaci připravujeme).',
+    minor: 'Mladší 15 let',
+    columns: {
+      student: 'Student',
+      age: 'Věk',
+      since: 'Studentem od',
+      status: 'Stav pozvánky',
+      actions: 'Akce',
+    },
+    status: {
+      pending: 'Čeká na přijetí · platí do {date}',
+      expired: 'Vypršela {date}',
+    },
+    resend: 'Poslat znovu',
+    resent: 'Nový kód odeslán na {email}. Starý kód už neplatí.',
+    revoke: 'Zrušit pozvánku',
+    revoked: 'Pozvánka je zrušená.',
+    revokeDialog: {
+      title: 'Zrušit pozvánku pro {email}?',
+      message: 'Kód z e-mailu přestane platit. Pozvat studenta můžete později znovu.',
+    },
+    remove: 'Odebrat',
+    removed: 'Student je odebraný.',
+    removeDialog: {
+      title: 'Odebrat studenta {name}?',
+      message:
+        'Student přestane být váš a neuvidí vaše doporučení. Pokud nemá jiného lektora, jeho účet se zablokuje a odhlásí. Veřejné lekce může dál používat bez účtu.',
+    },
+    inviteTitle: 'Pozvat studenta',
+    inviteIntro:
+      'Student dostane e-mail s kódem platným 14 dní. Kód zadá v aplikaci Italština RICI a vytvoří si účet.',
+    form: {
+      name: 'Jméno studenta',
+      email: 'E-mail studenta',
+      isMinor: 'Student je mladší 15 let',
+      consentInfo:
+        'U dětí do 15 let vyžaduje GDPR souhlas zákonného zástupce. Ukládáme jen to, že je student mladší 15 let, a kdy jste souhlas potvrdili; datum narození neukládáme.',
+      consent:
+        'Potvrzuji, že zákonný zástupce dal souhlas s tím, aby dítě používalo aplikaci s účtem.',
+      send: 'Odeslat pozvánku',
+      sending: 'Odesílám…',
+    },
+    errors: {
+      missing: 'Vyplňte jméno i e-mail.',
+      invalidEmail: 'Toto není platná e-mailová adresa.',
+      nameRequired: 'Vyplňte jméno studenta.',
+      consentRequired: 'U studenta mladšího 15 let potvrďte souhlas zákonného zástupce.',
+      tooMany: 'Dnes jste odeslali příliš mnoho pozvánek. Zkuste to zítra.',
+      studioAccount: 'Tento e-mail patří účtu do Studia, nelze ho pozvat jako studenta.',
+      alreadyStudent: 'Tento student už je váš.',
+      alreadyInvited: 'Tento e-mail už pozvánku má. Použijte „Poslat znovu“ v seznamu pozvánek.',
+      mailFailed: 'E-mail se nepodařilo odeslat, pozvánka se neuložila. Zkuste to znovu.',
+      failed: 'Akce se nepodařila: {message}',
+    },
+  },
   login: {
     title: 'Přihlášení',
     intro: 'Přihlaste se účtem, který vám založil správce Studia.',
@@ -80,7 +144,7 @@ export const cs = {
       lessons: 'Lekce',
       lessonsDetail: '{published} zveřejněné · {drafts} s neveřejnými změnami',
       students: 'Studenti',
-      studentsDetail: 'Pozvánky přijdou s přihlašováním',
+      studentsDetail: 'kteří přijali vaši pozvánku',
       lexemes: 'Slovíčka',
       lexemesDetail: 've zveřejněných lekcích',
       topics: 'Gramatická témata',
@@ -94,7 +158,7 @@ export const cs = {
     students: {
       title: 'Zatím žádní studenti',
       message:
-        'Studenty budete zvát e-mailem. Uvidí jen lekce, které jim přidělíte, a vy tady uvidíte jejich postup. Přijde s přihlašováním.',
+        'Pozvěte studenty e-mailem. Po přihlášení v aplikaci uvidí lekce, které jim doporučíte.',
     },
     quickActions: {
       title: 'Rychlé akce',

@@ -13,10 +13,20 @@ class ConfigError(Exception):
     """The environment does not describe a valid configuration."""
 
 
+DEFAULT_MAIL_FROM = "Italština RICI <no-reply@rici.localhost>"
+
+
 @dataclass(frozen=True)
 class Settings:
     app_env: AppEnv
     database_url: str
+    # Outgoing e-mail (invitations). Without SMTP_HOST, sending fails with a clear error.
+    smtp_host: str | None = None
+    smtp_port: int = 25
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_starttls: bool = False
+    mail_from: str = DEFAULT_MAIL_FROM
 
 
 def _app_env(raw: str | None) -> AppEnv:
@@ -33,4 +43,16 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
     database_url = env.get("DATABASE_URL", "").strip()
     if not database_url:
         raise ConfigError("DATABASE_URL is not set (see .env.example).")
-    return Settings(app_env=_app_env(env.get("APP_ENV")), database_url=database_url)
+    port = env.get("SMTP_PORT", "25").strip() or "25"
+    if not port.isdigit():
+        raise ConfigError(f"SMTP_PORT must be a number, got {port!r}.")
+    return Settings(
+        app_env=_app_env(env.get("APP_ENV")),
+        database_url=database_url,
+        smtp_host=env.get("SMTP_HOST", "").strip() or None,
+        smtp_port=int(port),
+        smtp_username=env.get("SMTP_USERNAME") or None,
+        smtp_password=env.get("SMTP_PASSWORD") or None,
+        smtp_starttls=env.get("SMTP_STARTTLS", "").lower() in ("1", "true", "yes"),
+        mail_from=env.get("MAIL_FROM", "").strip() or DEFAULT_MAIL_FROM,
+    )

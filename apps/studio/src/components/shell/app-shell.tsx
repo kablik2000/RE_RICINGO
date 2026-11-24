@@ -8,20 +8,20 @@ import type { Teacher } from '@/lib/studio-api';
 
 import styles from './app-shell.module.css';
 
-export type NavSection = 'overview' | 'lessons';
+export type NavSection = 'overview' | 'lessons' | 'students';
 
 interface NavItem {
   key: TranslationKey;
   icon: string;
-  href?: '/' | '/lessons';
+  href?: '/' | '/lessons' | '/students';
   section?: NavSection;
 }
 
 const PRIMARY: readonly NavItem[] = [
   { key: 'nav.overview', icon: 'dashboard', href: '/', section: 'overview' },
   { key: 'nav.lessons', icon: 'menu_book', href: '/lessons', section: 'lessons' },
+  { key: 'nav.students', icon: 'group', href: '/students', section: 'students' },
   // Not built yet: shown so the lecturer sees what is coming, but not interactive.
-  { key: 'nav.students', icon: 'group' },
   { key: 'nav.results', icon: 'insights' },
   { key: 'nav.library', icon: 'library_books' },
 ];

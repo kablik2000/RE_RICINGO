@@ -38,10 +38,10 @@ class Organization(Base):
 
 
 class User(Base):
-    """A Studio account. Created by an operator (no public sign-up); students come with M2."""
+    """An account: a teacher (created by an operator) or a student (by invitation, ADR-0013)."""
 
     __tablename__ = "users"
-    __table_args__ = (CheckConstraint("role IN ('teacher')", name="users_role_known"),)
+    __table_args__ = (CheckConstraint("role IN ('teacher', 'student')", name="users_role_known"),)
 
     id: Mapped[uuid.UUID] = mapped_column(
         Uuid, primary_key=True, server_default=text("gen_random_uuid()")
@@ -62,6 +62,58 @@ class User(Base):
     password_changed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+    # Students under 15 (CZ age of digital consent): the inviting teacher confirmed the parents'
+    # consent at this time (GDPR art. 8). Only this flag and the time are kept, no birth date.
+    is_minor: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
+    parental_consent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class TeacherStudent(Base):
+    """A student of a teacher: the teacher sees the student and recommends lessons to them."""
+
+    __tablename__ = "teacher_students"
+
+    teacher_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    student_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class Invitation(Base):
+    """An invitation e-mailed to a future student. Only the SHA-256 of its code is stored."""
+
+    __tablename__ = "invitations"
+    __table_args__ = (
+        CheckConstraint(
+            "NOT is_minor OR parental_consent_at IS NOT NULL",
+            name="invitations_minor_needs_consent",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("organizations.id"), nullable=False
+    )
+    teacher_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    email: Mapped[str] = mapped_column(String(254), index=True, nullable=False)
+    display_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    code_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    is_minor: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    parental_consent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class AuthSession(Base):

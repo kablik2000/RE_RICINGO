@@ -40,6 +40,10 @@ export default async function OverviewPage() {
             <p className={ui.pageSubtitle}>{formatLongDate(new Date())}</p>
           </div>
           <div className={ui.actions}>
+            <Link href="/students/invite" className={`${ui.button ?? ''} ${ui.outlined ?? ''}`}>
+              <Icon name="person_add" size={18} />
+              {t('overview.inviteStudent')}
+            </Link>
             <Link href="/lessons/new" className={`${ui.button ?? ''} ${ui.filled ?? ''}`}>
               <Icon name="add" size={18} />
               {t('overview.newLesson')}
@@ -210,6 +214,10 @@ function OverviewData({
             {t('overview.students.title')}
           </h2>
           <p className={ui.muted}>{t('overview.students.message')}</p>
+          <Link href="/students/invite" className={`${ui.button ?? ''} ${ui.tonal ?? ''}`}>
+            <Icon name="person_add" size={18} />
+            {t('overview.inviteStudent')}
+          </Link>
         </section>
       </div>
     </>

@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 from rici_api import auth, lessons
 from rici_api.app import create_app
 from rici_api.config import Settings
+from rici_api.mailer import Email, MailError
 from rici_api.migrate import upgrade_database
 from rici_api.models import Organization
 
@@ -76,19 +77,38 @@ def engine(database_engine: Engine) -> Iterator[Engine]:
         connection.execute(text("ALTER TABLE lesson_versions DISABLE TRIGGER USER"))
         connection.execute(
             text(
-                "TRUNCATE lesson_versions, lessons, auth_sessions, login_attempts, users, "
-                "organizations"
+                "TRUNCATE lesson_versions, lessons, auth_sessions, login_attempts, invitations, "
+                "teacher_students, users, organizations"
             )
         )
         connection.execute(text("ALTER TABLE lesson_versions ENABLE TRIGGER USER"))
     yield database_engine
 
 
+class RecordingMailer:
+    """Keeps e-mails instead of sending them; `fail` makes the next send fail."""
+
+    def __init__(self) -> None:
+        self.sent: list[Email] = []
+        self.fail = False
+
+    def send(self, email: Email) -> None:
+        if self.fail:
+            raise MailError("SMTP server unavailable.")
+        self.sent.append(email)
+
+
 @pytest.fixture
-def studio_app(engine: Engine) -> Flask:
+def mailbox() -> RecordingMailer:
+    return RecordingMailer()
+
+
+@pytest.fixture
+def studio_app(engine: Engine, mailbox: RecordingMailer) -> Flask:
     return create_app(
         Settings(app_env="test", database_url=TEST_DATABASE_URL),
         engine=engine,
+        mailer=mailbox,
     )
 
 

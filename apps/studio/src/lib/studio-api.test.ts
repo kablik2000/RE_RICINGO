@@ -2,6 +2,7 @@ import { filterLessons, parseLessonFilter } from './lesson-filter';
 import {
   deleteLesson,
   fetchCurrentTeacher,
+  inviteStudent,
   listLessons,
   load,
   type LessonSummary,
@@ -120,6 +121,20 @@ describe('studio API client', () => {
     const fetchImpl = respondWith({ teacher });
 
     await expect(fetchCurrentTeacher('abc', fetchImpl)).resolves.toEqual(teacher);
+  });
+
+  it('passes the API error code of a refused invitation', async () => {
+    const fetchImpl = respondWith(
+      { error: { code: 'consent_required', message: 'Consent needed.' } },
+      422,
+    );
+
+    const error = await inviteStudent(
+      { email: 'jan@example.test', displayName: 'Jan', isMinor: true, parentalConsent: false },
+      fetchImpl,
+    ).catch((caught: unknown) => caught);
+
+    expect(error).toMatchObject({ status: 422, code: 'consent_required' });
   });
 
   it('reports an unreachable backend as a value pages can render', async () => {

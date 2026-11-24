@@ -26,6 +26,13 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-24 — **Students and invitations in the Teacher Studio** (ADR-0013, step 2): page
+  "Studenti" (enabled in the navigation) with the teacher's students and open invitations;
+  "Pozvat studenta" sends an e-mail with a one-time code (12 characters, 14 days, only its hash
+  is stored); students under 15 need the teacher's confirmation of the parents' consent; resend
+  (new code), revoke, remove a student. The overview counts the teacher's students. API:
+  `/api/v1/studio/students`, `/invitations`, SMTP settings (`SMTP_*`, `MAIL_FROM`), migration
+  `0005_students_and_invitations`. Accepting an invitation in the app is step 3.
 - 2026-11-24 — **Lesson visibility** (ADR-0013, step 1): the Studio editor has "Pro všechny /
   Jen studenti" next to the tabs (with a confirmation) and the lesson list a "Pro koho" column.
   The content API serves only public lessons, in every environment and without an account; a
