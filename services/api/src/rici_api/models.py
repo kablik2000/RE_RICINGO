@@ -9,6 +9,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Integer,
     String,
     Uuid,
@@ -197,3 +198,51 @@ class LessonVersion(Base):
     )
 
     lesson: Mapped[Lesson] = relationship(back_populates="versions")
+
+
+class Recommendation(Base):
+    """Something a teacher recommends to one of their students (ADR-0013 step 4).
+
+    `lesson`: go through the lesson; `practice`: practise the lesson, or one of its grammar topics
+    (`grammar_topic_id`); `vocabulary`: learn the chosen words of the lesson (`lexeme_ids`).
+    Topic and word IDs refer to the lesson's published versions; ending the teacher-student link
+    deletes the teacher's recommendations (foreign key to `teacher_students`).
+    """
+
+    __tablename__ = "recommendations"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["teacher_id", "student_id"],
+            ["teacher_students.teacher_id", "teacher_students.student_id"],
+            ondelete="CASCADE",
+        ),
+        CheckConstraint(
+            "kind IN ('lesson', 'practice', 'vocabulary')", name="recommendations_kind_known"
+        ),
+        CheckConstraint(
+            "kind = 'practice' OR grammar_topic_id IS NULL",
+            name="recommendations_topic_only_for_practice",
+        ),
+        CheckConstraint(
+            "(kind = 'vocabulary') = (jsonb_array_length(lexeme_ids) > 0)",
+            name="recommendations_words_only_for_vocabulary",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, primary_key=True, default=uuid.uuid4, server_default=text("gen_random_uuid()")
+    )
+    teacher_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
+    student_id: Mapped[uuid.UUID] = mapped_column(Uuid, index=True, nullable=False)
+    kind: Mapped[str] = mapped_column(String(20), nullable=False)
+    lesson_id: Mapped[str] = mapped_column(
+        String(100), ForeignKey("lessons.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    grammar_topic_id: Mapped[str | None] = mapped_column(String(100))
+    lexeme_ids: Mapped[list[str]] = mapped_column(
+        JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb")
+    )
+    note: Mapped[str | None] = mapped_column(String(500))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )

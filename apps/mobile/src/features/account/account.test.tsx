@@ -118,6 +118,10 @@ describe('AcceptInvitationScreen', () => {
       expect.objectContaining({ code: '8cmt-gy2g-a13v', password: 'heslo-studenta-1' }),
     );
     await expect(test.tokens.read()).resolves.toBe('tok-1');
+    // Recommended lessons download right away.
+    await waitFor(() => {
+      expect(test.server.api.fetchCatalog).toHaveBeenCalled();
+    });
   });
 
   it('explains a code that does not work', async () => {

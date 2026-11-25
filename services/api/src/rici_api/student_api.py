@@ -12,8 +12,9 @@ from flask import Blueprint, Response, jsonify, request
 from flask.typing import ResponseReturnValue
 from sqlalchemy.orm import Session
 
-from rici_api import auth, student_auth
+from rici_api import auth, recommendations, student_auth
 from rici_api.auth_api import bearer_token
+from rici_api.studio_api import recommendation_json
 
 SessionFactory = Callable[[], Session]
 MAX_FIELD_LENGTH = 512
@@ -173,6 +174,19 @@ def student_blueprint(session_factory: SessionFactory) -> Blueprint:
                 "maxDevices": student_auth.MAX_DEVICES,
             }
         )
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    @blueprint.get("/recommendations")
+    def list_recommendations() -> ResponseReturnValue:
+        token = bearer_token()
+        with session_factory() as session, session.begin():
+            found = student_auth.authenticate(session, token) if token else None
+            if found is None:
+                return _error("unauthorized", "Sign in again.", 401)
+            views = recommendations.for_student(session, found[0].id)
+            body = {"recommendations": [recommendation_json(view) for view in views]}
+        response = jsonify(body)
         response.headers["Cache-Control"] = "no-store"
         return response
 

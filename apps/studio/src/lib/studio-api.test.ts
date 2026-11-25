@@ -6,6 +6,7 @@ import {
   listLessons,
   load,
   type LessonSummary,
+  recommend,
   saveLesson,
   signIn,
   signStudentOutEverywhere,
@@ -146,6 +147,32 @@ describe('studio API client', () => {
     expect(fetchImpl).toHaveBeenCalledWith(
       'http://localhost:8000/api/v1/studio/students/s1/sessions',
       expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
+  it('recommends words of a lesson to a student', async () => {
+    const created = {
+      id: 'r1',
+      kind: 'vocabulary',
+      teacherName: 'Lektorka',
+      lesson: { id: 'al-bar', titleItalian: 'Al bar', titleCzech: 'V kavárně', level: 'A1' },
+      grammarTopic: null,
+      words: [{ id: 'volere', lemma: 'volere', translation: 'chtít' }],
+      note: null,
+      createdAt: '2026-11-25T10:00:00+00:00',
+      available: true,
+    };
+    const fetchImpl = respondWith({ recommendation: created }, 201);
+
+    await expect(
+      recommend('s1', { kind: 'vocabulary', lessonId: 'al-bar', wordIds: ['volere'] }, fetchImpl),
+    ).resolves.toEqual(created);
+    expect(fetchImpl).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/studio/students/s1/recommendations',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ kind: 'vocabulary', lessonId: 'al-bar', wordIds: ['volere'] }),
+      }),
     );
   });
 

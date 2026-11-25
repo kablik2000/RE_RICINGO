@@ -77,8 +77,8 @@ def engine(database_engine: Engine) -> Iterator[Engine]:
         connection.execute(text("ALTER TABLE lesson_versions DISABLE TRIGGER USER"))
         connection.execute(
             text(
-                "TRUNCATE lesson_versions, lessons, auth_sessions, login_attempts, invitations, "
-                "teacher_students, users, organizations"
+                "TRUNCATE recommendations, lesson_versions, lessons, auth_sessions, "
+                "login_attempts, invitations, teacher_students, users, organizations"
             )
         )
         connection.execute(text("ALTER TABLE lesson_versions ENABLE TRIGGER USER"))

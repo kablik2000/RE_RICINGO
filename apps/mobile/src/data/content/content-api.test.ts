@@ -16,6 +16,19 @@ function respondWith(body: unknown, status = 200) {
 }
 
 describe('content API client', () => {
+  it('sends the signed-in student token, so recommended lessons are listed too', async () => {
+    const fetchImpl = respondWith({ lessons: [] });
+
+    await createContentApi(BASE, fetchImpl, () => Promise.resolve('tok-1')).fetchCatalog();
+    await createContentApi(BASE, fetchImpl).fetchCatalog();
+
+    const headers = fetchImpl.mock.calls.map(
+      (call) => (call as unknown as [string, RequestInit])[1].headers as Record<string, string>,
+    );
+    expect(headers[0]?.Authorization).toBe('Bearer tok-1');
+    expect(headers[1]?.Authorization).toBeUndefined();
+  });
+
   it('reads the catalog of published lessons', async () => {
     const fetchImpl = respondWith({ lessons: [CATALOG_ENTRY] });
 

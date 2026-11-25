@@ -382,6 +382,14 @@ teacher only with their current password; each device has its own session (60 da
 at most), at most 3 at a time; the app keeps the token in `expo-secure-store`
 (`AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY`); the lecturer can sign a student out everywhere.
 
+**Implemented (recommendations, ADR-0013 step 4):** table `recommendations` (teacher, student,
+kind `lesson` | `practice` | `vocabulary`, lesson, optional grammar topic, chosen word IDs, note),
+with a foreign key to `teacher_students`, so removing a student removes the teacher's
+recommendations. Topics and words are resolved against the lesson's newest published version;
+a recommendation whose lesson is withdrawn or whose topic or words left the lesson is hidden from
+the student and marked in the Studio. `/api/v1/content` treats a valid student token as "also the
+lessons recommended to this student" (an unknown token as none; `Vary: Authorization`).
+
 **Planned (students, M2):**
 
 - Implemented by the Flask API (ADR-0010). **Invite-only** (no public sign-up): the lecturer

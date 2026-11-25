@@ -38,8 +38,17 @@ export interface ContentApi {
 
 const REQUEST_TIMEOUT_MS = 20_000;
 
-export function createContentApi(baseUrl: string, fetchImpl: typeof fetch = fetch): ContentApi {
+/**
+ * `getToken` gives the signed-in student's session token: with it, the catalog also lists the
+ * lessons the student's lecturers recommended, including lessons for students only (ADR-0013).
+ */
+export function createContentApi(
+  baseUrl: string,
+  fetchImpl: typeof fetch = fetch,
+  getToken: () => Promise<string | null> = () => Promise.resolve(null),
+): ContentApi {
   async function get<T>(path: string, schema: z.ZodType<T>): Promise<T> {
+    const token = await getToken();
     const controller = new AbortController();
     const timeout = setTimeout(() => {
       controller.abort();
@@ -47,7 +56,10 @@ export function createContentApi(baseUrl: string, fetchImpl: typeof fetch = fetc
     let response: Response;
     try {
       response = await fetchImpl(`${baseUrl}/api/v1/content${path}`, {
-        headers: { Accept: 'application/json' },
+        headers: {
+          Accept: 'application/json',
+          ...(token !== null && { Authorization: `Bearer ${token}` }),
+        },
         signal: controller.signal,
       });
     } catch (error) {

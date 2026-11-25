@@ -42,11 +42,13 @@ export function useAccount() {
 }
 
 function useAfterSignIn() {
-  const { tokens } = useDataServices();
+  const { tokens, contentSync } = useDataServices();
   const queryClient = useQueryClient();
   return async (signedIn: SignedIn) => {
     await tokens.write(signedIn.token);
     await queryClient.invalidateQueries({ queryKey: accountQueryKeys.all });
+    // Lessons the lecturer recommended (also those for students only) download now.
+    void contentSync?.check();
   };
 }
 
@@ -74,7 +76,7 @@ export function useSignIn() {
 
 /** Signs this device out. Offline, the session is forgotten here and ends on the server later. */
 export function useSignOut() {
-  const { account, tokens } = useDataServices();
+  const { account, tokens, contentSync } = useDataServices();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
@@ -90,6 +92,8 @@ export function useSignOut() {
     },
     onSuccess: () => {
       queryClient.setQueryData(accountQueryKeys.me(), null);
+      // Lessons only for students leave the device, like lessons the lecturer unpublished.
+      void contentSync?.check();
     },
   });
 }

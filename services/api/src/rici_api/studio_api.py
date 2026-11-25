@@ -11,7 +11,7 @@ from flask import Blueprint, g, jsonify, request
 from flask.typing import ResponseReturnValue
 from sqlalchemy.orm import Session
 
-from rici_api import lessons, students
+from rici_api import lessons, recommendations, students
 from rici_api.auth import Teacher
 from rici_api.auth_api import require_teacher
 from rici_api.content import SchemaIssue
@@ -52,6 +52,31 @@ def _invitation_json(invitation: students.InvitationSummary) -> dict[str, object
         "status": invitation.status,
         "sentAt": invitation.sent_at.isoformat(),
         "expiresAt": invitation.expires_at.isoformat(),
+    }
+
+
+def recommendation_json(view: recommendations.RecommendationView) -> dict[str, object]:
+    """A recommendation as both the Studio and the student app receive it."""
+    return {
+        "id": str(view.id),
+        "kind": view.kind,
+        "teacherName": view.teacher_name,
+        "lesson": {
+            "id": view.lesson_id,
+            "titleItalian": view.lesson_title_italian,
+            "titleCzech": view.lesson_title_czech,
+            "level": view.lesson_level,
+        },
+        "grammarTopic": (
+            {"id": view.topic.id, "title": view.topic.title} if view.topic is not None else None
+        ),
+        "words": [
+            {"id": word.id, "lemma": word.lemma, "translation": word.translation}
+            for word in view.words
+        ],
+        "note": view.note,
+        "createdAt": view.created_at.isoformat(),
+        "available": view.available,
     }
 
 
@@ -229,6 +254,101 @@ def studio_blueprint(session_factory: SessionFactory, mailer: Mailer) -> Bluepri
     def remove_student(student_id: uuid.UUID) -> ResponseReturnValue:
         with session_factory() as session, session.begin():
             students.remove_student(session, current_teacher(), student_id)
+        return "", 204
+
+    @studio.errorhandler(recommendations.RecommendationNotFoundError)
+    def no_recommendation(
+        error: recommendations.RecommendationNotFoundError,
+    ) -> ResponseReturnValue:
+        return _error("not_found", "No such student or recommendation.", 404)
+
+    @studio.errorhandler(recommendations.RecommendationError)
+    def bad_recommendation(error: recommendations.RecommendationError) -> ResponseReturnValue:
+        return _error(error.code, str(error), 422)
+
+    @studio.get("/recommendation-options")
+    def recommendation_options() -> ResponseReturnValue:
+        with session_factory() as session:
+            found = recommendations.options(session, organization())
+        return jsonify(
+            {
+                "lessons": [
+                    {
+                        "id": option.id,
+                        "titleItalian": option.title_italian,
+                        "titleCzech": option.title_czech,
+                        "level": option.level,
+                        "visibility": option.visibility,
+                        "grammarTopics": [
+                            {"id": topic.id, "title": topic.title} for topic in option.topics
+                        ],
+                        "words": [
+                            {"id": word.id, "lemma": word.lemma, "translation": word.translation}
+                            for word in option.words
+                        ],
+                    }
+                    for option in found
+                ]
+            }
+        )
+
+    @studio.get("/students/<uuid:student_id>")
+    def get_student(student_id: uuid.UUID) -> ResponseReturnValue:
+        with session_factory() as session:
+            student = recommendations.student_details(session, current_teacher(), student_id)
+            found = recommendations.for_teacher(session, current_teacher(), student_id)
+            body = {
+                "student": {
+                    "id": str(student.id),
+                    "email": student.email,
+                    "displayName": student.display_name,
+                    "isMinor": student.is_minor,
+                },
+                "recommendations": [recommendation_json(view) for view in found],
+            }
+        return jsonify(body)
+
+    @studio.post("/students/<uuid:student_id>/recommendations")
+    def recommend(student_id: uuid.UUID) -> ResponseReturnValue:
+        body = request.get_json(silent=True)
+        body = body if isinstance(body, dict) else {}
+        kind, lesson_id = body.get("kind"), body.get("lessonId")
+        topic, words, note = body.get("grammarTopicId"), body.get("wordIds"), body.get("note")
+        if not (
+            isinstance(kind, str)
+            and isinstance(lesson_id, str)
+            and (topic is None or isinstance(topic, str))
+            and (
+                words is None
+                or (isinstance(words, list) and all(isinstance(w, str) for w in words))
+            )
+            and (note is None or isinstance(note, str))
+        ):
+            return _error(
+                "validation",
+                'Expected {"kind", "lessonId", "grammarTopicId"?, "wordIds"?: [..], "note"?}.',
+                422,
+            )
+        with session_factory() as session, session.begin():
+            view = recommendations.recommend(
+                session,
+                current_teacher(),
+                student_id,
+                kind=kind,
+                lesson_id=lesson_id,
+                grammar_topic_id=topic,
+                word_ids=words,
+                note=note,
+            )
+            created = recommendation_json(view)
+        return jsonify({"recommendation": created}), 201
+
+    @studio.delete("/students/<uuid:student_id>/recommendations/<uuid:recommendation_id>")
+    def remove_recommendation(
+        student_id: uuid.UUID, recommendation_id: uuid.UUID
+    ) -> ResponseReturnValue:
+        with session_factory() as session, session.begin():
+            recommendations.remove(session, current_teacher(), student_id, recommendation_id)
         return "", 204
 
     @studio.put("/lessons/<lesson_id>/visibility")

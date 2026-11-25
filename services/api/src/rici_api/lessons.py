@@ -6,11 +6,12 @@ import json
 import re
 import unicodedata
 import uuid
+from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Literal
 
-from sqlalchemy import Select, select
+from sqlalchemy import Select, or_, select
 from sqlalchemy.orm import Session
 
 from rici_api.content import JsonObject, SchemaIssue, validate_lesson_bundle
@@ -340,18 +341,23 @@ class PublishedLesson:
     level: str
 
 
-def _public_lessons() -> Select[Lesson]:
-    """Lessons everyone may see: public, not unpublished, not archived (any organization)."""
+def _catalog_lessons(also: Collection[str] = ()) -> Select[Lesson]:
+    """Lessons in a catalog: not unpublished, not archived (any organization), and public or
+    among `also` (lessons recommended to the signed-in student, ADR-0013)."""
+    visible = Lesson.visibility == "public"
+    if also:
+        visible = or_(visible, Lesson.id.in_(list(also)))
     return select(Lesson).where(
         Lesson.archived_at.is_(None),
         Lesson.unpublished_at.is_(None),
-        Lesson.visibility == "public",
+        visible,
     )
 
 
-def list_published(session: Session) -> list[PublishedLesson]:
-    """The public catalog (ADR-0013): newest version of every public published lesson."""
-    lessons = session.scalars(_public_lessons().order_by(Lesson.created_at, Lesson.id)).all()
+def list_published(session: Session, also: Collection[str] = ()) -> list[PublishedLesson]:
+    """The catalog (ADR-0013): newest version of every public published lesson, plus the
+    published lessons in `also`."""
+    lessons = session.scalars(_catalog_lessons(also).order_by(Lesson.created_at, Lesson.id)).all()
     catalog = []
     for lesson in lessons:
         latest = _latest_version(session, lesson.id)
@@ -372,9 +378,12 @@ def list_published(session: Session) -> list[PublishedLesson]:
     return catalog
 
 
-def get_published_version(session: Session, lesson_id: str, version: int) -> LessonVersion:
-    """One published version of a public lesson; others answer as if they did not exist."""
-    if session.scalar(_public_lessons().where(Lesson.id == lesson_id)) is None:
+def get_published_version(
+    session: Session, lesson_id: str, version: int, also: Collection[str] = ()
+) -> LessonVersion:
+    """One published version of a lesson in the catalog (see `list_published`); others answer as
+    if they did not exist."""
+    if session.scalar(_catalog_lessons(also).where(Lesson.id == lesson_id)) is None:
         raise LessonNotFoundError(lesson_id)
     published = session.get(LessonVersion, (lesson_id, version))
     if published is None:

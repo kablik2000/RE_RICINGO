@@ -28,6 +28,9 @@ under 15 (Q-7), and several lecturers/schools use the Studio (Q-2).
 5. **Recommendations per student:** the lecturer recommends lessons and topics (_okruhy_) to
    individual students (no groups for now). A signed-in student sees them on Home in
    "Od vaší lektorky", and recommended private lessons download like public ones.
+   Implemented 2026-11-25 (owner: "practice, lessons and words") as three kinds: a lesson, practice
+   (a whole lesson or one of its grammar topics) and vocabulary (chosen words of a lesson), each
+   with an optional note; only published lessons of the lecturer's organization.
 6. **Accepting an invitation needs only the code** (owner decision 2026-11-24): the code is
    single-use and expires; the account gets the invited e-mail, which cannot be changed. Whoever
    redeems a shared code takes the invited student's place, which the student and the lecturer

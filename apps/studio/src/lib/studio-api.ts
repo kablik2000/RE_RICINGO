@@ -368,6 +368,107 @@ export async function removeStudent(id: string, fetchImpl?: typeof fetch): Promi
   await request(`/students/${encodeURIComponent(id)}`, z.null(), { method: 'DELETE' }, fetchImpl);
 }
 
+/** What a lecturer recommends (ADR-0013 step 4). */
+export const recommendationKindSchema = z.enum(['lesson', 'practice', 'vocabulary']);
+export type RecommendationKind = z.infer<typeof recommendationKindSchema>;
+
+const topicSchema = z.object({ id: z.string(), title: z.string() });
+const wordSchema = z.object({ id: z.string(), lemma: z.string(), translation: z.string() });
+export type RecommendableTopic = z.infer<typeof topicSchema>;
+export type RecommendableWord = z.infer<typeof wordSchema>;
+
+const recommendationSchema = z.object({
+  id: z.string(),
+  kind: recommendationKindSchema,
+  teacherName: z.string(),
+  lesson: z.object({
+    id: z.string(),
+    titleItalian: z.string(),
+    titleCzech: z.string(),
+    level: z.string(),
+  }),
+  grammarTopic: topicSchema.nullable(),
+  words: z.array(wordSchema),
+  note: z.string().nullable(),
+  createdAt: z.string(),
+  /** False while the lesson is withdrawn or the chosen topic or words left it. */
+  available: z.boolean(),
+});
+export type Recommendation = z.infer<typeof recommendationSchema>;
+
+const lessonOptionSchema = z.object({
+  id: z.string(),
+  titleItalian: z.string(),
+  titleCzech: z.string(),
+  level: z.string(),
+  visibility: visibilitySchema,
+  grammarTopics: z.array(topicSchema),
+  words: z.array(wordSchema),
+});
+export type LessonOption = z.infer<typeof lessonOptionSchema>;
+
+const studentDetailSchema = z.object({
+  student: z.object({
+    id: z.string(),
+    email: z.string(),
+    displayName: z.string(),
+    isMinor: z.boolean(),
+  }),
+  recommendations: z.array(recommendationSchema),
+});
+export type StudentDetail = z.infer<typeof studentDetailSchema>;
+
+/** One of the lecturer's students with what the lecturer recommends to them. */
+export function getStudent(id: string, fetchImpl?: typeof fetch): Promise<StudentDetail> {
+  return request(`/students/${encodeURIComponent(id)}`, studentDetailSchema, {}, fetchImpl);
+}
+
+/** Published lessons of the organization with their grammar topics and words. */
+export async function listRecommendationOptions(fetchImpl?: typeof fetch): Promise<LessonOption[]> {
+  const body = await request(
+    '/recommendation-options',
+    z.object({ lessons: z.array(lessonOptionSchema) }),
+    {},
+    fetchImpl,
+  );
+  return body.lessons;
+}
+
+export interface RecommendationInput {
+  kind: RecommendationKind;
+  lessonId: string;
+  grammarTopicId?: string;
+  wordIds?: string[];
+  note?: string;
+}
+
+export async function recommend(
+  studentId: string,
+  input: RecommendationInput,
+  fetchImpl?: typeof fetch,
+): Promise<Recommendation> {
+  const body = await request(
+    `/students/${encodeURIComponent(studentId)}/recommendations`,
+    z.object({ recommendation: recommendationSchema }),
+    { method: 'POST', body: JSON.stringify(input) },
+    fetchImpl,
+  );
+  return body.recommendation;
+}
+
+export async function removeRecommendation(
+  studentId: string,
+  recommendationId: string,
+  fetchImpl?: typeof fetch,
+): Promise<void> {
+  await request(
+    `/students/${encodeURIComponent(studentId)}/recommendations/${encodeURIComponent(recommendationId)}`,
+    z.null(),
+    { method: 'DELETE' },
+    fetchImpl,
+  );
+}
+
 export type Loaded<T> = { ok: true; data: T } | { ok: false; error: StudioApiError };
 
 /** Awaits a Studio API call, turning API failures into a value pages can render. */

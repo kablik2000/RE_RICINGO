@@ -26,6 +26,13 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-25 — **Recommendations per student** (ADR-0013, step 4): in the Studio, a student's
+  page (Studenti → name) recommends a lesson, practice (a whole lesson or one grammar topic) or
+  chosen words of a lesson, with an optional note, and lists and removes recommendations. Lessons
+  for students only that are recommended to a student download into that student's app after
+  sign-in and leave it after sign-out. API: `GET /api/v1/studio/students/<id>`,
+  `/recommendation-options`, `POST|DELETE /students/<id>/recommendations`,
+  `GET /api/v1/student/recommendations`; the content catalog accepts the student's token.
 - 2026-11-25 — **Student sign-in in the app** (ADR-0013, step 3): Profile → "Účet studenta" with
   "Mám pozvánku" (invitation code + new password creates the account) and "Přihlásit se" (e-mail
   and password on any device); "Moje zařízení" lists the devices (at most 3; a 4th sign-in asks

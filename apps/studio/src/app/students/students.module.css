@@ -52,6 +52,19 @@
   font-weight: 500;
 }
 
+a.person {
+  color: inherit;
+  text-decoration: none;
+}
+
+.personLink {
+  color: var(--rici-color-primary);
+}
+
+a.person:hover .personLink {
+  text-decoration: underline;
+}
+
 .empty {
   margin: 0;
   padding: var(--rici-space-xl);

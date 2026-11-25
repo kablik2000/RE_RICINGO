@@ -37,11 +37,12 @@ export function createDataServices(): DataServices {
   const holds = createLessonHolds();
   const updateSettings = createUpdateSettings(store);
   const apiUrl = getAppConfig().contentApiUrl;
+  const tokens = openTokenStore();
   const contentSync =
     apiUrl === null
       ? null
       : createContentSync({
-          api: createContentApi(apiUrl),
+          api: createContentApi(apiUrl, fetch, () => tokens.read()),
           library,
           holds,
           getConnection: async () => toConnectionKind(await getNetworkStateAsync()),
@@ -49,7 +50,7 @@ export function createDataServices(): DataServices {
           telemetry,
         });
   const account = apiUrl === null ? null : createAccountApi(apiUrl);
-  return { library, holds, updateSettings, contentSync, account, tokens: openTokenStore() };
+  return { library, holds, updateSettings, contentSync, account, tokens };
 }
 
 let appServices: DataServices | null = null;

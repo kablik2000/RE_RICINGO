@@ -82,10 +82,15 @@ function StudentTable({ students }: { students: Student[] }) {
               {students.map((student) => (
                 <tr key={student.id}>
                   <td>
-                    <span className={styles.person}>
-                      <span className={styles.personName}>{student.displayName}</span>
+                    <Link
+                      href={`/students/${student.id}`}
+                      className={styles.person}
+                      aria-label={t('student.open', { name: student.displayName })}>
+                      <span className={`${styles.personName ?? ''} ${styles.personLink ?? ''}`}>
+                        {student.displayName}
+                      </span>
                       <span className={ui.muted}>{student.email}</span>
-                    </span>
+                    </Link>
                   </td>
                   <td>{student.isMinor ? t('students.minor') : t('common.none')}</td>
                   <td>{t('students.devices', { count: student.deviceCount })}</td>
