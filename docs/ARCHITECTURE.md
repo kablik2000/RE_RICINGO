@@ -424,6 +424,9 @@ Three independent update channels:
 - API compatibility via `/api/v1`/`/api/v2` coexistence; DB via expand/contract migrations.
 - Environments: `development` (local Docker stack), `staging`, `production` — separate databases
   and API deployments; app config through `app.config.ts`; no secrets in any client bundle.
+- Hosting (ADR-0014): Render, Frankfurt, from the `render.yaml` Blueprint — managed PostgreSQL,
+  the API's Docker image (migrations as the pre-deploy command) and the Studio (`next start`),
+  which calls the API on Render's private network. Deploys follow CI on `main`.
 
 ---
 

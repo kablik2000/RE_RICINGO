@@ -11,11 +11,17 @@ export type ApiHealth = z.infer<typeof healthSchema>;
 export type ApiStatus =
   { kind: 'online' } | { kind: 'degraded' } | { kind: 'offline'; reason: string };
 
-/** Backend base URL; server-side only. Defaults to the local Docker stack. */
+/**
+ * Backend base URL; server-side only. `RICI_API_URL` wins; `RICI_API_HOSTPORT` is the API's
+ * `host:port` on a private network (Render Blueprint, `render.yaml`), reached over plain HTTP.
+ * Defaults to the local Docker stack.
+ */
 export function apiBaseUrl(
   env: Readonly<Record<string, string | undefined>> = process.env,
 ): string {
-  return env.RICI_API_URL ?? 'http://localhost:8000';
+  if (env.RICI_API_URL) return env.RICI_API_URL;
+  if (env.RICI_API_HOSTPORT) return `http://${env.RICI_API_HOSTPORT}`;
+  return 'http://localhost:8000';
 }
 
 /**

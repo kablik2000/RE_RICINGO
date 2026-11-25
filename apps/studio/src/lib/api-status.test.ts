@@ -30,10 +30,11 @@ describe('fetchApiStatus', () => {
     ).resolves.toMatchObject({ kind: 'offline' });
   });
 
-  it('uses RICI_API_URL or the local Docker stack', () => {
+  it('uses RICI_API_URL, the private API host or the local Docker stack', () => {
     expect(apiBaseUrl({ RICI_API_URL: 'https://api.example.test' })).toBe(
       'https://api.example.test',
     );
+    expect(apiBaseUrl({ RICI_API_HOSTPORT: 'rici-api:8000' })).toBe('http://rici-api:8000');
     expect(apiBaseUrl({})).toBe('http://localhost:8000');
   });
 });

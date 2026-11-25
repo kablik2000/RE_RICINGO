@@ -20,3 +20,4 @@ Status values: **Proposed** (awaiting approval) · **Accepted** · **Superseded 
 | [0011](0011-lesson-drafts-as-documents.md)                 | Lesson drafts as validated JSON documents (Studio MVP)           | Accepted                  |
 | [0012](0012-teacher-studio-sign-in.md)                     | Teacher Studio sign-in: accounts, sessions, organizations        | Accepted                  |
 | [0013](0013-public-app-and-invited-students.md)            | Public app, invited students, lesson visibility, recommendations | Accepted                  |
+| [0014](0014-hosting-on-render.md)                          | Hosting on Render (Frankfurt) from a Blueprint                   | Accepted                  |

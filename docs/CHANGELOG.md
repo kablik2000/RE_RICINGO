@@ -26,6 +26,12 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-25 — **Hosting on Render** (ADR-0014): `render.yaml` Blueprint creates PostgreSQL, the
+  API and the Teacher Studio in Frankfurt in one step (New → Blueprint); migrations run before
+  each deploy, deploys follow CI. The API accepts `postgres://` database URLs (switched to
+  psycopg 3) and, with `TRUSTED_PROXY_HOPS`, takes the client address from the load balancer.
+  The Studio reaches the API on the private network (`RICI_API_HOSTPORT`). Guide:
+  `docs/setup/NASAZENI_RENDER.md`.
 - 2026-11-25 — **Recommendations per student** (ADR-0013, step 4): in the Studio, a student's
   page (Studenti → name) recommends a lesson, practice (a whole lesson or one grammar topic) or
   chosen words of a lesson, with an optional note, and lists and removes recommendations. Lessons

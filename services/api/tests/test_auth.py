@@ -8,11 +8,15 @@ from sqlalchemy import Engine, select, text, update
 from sqlalchemy.orm import Session
 
 from rici_api import auth
-from rici_api.models import AuthSession, User
+from rici_api.app import create_app
+from rici_api.config import Settings
+from rici_api.models import AuthSession, LoginAttempt, User
 
 from .conftest import (
     TEACHER_EMAIL,
     TEACHER_PASSWORD,
+    TEST_DATABASE_URL,
+    RecordingMailer,
     create_teacher,
     import_demo,
     sign_in,
@@ -217,3 +221,29 @@ def test_weak_passwords_and_bad_emails_are_refused(
 def test_one_account_per_email(engine: Engine, teacher: auth.Teacher) -> None:
     with pytest.raises(auth.AccountError), Session(engine) as session, session.begin():
         auth.create_teacher(session, "LEKTORKA@example.test", "Jiná", "RICI", TEACHER_PASSWORD)
+
+
+def test_behind_a_trusted_proxy_the_address_is_the_one_it_appended(
+    engine: Engine, mailbox: RecordingMailer
+) -> None:
+    app = create_app(
+        Settings(app_env="test", database_url=TEST_DATABASE_URL, trusted_proxy_hops=1),
+        engine=engine,
+        mailer=mailbox,
+    )
+    client = app.test_client()
+    # A client-sent entry ("1.2.3.4") comes first; the proxy appends the real peer last.
+    client.post(
+        "/api/v1/auth/login",
+        json={"email": "nekdo@example.test", "password": "nejake-dlouhe-heslo-1"},
+        headers={"X-Forwarded-For": "1.2.3.4, 203.0.113.7"},
+    )
+    # Without the header (the Studio over the private network) the peer address stays.
+    client.post(
+        "/api/v1/auth/login",
+        json={"email": "nekdo@example.test", "password": "nejake-dlouhe-heslo-1"},
+    )
+
+    with Session(engine) as session:
+        addresses = session.scalars(select(LoginAttempt.address).order_by(LoginAttempt.created_at))
+        assert list(addresses) == ["203.0.113.7", "127.0.0.1"]

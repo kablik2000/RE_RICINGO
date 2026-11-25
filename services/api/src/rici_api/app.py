@@ -11,6 +11,7 @@ from flask.typing import ResponseReturnValue
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from werkzeug.exceptions import HTTPException
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from rici_api import auth, lessons
 from rici_api.auth_api import auth_blueprint
@@ -56,6 +57,11 @@ def create_app(
     app.register_blueprint(content_blueprint(session_factory), url_prefix="/api/v1/content")
     _register_error_handlers(app)
     _register_commands(app, db_engine, session_factory)
+    if resolved.trusted_proxy_hops > 0:
+        # The client address (sign-in throttling) is the entry the trusted proxies appended to
+        # X-Forwarded-For; entries a client sent itself are ignored. Requests that came without
+        # a proxy (the Studio over the private network) keep their peer address.
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=resolved.trusted_proxy_hops)  # type: ignore[method-assign]
     return app
 
 

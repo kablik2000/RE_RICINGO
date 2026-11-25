@@ -168,6 +168,10 @@ The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for t
 - [ ] Generated TypeScript client → `packages/api`; error mapping to `AppError`.
 - [ ] File storage (audio, artwork): S3-compatible bucket, signed URLs.
 - [ ] Hosting (EU) for API + PostgreSQL + files; backups and a documented restore drill (Q-19).
+  - [x] Render Blueprint (ADR-0014, `render.yaml`): PostgreSQL, API (Docker, migrations before each deploy) and Studio in Frankfurt, private network between them, deploys after CI; API accepts the platform's database URL and trusts Render's load balancer for the client address (`TRUSTED_PROXY_HOPS`); guide `docs/setup/NASAZENI_RENDER.md`.
+  - [ ] First deploy by the owner and the checks in the guide (health, client address behind the load balancer, `Secure` cookie); record the result in ADR-0014.
+  - [ ] Restore drill for Render's database backups, documented.
+  - [ ] File storage for audio and artwork (Render disk or S3-compatible bucket).
 - [ ] Mobile data layer: API-backed `LessonRepository` (secure token storage done with student sign-in, ADR-0013).
 - [x] Student sign-in screens (accept invitation, sign in) — no auth gate: the app works without an account (ADR-0013).
 - [ ] Profile: account details, sign-out, account deletion entry point.
@@ -254,7 +258,7 @@ Order: each step is usable on its own.
 - [x] Teacher sign-in (ADR-0012): login page, `httpOnly` session cookie, every page/action/API call checks the session, organization scoping, CSP + security headers, operator commands and VS Code tasks to create accounts. Verified in the browser 2026-11-23 (production build: sign-in, wrong password, forged cookie, sign-out).
 - [ ] Two-factor sign-in for teachers (postponed by the owner, ADR-0012) and a breached-password check.
 - [ ] Self-service password reset by e-mail (with invitations); until then the operator command `set-password`.
-- [ ] Pass the real client address from the Studio to the API over a trusted channel (sign-in throttling per address), with hosting (Q-19).
+- [ ] Pass the real client address from the Studio to the API over a trusted channel (sign-in throttling per address), with hosting (Q-19). The app's requests already carry it on Render (ADR-0014); the Studio's sign-ins still all come from the Studio's own address.
 - [ ] The student's account section needs the server: offline it shows an error instead of the last known account (cache the profile with the token).
 - [ ] Production e-mail: SMTP provider and sender domain for invitations (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_STARTTLS`, `MAIL_FROM`; Q-10).
 - [x] Students: list, invite, resend, revoke, remove (ADR-0013 step 2). Student profile and level: later.
