@@ -8,6 +8,8 @@ import type { ConnectionKind, UpdatePolicy } from '@/data/content/update-rules';
 import { createUpdateSettings } from '@/data/content/update-settings';
 import alBar from '@/data/demo/al-bar.lesson.json';
 import { createLessonLibrary, toSeed } from '@/data/lesson-library';
+import type { AccountApi } from '@/data/account/account-api';
+import { openTokenStore } from '@/data/account/token-store.web';
 import { createMemoryLocalStore } from '@/data/local/local-store';
 
 type Bundle = typeof alBar;
@@ -65,13 +67,19 @@ export function createFakeContentServer() {
 export interface TestServicesOptions {
   connection?: ConnectionKind;
   policy?: UpdatePolicy;
+  /** Student account API (tests of sign-in screens); none by default. */
+  account?: AccountApi | null;
 }
 
 /**
  * Data services over memory storage, the bundled demo lesson and a fake lesson server that
  * publishes the same demo lesson (as the development server does).
  */
-export function createTestServices({ connection = 'unmetered', policy }: TestServicesOptions = {}) {
+export function createTestServices({
+  connection = 'unmetered',
+  policy,
+  account = null,
+}: TestServicesOptions = {}) {
   const server = createFakeContentServer();
   server.publish(lessonBundle());
   const store = createMemoryLocalStore();
@@ -90,6 +98,25 @@ export function createTestServices({ connection = 'unmetered', policy }: TestSer
     now: () => Date.UTC(2026, 10, 23, 13, 5),
   });
   const ready = policy === undefined ? Promise.resolve() : updateSettings.setPolicy(policy);
-  const services: DataServices = { library, holds, updateSettings, contentSync };
-  return { services, server, store, library, holds, contentSync, telemetry, network, ready };
+  const tokens = openTokenStore();
+  const services: DataServices = {
+    library,
+    holds,
+    updateSettings,
+    contentSync,
+    account,
+    tokens,
+  };
+  return {
+    services,
+    server,
+    store,
+    library,
+    holds,
+    contentSync,
+    telemetry,
+    network,
+    ready,
+    tokens,
+  };
 }

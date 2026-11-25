@@ -46,6 +46,14 @@ export default function RootLayout() {
             name="lesson/[lessonId]/dialogue"
             options={{ ...withHeader, title: t('dialogue.title') }}
           />
+          <Stack.Screen
+            name="account/invitation"
+            options={{ ...withHeader, title: t('account.invitation.title') }}
+          />
+          <Stack.Screen
+            name="account/sign-in"
+            options={{ ...withHeader, title: t('account.signInScreen.title') }}
+          />
         </Stack>
       </DataProvider>
     </AppProviders>

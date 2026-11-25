@@ -6,6 +6,11 @@ export const lessonQueryKeys = {
   vocabulary: () => ['vocabulary'] as const,
 };
 
+export const accountQueryKeys = {
+  all: ['account'] as const,
+  me: () => [...accountQueryKeys.all, 'me'] as const,
+};
+
 export const settingsQueryKeys = {
   updatePolicy: () => ['settings', 'updatePolicy'] as const,
 };

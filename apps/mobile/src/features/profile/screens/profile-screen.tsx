@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import type { AppConfig } from '@/core/config';
 import { t } from '@/core/i18n';
+import { AccountSection } from '@/features/account';
 
 import { LessonUpdateSettings } from '../components/lesson-update-settings';
 
@@ -11,13 +12,16 @@ export interface ProfileScreenProps {
 }
 
 /**
- * Profile: lesson update settings and build information. Account details arrive with
- * authentication (M2). `config` is injected so the screen stays testable without native constants.
+ * Profile: the student account (ADR-0013), lesson update settings and build information. `config`
+ * is injected so the screen stays testable without native constants.
  */
 export function ProfileScreen({ config }: ProfileScreenProps) {
   const styles = useThemedStyles(createStyles);
   return (
     <Screen title={t('profile.title')}>
+      <Surface tone="surfaceContainerLow" style={styles.list}>
+        <AccountSection />
+      </Surface>
       <Surface tone="surfaceContainerLow" style={styles.list}>
         <LessonUpdateSettings />
       </Surface>

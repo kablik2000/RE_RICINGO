@@ -3,6 +3,8 @@ import { getNetworkStateAsync } from 'expo-network';
 import { getAppConfig } from '@/core/config';
 import { telemetry } from '@/core/telemetry';
 
+import { createAccountApi, type AccountApi } from './account/account-api';
+import { openTokenStore, type TokenStore } from './account/token-store';
 import { createContentApi } from './content/content-api';
 import { createContentSync, type ContentSync } from './content/content-sync';
 import { createLessonHolds, type LessonHolds } from './content/lesson-holds';
@@ -19,6 +21,10 @@ export interface DataServices {
   updateSettings: UpdateSettings;
   /** `null` when this build downloads no lessons (web preview, no API configured). */
   contentSync: ContentSync | null;
+  /** Student accounts (ADR-0013); `null` without a server, like `contentSync`. */
+  account: AccountApi | null;
+  /** The signed-in student's session token. */
+  tokens: TokenStore;
 }
 
 /** Lessons shipped inside the app: available offline from the very first start. */
@@ -42,7 +48,8 @@ export function createDataServices(): DataServices {
           getPolicy: () => updateSettings.getPolicy(),
           telemetry,
         });
-  return { library, holds, updateSettings, contentSync };
+  const account = apiUrl === null ? null : createAccountApi(apiUrl);
+  return { library, holds, updateSettings, contentSync, account, tokens: openTokenStore() };
 }
 
 let appServices: DataServices | null = null;

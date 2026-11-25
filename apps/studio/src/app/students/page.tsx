@@ -71,6 +71,7 @@ function StudentTable({ students }: { students: Student[] }) {
               <tr>
                 <th scope="col">{t('students.columns.student')}</th>
                 <th scope="col">{t('students.columns.age')}</th>
+                <th scope="col">{t('students.columns.devices')}</th>
                 <th scope="col">{t('students.columns.since')}</th>
                 <th scope="col">
                   <span className={ui.visuallyHidden}>{t('students.columns.actions')}</span>
@@ -87,9 +88,14 @@ function StudentTable({ students }: { students: Student[] }) {
                     </span>
                   </td>
                   <td>{student.isMinor ? t('students.minor') : t('common.none')}</td>
+                  <td>{t('students.devices', { count: student.deviceCount })}</td>
                   <td className={ui.muted}>{formatDate(student.since)}</td>
                   <td>
-                    <StudentActions id={student.id} name={student.displayName} />
+                    <StudentActions
+                      id={student.id}
+                      name={student.displayName}
+                      deviceCount={student.deviceCount}
+                    />
                   </td>
                 </tr>
               ))}

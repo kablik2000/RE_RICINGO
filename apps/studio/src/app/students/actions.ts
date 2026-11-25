@@ -9,6 +9,7 @@ import {
   removeStudent,
   resendInvitation,
   revokeInvitation,
+  signStudentOutEverywhere,
   StudioApiError,
 } from '@/lib/studio-api';
 
@@ -97,4 +98,9 @@ export async function revokeAction(id: string): Promise<ActionResult> {
 export async function removeStudentAction(id: string): Promise<ActionResult> {
   const studentId = await authorize(id);
   return run(() => removeStudent(studentId));
+}
+
+export async function signOutEverywhereAction(id: string): Promise<ActionResult> {
+  const studentId = await authorize(id);
+  return run(() => signStudentOutEverywhere(studentId));
 }

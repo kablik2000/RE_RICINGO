@@ -169,6 +169,7 @@ def studio_blueprint(session_factory: SessionFactory, mailer: Mailer) -> Bluepri
                         "displayName": student.display_name,
                         "isMinor": student.is_minor,
                         "since": student.since.isoformat(),
+                        "deviceCount": student.device_count,
                     }
                     for student in found
                 ],
@@ -216,6 +217,12 @@ def studio_blueprint(session_factory: SessionFactory, mailer: Mailer) -> Bluepri
     def revoke_invitation(invitation_id: uuid.UUID) -> ResponseReturnValue:
         with session_factory() as session, session.begin():
             students.revoke(session, current_teacher(), invitation_id)
+        return "", 204
+
+    @studio.delete("/students/<uuid:student_id>/sessions")
+    def sign_student_out(student_id: uuid.UUID) -> ResponseReturnValue:
+        with session_factory() as session, session.begin():
+            students.sign_out_everywhere(session, current_teacher(), student_id)
         return "", 204
 
     @studio.delete("/students/<uuid:student_id>")

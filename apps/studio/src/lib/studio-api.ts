@@ -282,6 +282,8 @@ const studentSchema = z.object({
   displayName: z.string(),
   isMinor: z.boolean(),
   since: z.string(),
+  /** Devices the student is signed in on (at most 3, ADR-0013). */
+  deviceCount: z.number(),
 });
 export type Student = z.infer<typeof studentSchema>;
 
@@ -342,6 +344,19 @@ export async function resendInvitation(id: string, fetchImpl?: typeof fetch): Pr
 export async function revokeInvitation(id: string, fetchImpl?: typeof fetch): Promise<void> {
   await request(
     `/invitations/${encodeURIComponent(id)}`,
+    z.null(),
+    { method: 'DELETE' },
+    fetchImpl,
+  );
+}
+
+/** Signs the student out on every device (a lost phone, a shared account). */
+export async function signStudentOutEverywhere(
+  id: string,
+  fetchImpl?: typeof fetch,
+): Promise<void> {
+  await request(
+    `/students/${encodeURIComponent(id)}/sessions`,
     z.null(),
     { method: 'DELETE' },
     fetchImpl,

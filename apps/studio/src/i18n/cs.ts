@@ -54,12 +54,12 @@ export const cs = {
     invited: 'Pozvánka je odeslaná. Student v e-mailu najde kód, který zadá v aplikaci.',
     listTitle: 'Moji studenti · {count}',
     invitationsTitle: 'Odeslané pozvánky · {count}',
-    empty:
-      'Zatím tu nikdo není. Studenti se tu objeví, jakmile přijmou pozvánku v aplikaci (přijetí pozvánky v aplikaci připravujeme).',
+    empty: 'Zatím tu nikdo není. Studenti se tu objeví, jakmile přijmou pozvánku v aplikaci.',
     minor: 'Mladší 15 let',
     columns: {
       student: 'Student',
       age: 'Věk',
+      devices: 'Zařízení',
       since: 'Studentem od',
       status: 'Stav pozvánky',
       actions: 'Akce',
@@ -75,6 +75,14 @@ export const cs = {
     revokeDialog: {
       title: 'Zrušit pozvánku pro {email}?',
       message: 'Kód z e-mailu přestane platit. Pozvat studenta můžete později znovu.',
+    },
+    devices: '{count} ze 3',
+    signOutEverywhere: 'Odhlásit všude',
+    signedOut: 'Student je odhlášený ze všech zařízení.',
+    signOutDialog: {
+      title: 'Odhlásit studenta {name} ze všech zařízení?',
+      message:
+        'Hodí se při ztrátě telefonu nebo když účet používá někdo jiný. Student se pak znovu přihlásí e-mailem a heslem.',
     },
     remove: 'Odebrat',
     removed: 'Student je odebraný.',

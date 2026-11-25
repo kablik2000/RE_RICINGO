@@ -28,7 +28,19 @@ under 15 (Q-7), and several lecturers/schools use the Studio (Q-2).
 5. **Recommendations per student:** the lecturer recommends lessons and topics (_okruhy_) to
    individual students (no groups for now). A signed-in student sees them on Home in
    "Od vaší lektorky", and recommended private lessons download like public ones.
-6. Progress of a signed-in student is stored on the server (multi-device) once progress sync
+6. **Accepting an invitation needs only the code** (owner decision 2026-11-24): the code is
+   single-use and expires; the account gets the invited e-mail, which cannot be changed. Whoever
+   redeems a shared code takes the invited student's place, which the student and the lecturer
+   notice at once (the lecturer revokes it and invites again).
+7. **Several devices, at most 3 at a time** (owner decision 2026-11-24): after accepting, the
+   student signs in with e-mail and password on any device; each device has its own session. A
+   sign-in on a fourth device is refused until a device is removed — by the student in the app
+   or by the lecturer in the Studio ("Odhlásit ze všech zařízení"). This limits sharing one
+   account among friends. Implementation choices (2026-11-25): student passwords need at least
+   12 characters (phones; the device limit and throttling make guessing impractical); a device
+   session lasts 60 days without use and a year at most; an existing student's account joins
+   another teacher only with its current password, so a code cannot take over an account.
+8. Progress of a signed-in student is stored on the server (multi-device) once progress sync
    exists (M7); a student keeps the anonymous progress made before signing in.
 
 ## Consequences

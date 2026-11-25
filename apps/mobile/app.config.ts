@@ -89,6 +89,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     // Offline lesson store and settings (DEVELOPMENT_PLAN M7).
     'expo-sqlite',
+    // Student session token in the Keychain / Keystore; excluded from Android backups (ADR-0013).
+    'expo-secure-store',
     // Windows: native Android builds need a CMake whose ninja supports long paths.
     './plugins/with-android-cmake',
     [

@@ -8,6 +8,7 @@ import {
   type LessonSummary,
   saveLesson,
   signIn,
+  signStudentOutEverywhere,
   StudioApiError,
   unpublishLesson,
 } from './studio-api';
@@ -135,6 +136,17 @@ describe('studio API client', () => {
     ).catch((caught: unknown) => caught);
 
     expect(error).toMatchObject({ status: 422, code: 'consent_required' });
+  });
+
+  it('signs a student out everywhere', async () => {
+    const fetchImpl = vi.fn(() => Promise.resolve(new Response(null, { status: 204 })));
+
+    await signStudentOutEverywhere('s1', fetchImpl);
+
+    expect(fetchImpl).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/studio/students/s1/sessions',
+      expect.objectContaining({ method: 'DELETE' }),
+    );
   });
 
   it('reports an unreachable backend as a value pages can render', async () => {

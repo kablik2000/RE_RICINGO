@@ -26,6 +26,15 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-25 — **Student sign-in in the app** (ADR-0013, step 3): Profile → "Účet studenta" with
+  "Mám pozvánku" (invitation code + new password creates the account) and "Přihlásit se" (e-mail
+  and password on any device); "Moje zařízení" lists the devices (at most 3; a 4th sign-in asks
+  which device to sign out) and signs them out; the session token is kept in `expo-secure-store`
+  (Keychain / Keystore, not in backups; needs a new development build). Studio: devices per
+  student and "Odhlásit všude". API: `/api/v1/student/invitations/accept`, `/login`, `/logout`,
+  `/me`, `/devices/<id>`, `DELETE /api/v1/studio/students/<id>/sessions`; an existing student
+  joins another teacher only with their current password; wrong codes are throttled per address.
+  Design system: `TextField`.
 - 2026-11-24 — **Students and invitations in the Teacher Studio** (ADR-0013, step 2): page
   "Studenti" (enabled in the navigation) with the teacher's students and open invitations;
   "Pozvat studenta" sends an e-mail with a one-time code (12 characters, 14 days, only its hash

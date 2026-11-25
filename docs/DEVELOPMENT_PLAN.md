@@ -168,8 +168,8 @@ The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for t
 - [ ] Generated TypeScript client → `packages/api`; error mapping to `AppError`.
 - [ ] File storage (audio, artwork): S3-compatible bucket, signed URLs.
 - [ ] Hosting (EU) for API + PostgreSQL + files; backups and a documented restore drill (Q-19).
-- [ ] Mobile data layer: API-backed `LessonRepository`, secure token storage.
-- [ ] `(auth)` route group: sign-in, accept invitation, auth gate in the root layout (moved from M1).
+- [ ] Mobile data layer: API-backed `LessonRepository` (secure token storage done with student sign-in, ADR-0013).
+- [x] Student sign-in screens (accept invitation, sign in) — no auth gate: the app works without an account (ADR-0013).
 - [ ] Profile: account details, sign-out, account deletion entry point.
 - [x] `docs/ARCHITECTURE.md` rewritten for ADR-0010 (system overview, repository layout, backend, auth, testing, security).
 - [x] Lesson JSON Schema generated from the zod schema (`packages/domain/schema/`, copy in `services/api/src/rici_api/schemas/`); a domain test fails when a copy is stale (`pnpm --filter @ricingo/domain schema:update`); the API validates bundle structure with it (`rici_api.content`), demo lesson passes.
@@ -227,7 +227,7 @@ Order: each step is usable on its own.
 
 - [x] 1. Lesson visibility: Studio switch "Veřejná / Jen pro mé studenty" (default: students only); public catalog of all organizations' public lessons without sign-in; content API for public lessons leaves development-only. Done 2026-11-24 (migration `0004_lesson_visibility`; already published lessons stay public); verified in the browser, the student app on a device not re-checked (its removal logic is unchanged).
 - [x] 2. Students and invitations in the Studio: student list, invite by e-mail (Mailpit in development), parental-consent confirmation for students under 15, revoke access. Done 2026-11-24: page Studenti, invitation e-mail with a 12-character one-time code (valid 14 days, stored hashed), resend, revoke, remove a student (a student without any teacher is disabled), max 50 invitations per teacher a day; migration `0005_students_and_invitations`. Verified in the browser with Mailpit.
-- [ ] 3. Student sign-in in the app: accept invitation, set password, sign in/out, tokens in `expo-secure-store`; the app keeps working without an account.
+- [x] 3. Student sign-in in the app: accept invitation with the code alone (account takes the invited e-mail), set password, sign in/out on any device, at most 3 signed-in devices (a 4th is refused; the student removes a device in the app, the lecturer can sign the student out everywhere in the Studio), tokens in `expo-secure-store`; the app keeps working without an account. Done 2026-11-25: Profile → \"Účet studenta\" (Mám pozvánku / Přihlásit se / Moje zařízení / Odhlásit se), device-limit chooser, `expo-secure-store` (new development build), Studio column \"Zařízení\" and \"Odhlásit všude\"; student passwords at least 12 characters; migration `0006_session_device_name`. Verified on the Android emulator against the Docker API (accept with a code typed in lower case, restart keeps the session, 4th device refused and replaced, device removed, lecturer signs the student out everywhere).
 - [ ] 4. Recommendations per student: Studio student detail → recommend lessons and topics ("okruhy"); recommended private lessons download for that student.
 - [ ] 5. Home block "Od vaší lektorky" for signed-in students (part of the Home design).
 - [ ] 6. Server-side progress for signed-in students (with M7 progress sync); keep anonymous progress after signing in.
@@ -254,6 +254,7 @@ Order: each step is usable on its own.
 - [ ] Two-factor sign-in for teachers (postponed by the owner, ADR-0012) and a breached-password check.
 - [ ] Self-service password reset by e-mail (with invitations); until then the operator command `set-password`.
 - [ ] Pass the real client address from the Studio to the API over a trusted channel (sign-in throttling per address), with hosting (Q-19).
+- [ ] The student's account section needs the server: offline it shows an error instead of the last known account (cache the profile with the token).
 - [ ] Production e-mail: SMTP provider and sender domain for invitations (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_STARTTLS`, `MAIL_FROM`; Q-10).
 - [x] Students: list, invite, resend, revoke, remove (ADR-0013 step 2). Student profile and level: later.
 - [ ] Assignments: assign/reorder lessons per student.

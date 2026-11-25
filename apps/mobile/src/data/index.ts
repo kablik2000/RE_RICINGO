@@ -15,5 +15,18 @@ export {
   type LessonUpdates,
 } from './content-hooks';
 export { ContentSyncDriver } from './content-sync-driver';
+export {
+  useAcceptInvitation,
+  useAccount,
+  useRemoveDevice,
+  useSignIn,
+  useSignOut,
+} from './account-hooks';
+export {
+  AccountError,
+  type AccountDetails,
+  type AccountErrorCode,
+  type Device,
+} from './account/account-api';
 export type { ContentSync, ContentSyncState, LessonChange } from './content/content-sync';
 export { UPDATE_POLICIES, type LessonUpdate, type UpdatePolicy } from './content/update-rules';

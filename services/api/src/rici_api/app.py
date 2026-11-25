@@ -20,6 +20,7 @@ from rici_api.db import create_db_engine, database_is_reachable
 from rici_api.mailer import Mailer, SmtpMailer, UnconfiguredMailer
 from rici_api.migrate import upgrade_database
 from rici_api.models import Organization
+from rici_api.student_api import student_blueprint
 from rici_api.studio_api import studio_blueprint
 
 DatabaseCheck = Callable[[], bool]
@@ -50,6 +51,7 @@ def create_app(
     app.register_blueprint(
         studio_blueprint(session_factory, mailer or _mailer(resolved)), url_prefix="/api/v1/studio"
     )
+    app.register_blueprint(student_blueprint(session_factory), url_prefix="/api/v1/student")
     # Public lessons for everyone, without an account (ADR-0013).
     app.register_blueprint(content_blueprint(session_factory), url_prefix="/api/v1/content")
     _register_error_handlers(app)

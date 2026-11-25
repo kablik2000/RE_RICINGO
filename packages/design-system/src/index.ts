@@ -45,6 +45,7 @@ export {
 } from './components/icon-button';
 export { ListItem, type ListItemProps } from './components/list-item';
 export { SearchField, type SearchFieldProps } from './components/search-field';
+export { TextField, type TextFieldProps } from './components/text-field';
 export { Surface, type SurfaceProps, type SurfaceTone } from './components/surface';
 export { Screen, type ScreenProps } from './components/screen';
 export {

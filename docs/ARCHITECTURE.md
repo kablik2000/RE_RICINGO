@@ -376,6 +376,12 @@ e-mail carries a one-time code (60 bits, 14 days, stored as SHA-256); students u
 teacher's confirmation of the parents' consent (only a flag and the time are stored); a teacher
 sees and manages only their own students (`teacher_students`).
 
+**Implemented (student sign-in, ADR-0013 step 3):** the code alone creates the account (the
+invited e-mail, a new password of at least 12 characters); an existing student joins another
+teacher only with their current password; each device has its own session (60 days idle, a year
+at most), at most 3 at a time; the app keeps the token in `expo-secure-store`
+(`AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY`); the lecturer can sign a student out everywhere.
+
 **Planned (students, M2):**
 
 - Implemented by the Flask API (ADR-0010). **Invite-only** (no public sign-up): the lecturer

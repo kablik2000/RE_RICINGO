@@ -17,6 +17,7 @@ from typing import Literal
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
+from rici_api import auth
 from rici_api.auth import Teacher, normalize_email
 from rici_api.mailer import Email, Mailer, MailError
 from rici_api.models import AuthSession, Invitation, TeacherStudent, User
@@ -65,6 +66,7 @@ class StudentSummary:
     display_name: str
     is_minor: bool
     since: datetime
+    device_count: int
 
 
 def new_code() -> str:
@@ -256,6 +258,7 @@ def list_students(
             display_name=user.display_name,
             is_minor=user.is_minor,
             since=since,
+            device_count=_device_count(session, user.id, now),
         )
         for user, since in rows
     ]
@@ -269,6 +272,29 @@ def list_students(
         .order_by(Invitation.sent_at.desc())
     ).all()
     return students, [_summary(invitation, now) for invitation in invitations]
+
+
+def _device_count(session: Session, student_id: uuid.UUID, now: datetime) -> int:
+    policy = auth.STUDENT_SESSIONS
+    return (
+        session.scalar(
+            select(func.count())
+            .select_from(AuthSession)
+            .where(
+                AuthSession.user_id == student_id,
+                AuthSession.expires_at > now,
+                AuthSession.last_seen_at > now - policy.idle_timeout,
+            )
+        )
+        or 0
+    )
+
+
+def sign_out_everywhere(session: Session, teacher: Teacher, student_id: uuid.UUID) -> None:
+    """Signs the teacher's student out on all devices (a lost phone, a shared account)."""
+    if session.get(TeacherStudent, (teacher.id, student_id)) is None:
+        raise InvitationNotFoundError(str(student_id))
+    auth.end_all_sessions(session, student_id)
 
 
 def count_students(session: Session, teacher: Teacher) -> int:

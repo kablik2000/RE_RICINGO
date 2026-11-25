@@ -8,7 +8,13 @@ import { Icon } from '@/components/icon';
 import ui from '@/components/ui.module.css';
 import { t } from '@/i18n';
 
-import { removeStudentAction, resendAction, revokeAction, type ActionResult } from './actions';
+import {
+  removeStudentAction,
+  resendAction,
+  revokeAction,
+  signOutEverywhereAction,
+  type ActionResult,
+} from './actions';
 import styles from './students.module.css';
 
 function useRowAction() {
@@ -76,12 +82,33 @@ export function InvitationActions({ id, email }: { id: string; email: string }) 
   );
 }
 
-/** "Odebrat" for a student, with a confirmation. */
-export function StudentActions({ id, name }: { id: string; name: string }) {
+/** "Odhlásit všude" and "Odebrat" for a student, each with a confirmation. */
+export function StudentActions({
+  id,
+  name,
+  deviceCount,
+}: {
+  id: string;
+  name: string;
+  deviceCount: number;
+}) {
   const { pending, message, run } = useRowAction();
   const [confirming, setConfirming] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   return (
     <div className={styles.rowActions}>
+      {deviceCount > 0 && (
+        <button
+          type="button"
+          className={`${ui.button ?? ''} ${ui.text ?? ''}`}
+          disabled={pending}
+          onClick={() => {
+            setSigningOut(true);
+          }}>
+          <Icon name="devices_off" size={18} />
+          {t('students.signOutEverywhere')}
+        </button>
+      )}
       <button
         type="button"
         className={`${ui.button ?? ''} ${ui.text ?? ''}`}
@@ -97,6 +124,19 @@ export function StudentActions({ id, name }: { id: string; name: string }) {
           {message}
         </span>
       )}
+      <ConfirmDialog
+        open={signingOut}
+        title={t('students.signOutDialog.title', { name })}
+        message={t('students.signOutDialog.message')}
+        confirmLabel={t('students.signOutEverywhere')}
+        onConfirm={() => {
+          setSigningOut(false);
+          run(() => signOutEverywhereAction(id), t('students.signedOut'));
+        }}
+        onCancel={() => {
+          setSigningOut(false);
+        }}
+      />
       <ConfirmDialog
         open={confirming}
         title={t('students.removeDialog.title', { name })}
