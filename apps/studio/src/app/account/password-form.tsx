@@ -24,11 +24,18 @@ export function PasswordForm({ email }: { email: string }) {
       <input type="email" name="username" autoComplete="username" value={email} readOnly hidden />
       <label className={ui.field}>
         <span>{t('account.currentPassword')}</span>
+        {/* Typed by the lecturer, never filled in by the browser's password manager: the change
+            must be confirmed by someone who knows the password, not by whoever has the browser
+            open. Browsers do not autofill read-only fields; it becomes editable on focus. */}
         <input
           className={ui.input}
           type="password"
           name="currentPassword"
-          autoComplete="current-password"
+          autoComplete="off"
+          readOnly
+          onFocus={(event) => {
+            event.currentTarget.readOnly = false;
+          }}
           required
         />
       </label>
