@@ -83,4 +83,5 @@ Až bude vybraný poskytovatel (Q-10): na serveru v `/srv/ricingo/.env` odkoment
 - `deploy/compose.yaml` a `deploy/ricingo.caddy` se na server dostanou s další verzí.
 - `deploy/deploy.sh` a `deploy/proxy/*` se instalují ručně (root):
   `install -m 755 deploy.sh /srv/ricingo/deploy.sh`, Caddy: `docker compose -f /srv/proxy/compose.yaml exec caddy caddy reload --config /etc/caddy/Caddyfile`.
+- Firewall (`ufw`) pouští dovnitř jen 22, 80 a 443.
 - Zálohy databáze zatím **nejsou** (DEVELOPMENT_PLAN, hosting).

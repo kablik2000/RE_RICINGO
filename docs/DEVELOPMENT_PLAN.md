@@ -172,8 +172,10 @@ The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for t
   - [x] VPS stack (ADR-0015): Studio Docker image (Next.js standalone), production `deploy/compose.yaml` (PostgreSQL, API, Studio on loopback ports), shared Caddy proxy (`deploy/proxy/`, `deploy/ricingo.caddy`), `deploy/deploy.sh` (tag's files, pull, migrations, health checks, return to the previous version); release workflow (tag `vX.Y.Z` → CI → images to GHCR → deploy over SSH; dispatch = rollback); guide `docs/setup/NASAZENI_VPS.md`. Stack tested locally with the production compose file (health, Studio sign-in).
   - [x] Server prepared over SSH: `deploy` user with a key restricted to `deploy.sh`, `/srv/ricingo` with `.env` (random database password), `/srv/proxy` with Caddy running.
   - [x] Owner: DNS `rici` and `api.rici` (A + AAAA) at Wedos; `DEPLOY_SSH_KEY` secret in the GitHub environment `production`.
-  - [ ] First release (`v0.1.0`) and the checks in the guide (health, `Secure` cookie, client address via Caddy); first lecturer account.
-  - [ ] Server hardening: no password login for root, firewall (ufw: 22, 80, 443).
+  - [x] First release `v0.1.1` live 2026-11-26 (`v0.1.0` stopped at CI lint, fixed): health OK over HTTPS (Let's Encrypt), HTTP → HTTPS, Studio sends HSTS/CSP, API records the real client address through Caddy (a sent `X-Forwarded-For` is ignored).
+  - [ ] First lecturer account (`create-teacher`, guide) and a check of the `__Host-` `Secure` session cookie after sign-in.
+  - [x] Firewall: ufw (preinstalled, deny incoming) now allows 22, 80, 443 (IPv4 + IPv6), 2026-11-26.
+  - [ ] Server hardening: no password login for root.
   - [ ] Database backups (scheduled `pg_dump` off the server) and a documented restore drill.
   - [ ] File storage for audio and artwork (S3-compatible bucket or server volume with backups).
 - [ ] Mobile data layer: API-backed `LessonRepository` (secure token storage done with student sign-in, ADR-0013).
