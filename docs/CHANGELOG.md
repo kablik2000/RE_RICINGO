@@ -6,6 +6,8 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Fixed
 
+- 2026-11-26 — CI failed on `main` since 2026-11-23 (`pnpm lint`): on CI `process.env.RICI_API_URL`
+  in `apps/mobile/app.config.ts` typed as `any`. It is now read as `unknown` and checked.
 - 2026-11-23 — Studio "Smazat" and "Zrušit zveřejnění" could silently do nothing: they asked
   with the browser's `confirm()`, which a browser may suppress ("prevent this page from creating
   additional dialogs"). They now use an in-page Material dialog.

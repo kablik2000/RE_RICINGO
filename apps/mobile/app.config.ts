@@ -30,7 +30,10 @@ export function resolveAppEnv(raw: unknown): AppEnv {
 const rawAppEnv: unknown = process.env.APP_ENV;
 const appEnv = resolveAppEnv(rawAppEnv);
 /** API serving published lessons; optional in development (the app finds the local one). */
-const apiUrl = process.env.RICI_API_URL;
+// `unknown` + a type check: on CI `process.env` values type as `any` (unlike locally), and
+// assigning them as they are fails lint there (no-unsafe-assignment).
+const rawApiUrl: unknown = process.env.RICI_API_URL;
+const apiUrl = typeof rawApiUrl === 'string' && rawApiUrl !== '' ? rawApiUrl : undefined;
 
 /** Name shown under the app icon and in the app switcher (owner decision 2026-11-23). */
 const APP_DISPLAY_NAME = 'Italština RICI';
@@ -108,6 +111,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   extra: {
     appEnv,
-    ...(apiUrl !== undefined && apiUrl !== '' && { apiUrl }),
+    ...(apiUrl !== undefined && { apiUrl }),
   },
 });
