@@ -241,3 +241,11 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Compact widths (phones): tighter page margins. */
+@media (width < 600px) {
+  .page {
+    padding: var(--rici-space-lg) var(--rici-space-lg) var(--rici-space-xxl);
+    gap: var(--rici-space-lg);
+  }
+}

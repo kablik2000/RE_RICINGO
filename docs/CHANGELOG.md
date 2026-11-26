@@ -28,6 +28,18 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-26 — **Statistics in the Teacher Studio** ("Statistiky"): main numbers (lessons,
+  sentences, words, grammar topics, students and how many used the app in the last 7 and 30
+  days, recommendations), lessons by level and status, invitations by state, and new students
+  and published lesson versions per month for the last 12 months. API:
+  `GET /api/v1/studio/statistics`. Learning results need progress sync from the app first.
+- 2026-11-26 — **Change your own password in the Teacher Studio:** the avatar in the top bar
+  opens "Můj účet" with the account details and a password form (current password, new one
+  twice). New API endpoint `POST /api/v1/auth/password`: the current password is checked and
+  throttled like a sign-in, other sessions of the account end, this one stays signed in.
+- 2026-11-26 — **Teacher Studio on phones:** below 840 px the navigation hides behind a menu
+  button (modal drawer, closes on navigation, Escape or a tap outside), pages use tighter
+  margins and the lesson editor stacks into one column.
 - 2026-11-26 — **Hosting on our VPS** (ADR-0015, supersedes ADR-0014 before Render was ever
   deployed): the Studio has a Docker image (`apps/studio/Dockerfile`, Next.js standalone); a tag
   `vX.Y.Z` runs CI, builds the API and Studio images in GitHub Actions, pushes them to GHCR and

@@ -7,7 +7,8 @@
 - Throttling: after 5 failures for one e-mail within 15 minutes that e-mail is blocked for the
   rest of the window, whether the account exists or not; one address is blocked after 50.
 - Sessions: a 256-bit random token; only its SHA-256 is stored. They end after 2 hours without
-  use or 12 hours after sign-in, on sign-out, and when the password changes.
+  use or 12 hours after sign-in, on sign-out, and when the password changes (a teacher who
+  changes their own password stays signed in on that session only).
 """
 
 import hashlib
@@ -50,6 +51,14 @@ class AccountError(Exception):
 
 class InvalidCredentialsError(Exception):
     """Wrong e-mail or password, or an inactive account. Deliberately not more specific."""
+
+
+class WeakPasswordError(Exception):
+    """A new password does not meet the rules; `code` says which (see `password_issue`)."""
+
+    def __init__(self, code: str) -> None:
+        super().__init__(code)
+        self.code = code
 
 
 class TooManyAttemptsError(Exception):
@@ -104,20 +113,33 @@ def _normalize_password(password: str) -> str:
     return unicodedata.normalize("NFKC", password)
 
 
+def password_issue(password: str, email: str, min_length: int = PASSWORD_MIN_LENGTH) -> str | None:
+    """Why a new password is not acceptable, as an error code (`password_too_short`, ...), or
+    None. The codes are part of the API (Studio shows its own message for each)."""
+    normalized = _normalize_password(password)
+    if len(normalized) < min_length:
+        return "password_too_short"
+    if len(normalized) > PASSWORD_MAX_LENGTH:
+        return "password_too_long"
+    if normalized.strip().lower() == normalize_email(email):
+        return "password_is_email"
+    if len(set(normalized)) < 4:
+        return "password_too_repetitive"
+    return None
+
+
 def password_problem(
     password: str, email: str, min_length: int = PASSWORD_MIN_LENGTH
 ) -> str | None:
-    """Why a new password is not acceptable, or None."""
-    normalized = _normalize_password(password)
-    if len(normalized) < min_length:
-        return f"The password must have at least {min_length} characters."
-    if len(normalized) > PASSWORD_MAX_LENGTH:
-        return f"The password must have at most {PASSWORD_MAX_LENGTH} characters."
-    if normalized.strip().lower() == normalize_email(email):
-        return "The password must not be the e-mail address."
-    if len(set(normalized)) < 4:
-        return "The password repeats too few characters."
-    return None
+    """Why a new password is not acceptable, as a sentence (operator commands), or None."""
+    issue = password_issue(password, email, min_length)
+    messages = {
+        "password_too_short": f"The password must have at least {min_length} characters.",
+        "password_too_long": f"The password must have at most {PASSWORD_MAX_LENGTH} characters.",
+        "password_is_email": "The password must not be the e-mail address.",
+        "password_too_repetitive": "The password repeats too few characters.",
+    }
+    return None if issue is None else messages[issue]
 
 
 def hash_password(password: str) -> str:
@@ -178,6 +200,31 @@ def set_password(session: Session, email: str, password: str) -> None:
     user.password_hash = hash_password(password)
     user.password_changed_at = datetime.now(UTC)
     end_all_sessions(session, user.id)
+
+
+def change_password(
+    session: Session, token: str, current_password: str, new_password: str, address: str
+) -> None:
+    """A signed-in teacher replaces their own password. The current password is checked like a
+    sign-in (throttled, recorded; commit even when it raises InvalidCredentialsError). Every
+    other session of the account ends; the one that asked stays signed in.
+    Raises InvalidCredentialsError (no session, or wrong current password), WeakPasswordError,
+    TooManyAttemptsError."""
+    found = resolve_session(session, token, TEACHER, TEACHER_SESSIONS)
+    if found is None:
+        raise InvalidCredentialsError
+    current_session, user = found
+    if (issue := password_issue(new_password, user.email)) is not None:
+        raise WeakPasswordError(issue)
+    check_password(session, user.email, current_password, address, TEACHER)
+    user.password_hash = hash_password(new_password)
+    user.password_changed_at = datetime.now(UTC)
+    session.execute(
+        delete(AuthSession).where(
+            AuthSession.user_id == user.id, AuthSession.id != current_session.id
+        )
+    )
+    session.flush()
 
 
 def set_active(session: Session, email: str, active: bool) -> None:

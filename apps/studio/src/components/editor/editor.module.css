@@ -732,3 +732,40 @@
   cursor: default;
   opacity: 0.6;
 }
+
+/* Narrow screens: one column; the header, tabs and sentence tree scroll with the page. */
+@media (width < 840px) {
+  .header {
+    position: static;
+    padding: var(--rici-space-sm) var(--rici-space-lg) 0;
+  }
+
+  .tabs {
+    padding-left: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tab {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 0 var(--rici-space-md);
+  }
+
+  .dialogLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tree {
+    position: static;
+    max-height: 320px;
+  }
+
+  .issue {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .issueLocation {
+    grid-column: 1 / -1;
+  }
+}

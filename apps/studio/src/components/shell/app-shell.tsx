@@ -7,13 +7,14 @@ import { t, type TranslationKey } from '@/i18n';
 import type { Teacher } from '@/lib/studio-api';
 
 import styles from './app-shell.module.css';
+import { MenuButton, NAV_ID, NavState } from './nav-state';
 
-export type NavSection = 'overview' | 'lessons' | 'students';
+export type NavSection = 'overview' | 'lessons' | 'students' | 'statistics' | 'account';
 
 interface NavItem {
   key: TranslationKey;
   icon: string;
-  href?: '/' | '/lessons' | '/students';
+  href?: '/' | '/lessons' | '/students' | '/statistics';
   section?: NavSection;
 }
 
@@ -21,6 +22,7 @@ const PRIMARY: readonly NavItem[] = [
   { key: 'nav.overview', icon: 'dashboard', href: '/', section: 'overview' },
   { key: 'nav.lessons', icon: 'menu_book', href: '/lessons', section: 'lessons' },
   { key: 'nav.students', icon: 'group', href: '/students', section: 'students' },
+  { key: 'nav.statistics', icon: 'bar_chart', href: '/statistics', section: 'statistics' },
   // Not built yet: shown so the lecturer sees what is coming, but not interactive.
   { key: 'nav.results', icon: 'insights' },
   { key: 'nav.library', icon: 'library_books' },
@@ -33,7 +35,8 @@ const SECONDARY: readonly NavItem[] = [
 
 /**
  * Material 3 admin layout: navigation drawer (or a compact rail in the editor), top app bar with
- * search, and the page content.
+ * search and the account, and the page content. Below 840 px the navigation becomes a modal
+ * drawer behind a menu button (`NavState`).
  */
 export function AppShell({
   variant,
@@ -85,8 +88,10 @@ export function AppShell({
   };
 
   return (
-    <div className={`${styles.shell} ${isRail ? styles.rail : styles.drawer}`}>
-      <nav className={styles.nav} aria-label={t('nav.label')}>
+    <NavState
+      className={`${styles.shell ?? ''} ${isRail ? (styles.rail ?? '') : (styles.drawer ?? '')}`}
+      scrimClassName={styles.scrim ?? ''}>
+      <nav id={NAV_ID} className={styles.nav} aria-label={t('nav.label')}>
         <div className={styles.brand}>
           {isRail ? (
             <span className={styles.brandShort}>{t('app.shortName')}</span>
@@ -121,8 +126,9 @@ export function AppShell({
       </nav>
 
       <div className={styles.body}>
-        {topBar && (
+        {topBar ? (
           <header className={styles.topBar}>
+            <MenuButton className={styles.menuButton ?? ''} />
             <form action="/lessons" className={styles.search} role="search">
               <Icon name="search" />
               <input
@@ -133,17 +139,23 @@ export function AppShell({
               />
             </form>
             <span className={styles.spacer} />
-            <span
-              className={styles.avatar}
-              role="img"
-              aria-label={t('topBar.account', { name: teacher.displayName })}
-              title={t('topBar.account', { name: teacher.displayName })}>
+            <Link
+              href="/account"
+              className={`${styles.avatar ?? ''} ${active === 'account' ? (styles.avatarSelected ?? '') : ''}`}
+              aria-label={t('topBar.accountLink', { name: teacher.displayName })}
+              title={t('topBar.account', { name: teacher.displayName })}
+              {...(active === 'account' && { 'aria-current': 'page' as const })}>
               {initial}
-            </span>
+            </Link>
           </header>
+        ) : (
+          // Pages without the top app bar (the editor) still need the menu on narrow screens.
+          <div className={styles.compactBar}>
+            <MenuButton className={styles.menuButton ?? ''} />
+          </div>
         )}
         <div className={styles.content}>{children}</div>
       </div>
-    </div>
+    </NavState>
   );
 }

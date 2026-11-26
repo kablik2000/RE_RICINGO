@@ -11,7 +11,7 @@ from flask import Blueprint, g, jsonify, request
 from flask.typing import ResponseReturnValue
 from sqlalchemy.orm import Session
 
-from rici_api import lessons, recommendations, students
+from rici_api import lessons, recommendations, statistics, students
 from rici_api.auth import Teacher
 from rici_api.auth_api import require_teacher
 from rici_api.content import SchemaIssue
@@ -118,6 +118,40 @@ def studio_blueprint(session_factory: SessionFactory, mailer: Mailer) -> Bluepri
                 "publishedLexemes": data.published_lexemes,
                 "publishedGrammarTopics": data.published_grammar_topics,
                 "students": student_count,
+            }
+        )
+
+    @studio.get("/statistics")
+    def get_statistics() -> ResponseReturnValue:
+        with session_factory() as session:
+            data = statistics.statistics(session, current_teacher())
+        return jsonify(
+            {
+                "lessons": {
+                    "byStatus": data.lessons_by_status,
+                    "byLevel": data.lessons_by_level,
+                    "public": data.public_lessons,
+                    "studentsOnly": data.students_only_lessons,
+                    "sentences": data.sentences,
+                    "publishedLexemes": data.published_lexemes,
+                    "publishedGrammarTopics": data.published_grammar_topics,
+                },
+                "students": {
+                    "total": data.students,
+                    "minors": data.minors,
+                    "activeLast7Days": data.active_last_7_days,
+                    "activeLast30Days": data.active_last_30_days,
+                },
+                "invitations": data.invitations,
+                "recommendations": data.recommendations,
+                "months": [
+                    {
+                        "month": month.month,
+                        "studentsJoined": month.students_joined,
+                        "lessonsPublished": month.lessons_published,
+                    }
+                    for month in data.months
+                ],
             }
         )
 

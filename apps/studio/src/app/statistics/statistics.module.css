@@ -1,0 +1,87 @@
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--rici-space-md);
+}
+
+.tile {
+  padding: var(--rici-space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--rici-space-xxs);
+  min-width: 0;
+}
+
+.tileHead {
+  display: flex;
+  align-items: center;
+  gap: var(--rici-space-sm);
+  font-size: var(--rici-type-body-size);
+  color: var(--rici-color-on-surface-variant);
+}
+
+.tileValue {
+  font-size: 32px;
+  line-height: 40px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tileDetail {
+  font-size: var(--rici-type-body-small-size);
+  color: var(--rici-color-on-surface-variant);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--rici-space-lg);
+}
+
+.card {
+  padding: var(--rici-space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--rici-space-lg);
+  min-width: 0;
+}
+
+.cardTitle {
+  margin: 0;
+  font-weight: 500;
+  font-size: var(--rici-type-title-small-size);
+}
+
+.months {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--rici-space-xl);
+}
+
+.note {
+  margin: 0;
+  display: flex;
+  gap: var(--rici-space-sm);
+  align-items: flex-start;
+  font-size: var(--rici-type-body-small-size);
+}
+
+/* Phones: two tiles per row, tighter cards. */
+@media (width < 600px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--rici-space-sm);
+  }
+
+  .tile {
+    padding: var(--rici-space-md);
+  }
+
+  .tileValue {
+    font-size: 26px;
+    line-height: 32px;
+  }
+
+  .card {
+    padding: var(--rici-space-lg);
+  }
+}

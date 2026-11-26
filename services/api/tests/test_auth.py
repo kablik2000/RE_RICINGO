@@ -247,3 +247,93 @@ def test_behind_a_trusted_proxy_the_address_is_the_one_it_appended(
     with Session(engine) as session:
         addresses = session.scalars(select(LoginAttempt.address).order_by(LoginAttempt.created_at))
         assert list(addresses) == ["203.0.113.7", "127.0.0.1"]
+
+
+# --- Changing one's own password (Studio account page) ---
+
+NEW_PASSWORD = "nove-testovaci-heslo-lektorky"
+
+
+def change_password(client: FlaskClient, current: str, new: str) -> Any:
+    return client.post(
+        "/api/v1/auth/password", json={"currentPassword": current, "newPassword": new}
+    )
+
+
+def test_changing_the_password_keeps_this_session_and_ends_the_others(
+    studio_app: Flask, teacher: auth.Teacher
+) -> None:
+    this_device = studio_app.test_client()
+    other_device = studio_app.test_client()
+    sign_in(this_device)
+    sign_in(other_device)
+
+    response = change_password(this_device, TEACHER_PASSWORD, NEW_PASSWORD)
+
+    assert response.status_code == 204
+    assert this_device.get("/api/v1/auth/me").status_code == 200
+    assert other_device.get("/api/v1/auth/me").status_code == 401
+    anonymous = studio_app.test_client()
+    assert login(anonymous, TEACHER_EMAIL, TEACHER_PASSWORD).status_code == 401
+    assert login(anonymous, TEACHER_EMAIL, NEW_PASSWORD).status_code == 200
+
+
+def test_a_wrong_current_password_changes_nothing_and_counts_as_a_failed_sign_in(
+    client: FlaskClient, engine: Engine
+) -> None:
+    response = change_password(client, "uplne-spatne-heslo-123", NEW_PASSWORD)
+
+    assert response.status_code == 403
+    assert response.get_json()["error"]["code"] == "wrong_password"
+    assert client.get("/api/v1/auth/me").status_code == 200
+    assert login(client, TEACHER_EMAIL, TEACHER_PASSWORD).status_code == 200
+    with Session(engine) as session:
+        failures = session.scalars(
+            select(LoginAttempt).where(LoginAttempt.succeeded.is_(False))
+        ).all()
+    assert len(failures) == 1
+
+
+@pytest.mark.parametrize(
+    ("new", "code"),
+    [
+        ("kratke-heslo", "password_too_short"),
+        ("x" * (auth.PASSWORD_MAX_LENGTH + 1), "password_too_long"),
+        (TEACHER_EMAIL, "password_is_email"),
+        ("abcabcabcabcabcabc", "password_too_repetitive"),
+    ],
+)
+def test_a_weak_new_password_is_refused_with_its_reason(
+    client: FlaskClient, new: str, code: str
+) -> None:
+    response = change_password(client, TEACHER_PASSWORD, new)
+
+    assert response.status_code == 422
+    assert response.get_json()["error"]["code"] == code
+    assert login(client, TEACHER_EMAIL, TEACHER_PASSWORD).status_code == 200
+
+
+def test_repeated_wrong_current_passwords_are_throttled(client: FlaskClient) -> None:
+    for _ in range(auth.MAX_FAILURES_PER_EMAIL):
+        assert change_password(client, "spatne-heslo-dlouhe-1", NEW_PASSWORD).status_code == 403
+
+    blocked = change_password(client, TEACHER_PASSWORD, NEW_PASSWORD)
+
+    assert blocked.status_code == 429
+    assert blocked.get_json()["error"]["code"] == "too_many_attempts"
+
+
+@pytest.mark.parametrize(
+    "body",
+    [None, {}, {"currentPassword": "", "newPassword": NEW_PASSWORD}, {"currentPassword": 1}],
+)
+def test_changing_the_password_needs_both_fields(client: FlaskClient, body: Any) -> None:
+    assert client.post("/api/v1/auth/password", json=body).status_code == 422
+
+
+def test_changing_the_password_needs_a_session(
+    anonymous_client: FlaskClient, teacher: auth.Teacher
+) -> None:
+    response = change_password(anonymous_client, TEACHER_PASSWORD, NEW_PASSWORD)
+    assert response.status_code == 401
+    assert login(anonymous_client, TEACHER_EMAIL, TEACHER_PASSWORD).status_code == 200

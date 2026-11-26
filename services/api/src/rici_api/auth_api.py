@@ -101,6 +101,48 @@ def auth_blueprint(session_factory: SessionFactory) -> Blueprint:
                 auth.sign_out(session, token)
         return "", 204
 
+    @blueprint.post("/password")
+    def change_password() -> ResponseReturnValue:
+        """The signed-in teacher's own password. 204; 401 without a session; 403
+        `wrong_password`; 422 `validation` or a `password_*` code; 429 like sign-in."""
+        token = bearer_token()
+        if token is None:
+            return _error("unauthorized", "Sign in to the Teacher Studio.", 401)
+        body = request.get_json(silent=True)
+        current = body.get("currentPassword") if isinstance(body, dict) else None
+        new = body.get("newPassword") if isinstance(body, dict) else None
+        if not isinstance(current, str) or not isinstance(new, str) or not current:
+            return _error(
+                "validation", 'Expected {"currentPassword": ..., "newPassword": ...}.', 422
+            )
+        wrong_password = False
+        try:
+            with session_factory() as session, session.begin():
+                if auth.authenticate(session, token) is None:
+                    return _error("unauthorized", "Sign in to the Teacher Studio.", 401)
+                try:
+                    auth.change_password(session, token, current, new, request.remote_addr or "")
+                except auth.InvalidCredentialsError:
+                    # Keep the recorded failed attempt: commit, then answer 403 below.
+                    wrong_password = True
+        except auth.WeakPasswordError as error:
+            return _error(error.code, "The new password does not meet the rules.", 422)
+        except auth.TooManyAttemptsError as error:
+            response = jsonify(
+                {
+                    "error": {
+                        "code": "too_many_attempts",
+                        "message": "Too many failed sign-in attempts.",
+                        "retryAfter": error.retry_after_seconds,
+                    }
+                }
+            )
+            response.headers["Retry-After"] = str(error.retry_after_seconds)
+            return response, 429
+        if wrong_password:
+            return _error("wrong_password", "The current password is wrong.", 403)
+        return "", 204
+
     @blueprint.get("/me")
     def me() -> ResponseReturnValue:
         token = bearer_token()

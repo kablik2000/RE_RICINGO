@@ -235,3 +235,107 @@
   text-align: start;
   width: 100%;
 }
+
+a.avatar {
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+a.avatar:hover,
+.avatarSelected {
+  outline: 3px solid var(--rici-color-primary-container);
+}
+
+/* Narrow screens only: menu button, scrim, and the bar of pages without a top app bar. */
+.menuButton,
+.scrim,
+.compactBar {
+  display: none;
+}
+
+.menuButton {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--rici-radius-full);
+  background: transparent;
+  color: var(--rici-color-on-surface-variant);
+  cursor: pointer;
+}
+
+.menuButton:hover {
+  background: color-mix(in srgb, var(--rici-color-on-surface) 8%, transparent);
+}
+
+/* Material 3 compact and medium widths: the navigation becomes a modal drawer. */
+@media (width < 840px) {
+  .menuButton {
+    display: flex;
+  }
+
+  .nav {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 30;
+    height: 100dvh;
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--rici-color-on-surface) 24%, transparent);
+    border-radius: 0 var(--rici-radius-lg) var(--rici-radius-lg) 0;
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform 200ms ease,
+      visibility 0s linear 200ms;
+  }
+
+  .drawer .nav {
+    width: min(304px, 86vw);
+    box-sizing: border-box;
+  }
+
+  .shell[data-nav-open] .nav {
+    transform: none;
+    visibility: visible;
+    transition: transform 200ms ease;
+  }
+
+  .shell[data-nav-open] .scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--rici-color-on-surface) 32%, transparent);
+  }
+
+  .topBar {
+    height: 64px;
+    gap: var(--rici-space-sm);
+    padding: 0 var(--rici-space-sm);
+  }
+
+  .search {
+    flex: 1 1 auto;
+    height: 44px;
+    padding: 0 var(--rici-space-md);
+  }
+
+  .spacer {
+    display: none;
+  }
+
+  .compactBar {
+    display: flex;
+    align-items: center;
+    height: 56px;
+    padding: 0 var(--rici-space-sm);
+    border-bottom: 1px solid var(--rici-color-surface-container-high);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav {
+    transition: none;
+  }
+}

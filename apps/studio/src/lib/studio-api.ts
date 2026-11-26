@@ -162,6 +162,24 @@ export async function signOut(token: string, fetchImpl?: typeof fetch): Promise<
   await apiRequest('/auth/logout', z.null(), { method: 'POST' }, fetchImpl, token);
 }
 
+/**
+ * Replaces the signed-in teacher's own password. Rejects with 403 `wrong_password`, 422 and a
+ * `password_*` code (too short, too long, the e-mail, too repetitive), or 429 (throttled).
+ * The account's other sessions end; this one stays signed in.
+ */
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+  fetchImpl?: typeof fetch,
+): Promise<void> {
+  await apiRequest(
+    '/auth/password',
+    z.null(),
+    { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) },
+    fetchImpl,
+  );
+}
+
 export async function fetchCurrentTeacher(
   token: string,
   fetchImpl?: typeof fetch,
@@ -174,6 +192,42 @@ export async function fetchCurrentTeacher(
     token,
   );
   return body.teacher;
+}
+
+export const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
+
+const statisticsSchema = z.object({
+  lessons: z.object({
+    byStatus: z.record(lessonStatusSchema, z.number()),
+    byLevel: z.record(z.enum(LEVELS), z.number()),
+    public: z.number(),
+    studentsOnly: z.number(),
+    sentences: z.number(),
+    publishedLexemes: z.number(),
+    publishedGrammarTopics: z.number(),
+  }),
+  students: z.object({
+    total: z.number(),
+    minors: z.number(),
+    activeLast7Days: z.number(),
+    activeLast30Days: z.number(),
+  }),
+  invitations: z.object({
+    pending: z.number(),
+    accepted: z.number(),
+    expired: z.number(),
+    revoked: z.number(),
+  }),
+  recommendations: z.number(),
+  months: z.array(
+    z.object({ month: z.string(), studentsJoined: z.number(), lessonsPublished: z.number() }),
+  ),
+});
+export type StudioStatistics = z.infer<typeof statisticsSchema>;
+
+/** Numbers for the statistics page: the organization's lessons, the teacher's students. */
+export function getStatistics(fetchImpl?: typeof fetch): Promise<StudioStatistics> {
+  return request('/statistics', statisticsSchema, {}, fetchImpl);
 }
 
 export function getOverview(fetchImpl?: typeof fetch): Promise<StudioOverview> {
