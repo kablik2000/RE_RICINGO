@@ -424,9 +424,11 @@ Three independent update channels:
 - API compatibility via `/api/v1`/`/api/v2` coexistence; DB via expand/contract migrations.
 - Environments: `development` (local Docker stack), `staging`, `production` — separate databases
   and API deployments; app config through `app.config.ts`; no secrets in any client bundle.
-- Hosting (ADR-0014): Render, Frankfurt, from the `render.yaml` Blueprint — managed PostgreSQL,
-  the API's Docker image (migrations as the pre-deploy command) and the Studio (`next start`),
-  which calls the API on Render's private network. Deploys follow CI on `main`.
+- Hosting (ADR-0015): our VPS (`esprog-vps`), Docker Compose from `deploy/` — PostgreSQL, the
+  API and the Studio (Next.js standalone) on loopback ports behind one shared Caddy (HTTPS,
+  `rici.esprog.eu`, `api.rici.esprog.eu`). A tag `vX.Y.Z` runs CI, builds both images in GitHub
+  Actions (GHCR) and deploys them over SSH with a key restricted to `deploy.sh` (migrations, health
+  checks, automatic return to the previous version). Guide: `docs/setup/NASAZENI_VPS.md`.
 
 ---
 

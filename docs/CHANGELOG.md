@@ -26,6 +26,14 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-26 — **Hosting on our VPS** (ADR-0015, supersedes ADR-0014 before Render was ever
+  deployed): the Studio has a Docker image (`apps/studio/Dockerfile`, Next.js standalone); a tag
+  `vX.Y.Z` runs CI, builds the API and Studio images in GitHub Actions, pushes them to GHCR and
+  deploys them to `esprog-vps` over SSH (`.github/workflows/release.yml`, `deploy/deploy.sh`:
+  migrations, health checks, automatic return to the previous version; a manual run redeploys an
+  older version). Production stack in `deploy/compose.yaml` behind a shared Caddy with HTTPS
+  (`rici.esprog.eu`, `api.rici.esprog.eu`). `render.yaml` and the Render guide are removed; guide
+  `docs/setup/NASAZENI_VPS.md`.
 - 2026-11-25 — **Hosting on Render** (ADR-0014): `render.yaml` Blueprint creates PostgreSQL, the
   API and the Teacher Studio in Frankfurt in one step (New → Blueprint); migrations run before
   each deploy, deploys follow CI. The API accepts `postgres://` database URLs (switched to

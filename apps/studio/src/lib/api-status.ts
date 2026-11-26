@@ -12,8 +12,9 @@ export type ApiStatus =
   { kind: 'online' } | { kind: 'degraded' } | { kind: 'offline'; reason: string };
 
 /**
- * Backend base URL; server-side only. `RICI_API_URL` wins; `RICI_API_HOSTPORT` is the API's
- * `host:port` on a private network (Render Blueprint, `render.yaml`), reached over plain HTTP.
+ * Backend base URL; server-side only. `RICI_API_URL` wins (production: `http://api:8000` on the
+ * stack's network, `deploy/compose.yaml`); `RICI_API_HOSTPORT` is an API `host:port` on a private
+ * network, reached over plain HTTP.
  * Defaults to the local Docker stack.
  */
 export function apiBaseUrl(

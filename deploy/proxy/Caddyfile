@@ -1,0 +1,7 @@
+# Global Caddy config (ADR-0015). Site blocks live in ./sites, one file per project.
+{
+	# Let's Encrypt account e-mail: expiry and problem notices. Set it on the server.
+	# email admin@example.com
+}
+
+import /etc/caddy/sites/*.caddy

@@ -1,0 +1,133 @@
+# Release (ADR-0015): a tag vX.Y.Z builds the API and Studio images outside the server, pushes
+# them to GitHub Container Registry and deploys that version on the VPS.
+#   New release:  git tag v1.2.0 && git push origin v1.2.0
+#   Redeploy / roll back to an existing release: Actions → Release → Run workflow → version.
+# Setup (deploy key, server): docs/setup/NASAZENI_VPS.md.
+name: Release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to deploy, e.g. 1.2.0 (its tag and images must exist)
+        required: true
+
+# One deploy at a time; a queued one waits instead of cancelling a deploy halfway.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
+  DEPLOY_HOST: 80.211.213.195
+  # The server's SSH host key (ssh-keyscan, checked against the fingerprint of the first login).
+  DEPLOY_HOST_KEY: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDtiN7+ebscAMZ5iovcUyVMiqtjsFeeTN8uh7F0HHlCH
+
+jobs:
+  ci:
+    name: CI
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/ci.yml
+
+  images:
+    name: Image ${{ matrix.name }}
+    if: github.event_name == 'push'
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - name: rici-api
+            context: services/api
+            file: services/api/Dockerfile
+          - name: rici-studio
+            context: .
+            file: apps/studio/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_PREFIX }}/${{ matrix.name }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=sha
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+
+  deploy:
+    name: Deploy to the VPS
+    needs: images
+    # A dispatch skips the build and deploys images that already exist.
+    if: >-
+      always() &&
+      (github.event_name == 'workflow_dispatch' || needs.images.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://rici.esprog.eu
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then v="${INPUT_VERSION#v}"; else v="${REF_NAME#v}"; fi
+          if ! printf '%s' "$v" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "::error::Not a version: $v"; exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      # The deploy key may only run /srv/ricingo/deploy.sh on the server (forced command); the
+      # job's token on stdin lets the server read the tag's deploy files and pull the images.
+      - name: Deploy over SSH
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if [ -z "$SSH_KEY" ]; then echo "::error::Secret DEPLOY_SSH_KEY is not set"; exit 1; fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s %s\n' "$DEPLOY_HOST" "$DEPLOY_HOST_KEY" > ~/.ssh/known_hosts
+          printf '%s\n' "$TOKEN" | ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes "deploy@$DEPLOY_HOST" "deploy $VERSION"
+
+      - name: Smoke test over HTTPS
+        run: |
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 --retry-all-errors \
+            https://api.rici.esprog.eu/api/v1/health
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 --retry-all-errors \
+            --output /dev/null https://rici.esprog.eu/login

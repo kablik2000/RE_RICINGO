@@ -30,6 +30,9 @@ const SECURITY_HEADERS = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Self-contained server (`server.js` + only the files it needs) for the Docker image
+  // (apps/studio/Dockerfile, ADR-0015).
+  output: 'standalone',
   headers: () => Promise.resolve([{ source: '/:path*', headers: SECURITY_HEADERS }]),
   typedRoutes: true,
   // Workspace packages ship TypeScript sources; Next compiles them like app code.

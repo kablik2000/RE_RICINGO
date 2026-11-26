@@ -1,0 +1,14 @@
+# Build context of the Studio image (apps/studio/Dockerfile): the repository root.
+# The API image has its own context (services/api/.dockerignore).
+**/node_modules
+**/.next
+**/.turbo
+**/coverage
+**/*.tsbuildinfo
+.git
+.env
+.env.*
+apps/mobile/*
+!apps/mobile/package.json
+services
+docs

@@ -1,0 +1,13 @@
+# Caddy site config for RICI (ADR-0015), copied to /srv/proxy/sites/ by deploy.sh.
+# Caddy obtains and renews the HTTPS certificates itself (the DNS names must point to the VPS).
+# By default Caddy replaces any X-Forwarded-For a client sends with the client's own address.
+
+rici.esprog.eu {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3100
+}
+
+api.rici.esprog.eu {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8100
+}

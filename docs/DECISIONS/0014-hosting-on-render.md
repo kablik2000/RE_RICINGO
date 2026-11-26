@@ -1,6 +1,6 @@
 # ADR-0014: Hosting on Render (Frankfurt) from a Blueprint
 
-- Status: **Accepted** (owner chose Render, 2026-11-25)
+- Status: **Superseded by ADR-0015** (owner chose Render, 2026-11-25; replaced by the VPS before the first deploy, 2026-11-26)
 - Date: 2026-11-25
 - Answers: Q-19 (hosting for the API and PostgreSQL) — files (audio, artwork) stay open.
 

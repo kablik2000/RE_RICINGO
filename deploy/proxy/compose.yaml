@@ -1,0 +1,22 @@
+# Shared reverse proxy for every site on the VPS (ADR-0015), in /srv/proxy on the server.
+# Host networking: Caddy listens on 80/443 for IPv4 and IPv6 directly, so it sees the real
+# client address (a published Docker port would hide IPv6 clients behind Docker's proxy) and
+# the host firewall applies to it. It reaches the sites on their 127.0.0.1 ports.
+# Each site adds its own file to ./sites (RICI: deploy/ricingo.caddy).
+name: proxy
+
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./sites:/etc/caddy/sites:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  # Certificates and ACME account: kept across restarts so they are not requested again.
+  caddy-data:
+  caddy-config:

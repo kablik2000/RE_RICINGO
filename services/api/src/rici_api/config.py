@@ -27,8 +27,8 @@ class Settings:
     smtp_password: str | None = None
     smtp_starttls: bool = False
     mail_from: str = DEFAULT_MAIL_FROM
-    # Proxies in front of the API that append the client address to X-Forwarded-For (Render's
-    # load balancer: 1). 0 trusts no header: the address is the connecting peer.
+    # Proxies in front of the API that set the client address in X-Forwarded-For (Caddy on the
+    # VPS, ADR-0015: 1). 0 trusts no header: the address is the connecting peer.
     trusted_proxy_hops: int = 0
 
 
