@@ -22,3 +22,4 @@ Status values: **Proposed** (awaiting approval) · **Accepted** · **Superseded 
 | [0013](0013-public-app-and-invited-students.md)            | Public app, invited students, lesson visibility, recommendations   | Accepted                  |
 | [0014](0014-hosting-on-render.md)                          | Hosting on Render (Frankfurt) from a Blueprint                     | Superseded by 0015        |
 | [0015](0015-hosting-on-a-vps.md)                           | Hosting on our VPS: images from GitHub Actions, per-release deploy | Accepted                  |
+| [0016](0016-android-apk-direct-download.md)                | Android app as a direct APK download until the stores              | Accepted                  |

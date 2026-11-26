@@ -31,6 +31,10 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-26 — **Android app to download** (ADR-0016): signed release APK at
+  `https://rici.esprog.eu/app` with an install guide; new app icon in the italstinarici.cz
+  brand; application ID `eu.esprog.rici`; release signing through a config plugin with the key
+  outside the repository; build script `apps/mobile/scripts/build-release-apk.ps1`.
 - 2026-11-26 — `import-lesson --draft`: imports a lesson file as an unpublished draft to check
   and publish in the Studio (also incomplete ones; their problems are listed). Without the
   flag the lesson is published as before.

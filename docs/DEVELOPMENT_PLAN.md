@@ -279,6 +279,16 @@ Order: each step is usable on its own.
 - [ ] Authoring: edit lesson drafts, preview, publish (reusing compiler/validator).
 - [ ] Results: per-student progress and frequent mistakes.
 
+### Android APK download (ADR-0016)
+
+- [x] App icon in the italstinarici.cz brand (white Merriweather "RICI", beige swash on `#D2454B`): icon, adaptive icon layers, monochrome, splash, favicon (2026-11-26).
+- [x] Application ID `eu.esprog.rici`; release key (keystore outside the repo, `~/.gradle/gradle.properties`), config plugin `with-android-release-signing` (+ test), build script `apps/mobile/scripts/build-release-apk.ps1`, guide `docs/setup/ANDROID_APK.md`.
+- [x] Download page `deploy/www/app` (brand style, self-hosted fonts, real QR code, install steps, iPhone "Připravujeme"); Caddy serves `/app/` from `/srv/www/rici-app`.
+- [ ] Back up the release keystore and `gradle.properties` outside this computer (owner).
+- [ ] Android `versionCode` policy and an in-app notice when a newer APK is available.
+- [ ] App palette to the brand red `#D2454B` (`packages/design-system` palette, Q-10).
+- [ ] iPhone: Apple Developer account → TestFlight / App Store (Q-9, Q-16).
+
 ### M9 — Stabilization & release 1.0
 
 - [ ] Maestro E2E for critical flows.
@@ -307,7 +317,7 @@ Tasks to be broken down when M9 is near completion (see roadmap).
 - **Demo content is not lecturer-reviewed.** Italian sentences follow the spec's example; Czech explanations are developer drafts (spec §8 requires lecturer approval).
 - **Demo audio is device text-to-speech** (quality depends on the device's Italian voice); real audio is open question Q-3.
 - **Release builds have no API URL yet** (hosting, Q-19): they use the bundled demo lesson. The public catalog itself is served in every environment (ADR-0013).
-- **Application ID is provisional** (`com.ricingo.mobile`); it cannot change after store publishing (Q-16).
+- **Application ID** is `eu.esprog.rici` since 2026-11-26 (ADR-0016) and must not change; development builds are `eu.esprog.rici.dev` (a new development build is needed on devices that had `com.ricingo.mobile.dev`).
 - iOS has not been built (requires EAS cloud build or a Mac).
 - Local Android builds fail inside the AI assistant's sandbox (Java cannot open its loopback socket); run them from a normal terminal or VS Code task.
 - **Native Android builds on Windows need long-path support**: generated C++ object paths of React Native libraries exceed 260 characters. Requires Windows long paths (enabled on the dev PC) and an SDK CMake with ninja ≥ 1.12, selected by `plugins/with-android-cmake.js`. Builds are local only (owner decision 2026-11-22: no EAS cloud builds).

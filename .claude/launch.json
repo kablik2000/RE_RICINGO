@@ -9,6 +9,12 @@
       "port": 8081
     },
     {
+      "name": "app-download-page",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8090", "--directory", "deploy/www"],
+      "port": 8090
+    },
+    {
       "name": "studio",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["next", "dev", "--port", "3000"],

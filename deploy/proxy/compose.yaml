@@ -13,6 +13,8 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./sites:/etc/caddy/sites:ro
+      # Static files of the sites (RICI: /srv/www/rici-app, the app download page).
+      - /srv/www:/srv/www:ro
       - caddy-data:/data
       - caddy-config:/config
 

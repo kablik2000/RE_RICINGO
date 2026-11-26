@@ -44,11 +44,12 @@ const APP_NAMES: Readonly<Record<AppEnv, string>> = {
 };
 
 /**
- * PROVISIONAL application identifier — must be confirmed with the account owner before the first
- * store or EAS build, because it cannot change after publishing (DEVELOPMENT_PLAN Q-16).
- * Non-production variants get a suffix so they can be installed next to the production app.
+ * Application identifier (Android package, iOS bundle ID), on the owner's domain esprog.eu.
+ * It cannot change once the app is installed by students (an update must keep it), so never
+ * rename it. Non-production variants get a suffix so they can be installed next to the
+ * production app.
  */
-const BASE_APP_ID = 'com.ricingo.mobile';
+const BASE_APP_ID = 'eu.esprog.rici';
 const APP_ID_SUFFIXES: Readonly<Record<AppEnv, string>> = {
   development: '.dev',
   preview: '.preview',
@@ -56,8 +57,8 @@ const APP_ID_SUFFIXES: Readonly<Record<AppEnv, string>> = {
 };
 const appId = `${BASE_APP_ID}${APP_ID_SUFFIXES[appEnv]}`;
 
-/** Provisional brand red (see packages/design-system palette, open question Q-10). */
-const SPLASH_BACKGROUND = '#B3122E';
+/** Brand red of italstinarici.cz, as in the app icon. */
+const BRAND_RED = '#D2454B';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -70,13 +71,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: './assets/images/icon.png',
   ios: {
     bundleIdentifier: appId,
-    icon: './assets/expo.icon',
     supportsTablet: true,
   },
   android: {
     package: appId,
     adaptiveIcon: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: BRAND_RED,
       foregroundImage: './assets/images/android-icon-foreground.png',
       backgroundImage: './assets/images/android-icon-background.png',
       monochromeImage: './assets/images/android-icon-monochrome.png',
@@ -96,12 +96,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-secure-store',
     // Windows: native Android builds need a CMake whose ninja supports long paths.
     './plugins/with-android-cmake',
+    // Release builds signed with the RICI key from ~/.gradle/gradle.properties (never in git).
+    './plugins/with-android-release-signing',
     [
       'expo-splash-screen',
       {
-        backgroundColor: SPLASH_BACKGROUND,
+        backgroundColor: BRAND_RED,
         image: './assets/images/splash-icon.png',
-        imageWidth: 76,
+        imageWidth: 200,
       },
     ],
   ],

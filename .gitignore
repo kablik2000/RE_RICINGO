@@ -57,3 +57,6 @@ __pycache__/
 # Next.js (apps/studio)
 .next/
 next-env.d.ts
+
+# Android APK builds for direct download (apps/mobile/scripts/build-release-apk.ps1)
+apps/mobile/dist-apk/
