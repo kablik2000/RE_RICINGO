@@ -72,6 +72,21 @@ Stejně `set-password <e-mail>`, `disable-teacher <e-mail>`, `enable-teacher <e-
   ssh esprog-vps "cd /srv/ricingo && docker compose exec db psql -U rici -c 'SELECT address, created_at FROM login_attempts ORDER BY created_at DESC LIMIT 3'"
   ```
 
+Na mobilu (Termius) stačí `rici-ucet <e-mail>` (zeptá se na jméno a heslo).
+
+## Nahrání lekce ze souboru (jako koncept)
+
+Lekce (JSON ve formátu `packages/domain/schema/`) se nahraje nezveřejněná; ve Studiu se
+zkontroluje a zveřejní. Neúplná lekce projde taky, příkaz vypíše, co je třeba doplnit.
+
+```sh
+scp lekce.json esprog-vps:/tmp/lekce.json
+ssh esprog-vps "cd /srv/ricingo && docker compose cp /tmp/lekce.json api:/tmp/lekce.json && docker compose exec api flask --app rici_api.wsgi import-lesson /tmp/lekce.json --organization RICI --draft && rm /tmp/lekce.json"
+```
+
+`--public`: po zveřejnění ji uvidí všichni (jinak jen doporučeným studentům). Bez `--draft`
+se lekce rovnou zveřejní.
+
 ## E-maily s pozvánkami
 
 Až bude vybraný poskytovatel (Q-10): na serveru v `/srv/ricingo/.env` odkomentovat a vyplnit

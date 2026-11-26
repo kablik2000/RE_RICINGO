@@ -294,6 +294,35 @@ def create_lesson(
     return lesson_id
 
 
+_LESSON_ID = re.compile(r"^[a-z0-9][a-z0-9-]{0,99}$")
+
+
+def import_draft(
+    session: Session,
+    bundle: object,
+    organization_id: uuid.UUID,
+    visibility: Visibility = "students",
+) -> tuple[str, list[SchemaIssue]]:
+    """Imports a lesson bundle as a draft (never published), to be checked and published in the
+    Studio. It may be incomplete like any draft; returns the lesson ID and what still blocks
+    publishing. Only the shape a draft needs is required: an object with `lesson.id`."""
+    if not isinstance(bundle, dict) or not isinstance(bundle.get("lesson"), dict):
+        raise LessonContentError("The file must be a lesson bundle object.")
+    lesson_id = bundle["lesson"].get("id")
+    if not isinstance(lesson_id, str) or not _LESSON_ID.match(lesson_id):
+        raise LessonContentError("lesson.id must be lower-case letters, digits and hyphens.")
+    if session.get(Lesson, lesson_id) is not None:
+        raise LessonContentError(f'A lesson with id "{lesson_id}" already exists.')
+    draft = copy.deepcopy(bundle)
+    # Versions are numbered when the Studio publishes; a fresh lesson starts at 1.
+    draft["lesson"]["version"] = 1
+    session.add(
+        Lesson(id=lesson_id, organization_id=organization_id, visibility=visibility, draft=draft)
+    )
+    session.flush()
+    return lesson_id, validate_lesson_bundle(draft)
+
+
 def import_published_bundle(
     session: Session,
     bundle: object,

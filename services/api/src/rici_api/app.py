@@ -16,6 +16,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from rici_api import auth, lessons
 from rici_api.auth_api import auth_blueprint
 from rici_api.config import Settings, load_settings
+from rici_api.content import SchemaIssue
 from rici_api.content_api import content_blueprint
 from rici_api.db import create_db_engine, database_is_reachable
 from rici_api.mailer import Mailer, SmtpMailer, UnconfiguredMailer
@@ -114,19 +115,36 @@ def _register_commands(app: Flask, engine: Engine, session_factory: sessionmaker
     @click.argument("path", type=click.Path(exists=True, dir_okay=False, path_type=Path))
     @click.option("--organization", required=True, help="Organization (created if new).")
     @click.option("--public", is_flag=True, help="Visible to everyone (default: students only).")
-    def import_lesson(path: Path, organization: str, public: bool) -> None:
-        """Imports a published lesson bundle (JSON file), e.g. the demo lesson."""
+    @click.option(
+        "--draft",
+        is_flag=True,
+        help="Import as a draft to check and publish in the Studio (default: published).",
+    )
+    def import_lesson(path: Path, organization: str, public: bool, draft: bool) -> None:
+        """Imports a lesson bundle (JSON file), published (e.g. the demo lesson) or as a draft."""
         bundle = json.loads(path.read_text("utf-8"))
+        visibility: lessons.Visibility = "public" if public else "students"
+        issues: list[SchemaIssue] = []
         with session_factory() as session, session.begin():
             org = session.scalar(select(Organization).where(Organization.name == organization))
             if org is None:
                 org = Organization(name=organization)
                 session.add(org)
                 session.flush()
-            lesson_id = lessons.import_published_bundle(
-                session, bundle, org.id, "public" if public else "students"
-            )
-        click.echo(f"Imported lesson {lesson_id}.")
+            try:
+                if draft:
+                    lesson_id, issues = lessons.import_draft(session, bundle, org.id, visibility)
+                else:
+                    lesson_id = lessons.import_published_bundle(session, bundle, org.id, visibility)
+            except lessons.LessonContentError as error:
+                details = "".join(f"\n  {i.path}: {i.message}" for i in error.issues[:20])
+                raise click.ClickException(f"{error}{details}") from error
+        state = "as a draft" if draft else "and published"
+        click.echo(f"Imported lesson {lesson_id} {state}.")
+        if issues:
+            click.echo(f"{len(issues)} problem(s) to fix in the Studio before publishing:")
+            for issue in issues[:20]:
+                click.echo(f"  {issue.path}: {issue.message}")
 
     # Accounts are created by an operator; there is no public sign-up (ADR-0004, ADR-0012).
     # Passwords are asked for interactively, so they never appear in the shell history.

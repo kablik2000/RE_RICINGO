@@ -28,6 +28,9 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-26 — `import-lesson --draft`: imports a lesson file as an unpublished draft to check
+  and publish in the Studio (also incomplete ones; their problems are listed). Without the
+  flag the lesson is published as before.
 - 2026-11-26 — **Statistics in the Teacher Studio** ("Statistiky"): main numbers (lessons,
   sentences, words, grammar topics, students and how many used the app in the last 7 and 30
   days, recommendations), lessons by level and status, invitations by state, and new students
