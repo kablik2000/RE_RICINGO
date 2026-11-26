@@ -261,7 +261,7 @@ Order: each step is usable on its own.
 - [x] Student app tells what an automatic update changed ("Lekce jsou aktualizované": new, changed, removed lessons, until the student taps OK) and checks again on every return to the app (30 s guard). Verified on the Android emulator 2026-11-23.
 - [ ] Studio: drag-and-drop reordering of turns/sentences; selecting segment text with the mouse (now typed); lesson import from file.
 - [x] Operator import of a lesson as a draft (2026-11-26): `flask import-lesson <file> --organization <org> --draft [--public]` stores the bundle unpublished (version reset to 1, incomplete drafts allowed, problems listed) for review and publishing in the Studio; bad files and existing IDs are refused with a clear message.
-- [ ] Copy the development lessons `al-bar` and `al-barro` to production as drafts (exported and validated 2026-11-26; needs the release with `--draft` on the server).
+- [x] Development lessons `al-bar` and `al-barro` copied to production as drafts (organization RICI, visibility public) after v0.2.0, 2026-11-26.
 - [ ] Studio validation messages: the API's schema messages are translated for known patterns only; unknown ones show in English.
 - [x] Teacher sign-in (ADR-0012): login page, `httpOnly` session cookie, every page/action/API call checks the session, organization scoping, CSP + security headers, operator commands and VS Code tasks to create accounts. Verified in the browser 2026-11-23 (production build: sign-in, wrong password, forged cookie, sign-out).
 - [ ] Two-factor sign-in for teachers (postponed by the owner, ADR-0012) and a breached-password check.
