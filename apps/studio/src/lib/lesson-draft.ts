@@ -2,6 +2,7 @@ import type {
   DialogueTurn,
   GrammarTopic,
   LessonBundle,
+  LessonTheme,
   Lexeme,
   Segment,
   Sentence,
@@ -82,6 +83,16 @@ export function updateLessonInfo(
   changes: Partial<Pick<LessonBundle['lesson'], 'titleItalian' | 'titleCzech' | 'level' | 'goal'>>,
 ): LessonBundle {
   return withLesson(bundle, (lesson) => ({ ...lesson, ...changes }));
+}
+
+/** Sets the lesson's theme; `null` removes it. */
+export function setLessonTheme(bundle: LessonBundle, theme: LessonTheme | null): LessonBundle {
+  return withLesson(bundle, (lesson) => {
+    const updated = { ...lesson };
+    if (theme === null) delete updated.theme;
+    else updated.theme = theme;
+    return updated;
+  });
 }
 
 export function renameSpeaker(

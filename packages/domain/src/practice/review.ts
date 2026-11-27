@@ -46,18 +46,29 @@ export function isDue(state: ReviewState | undefined, now: Date): boolean {
   return state === undefined || Date.parse(state.dueAt) <= now.getTime();
 }
 
-/** What to practise: one kind, optionally one lesson and one grammar topic. */
+/** One kind of practice, or all kinds of the lesson mixed together. */
+export type PracticeSelection = PracticeKind | 'mixed';
+
+/**
+ * What to practise: a kind (or a mix), optionally one lesson, one grammar topic, or chosen words
+ * (a lecturer's vocabulary recommendation).
+ */
 export interface PracticeFilter {
-  kind: PracticeKind;
+  kind: PracticeSelection;
   lessonId?: string;
   grammarTopicId?: string;
+  lexemeIds?: readonly string[];
 }
 
 function matches(exercise: Exercise, filter: PracticeFilter): boolean {
+  const words = filter.lexemeIds;
   return (
     (filter.lessonId === undefined || exercise.lessonId === filter.lessonId) &&
     (filter.grammarTopicId === undefined ||
-      exercise.grammarTopicIds.includes(filter.grammarTopicId))
+      exercise.grammarTopicIds.includes(filter.grammarTopicId)) &&
+    (words === undefined ||
+      (exercise.kind === 'vocabulary' &&
+        words.some((id) => exercise.itemKey === `vocabulary:${exercise.lessonId}:${id}`)))
   );
 }
 
@@ -67,10 +78,11 @@ export function practiceCandidates(
   filter: PracticeFilter,
   random: Random = Math.random,
 ): Exercise[] {
+  const kinds = filter.kind === 'mixed' ? PRACTICE_KINDS : [filter.kind];
   const seen = new Set<string>();
   return bundles
     .filter((bundle) => filter.lessonId === undefined || bundle.lesson.id === filter.lessonId)
-    .flatMap((bundle) => generateExercises(bundle, filter.kind, random))
+    .flatMap((bundle) => kinds.flatMap((kind) => generateExercises(bundle, kind, random)))
     .filter((exercise) => {
       if (!matches(exercise, filter) || seen.has(exercise.itemKey)) return false;
       seen.add(exercise.itemKey);

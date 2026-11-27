@@ -225,6 +225,14 @@ describe('generated practice', () => {
     expect(
       practiceCandidates(bundles, { kind: 'grammar', lessonId: 'other' }, random()),
     ).toHaveLength(0);
+    expect(
+      practiceCandidates(bundles, { kind: 'vocabulary', lexemeIds: ['volere', 'pizza'] }, random())
+        .map((exercise) => exercise.itemKey)
+        .sort(),
+    ).toEqual(['vocabulary:al-bar:pizza', 'vocabulary:al-bar:volere']);
+    expect(
+      new Set(practiceCandidates(bundles, { kind: 'mixed' }, random()).map((e) => e.kind)).size,
+    ).toBe(5);
   });
 });
 

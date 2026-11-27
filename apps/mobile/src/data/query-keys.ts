@@ -9,6 +9,7 @@ export const lessonQueryKeys = {
 export const accountQueryKeys = {
   all: ['account'] as const,
   me: () => [...accountQueryKeys.all, 'me'] as const,
+  recommendations: () => [...accountQueryKeys.all, 'recommendations'] as const,
 };
 
 export const settingsQueryKeys = {

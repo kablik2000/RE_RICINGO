@@ -24,3 +24,4 @@ Status values: **Proposed** (awaiting approval) · **Accepted** · **Superseded 
 | [0015](0015-hosting-on-a-vps.md)                           | Hosting on our VPS: images from GitHub Actions, per-release deploy | Accepted                  |
 | [0016](0016-android-apk-direct-download.md)                | Android app as a direct APK download until the stores              | Accepted                  |
 | [0017](0017-practice-generated-from-lessons.md)            | Practice generated from lesson content, progress on the device     | Accepted                  |
+| [0018](0018-home-page-and-lesson-themes.md)                | Home page, lesson themes, recommendations in the app               | Accepted                  |

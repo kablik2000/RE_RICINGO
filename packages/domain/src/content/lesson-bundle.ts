@@ -17,6 +17,18 @@ const nonEmptyText = z.string().trim().min(1);
 
 export const cefrLevelSchema = z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
 
+/** Thematic area of a lesson, chosen in the Studio; students browse lessons by it. */
+export const lessonThemeSchema = z.enum([
+  'everyday',
+  'food',
+  'travel',
+  'shopping',
+  'work',
+  'free-time',
+  'health',
+  'culture',
+]);
+
 export const partOfSpeechSchema = z.enum([
   'noun',
   'verb',
@@ -93,6 +105,8 @@ export const lessonSchema = z.object({
   id: idSchema,
   version: z.number().int().positive(),
   level: cefrLevelSchema,
+  /** Optional, so lessons written before themes existed stay valid. */
+  theme: lessonThemeSchema.optional(),
   titleItalian: nonEmptyText,
   titleCzech: nonEmptyText,
   goal: nonEmptyText,
@@ -119,6 +133,7 @@ export const lessonBundleSchema = z.object({
 });
 
 export type CefrLevel = z.infer<typeof cefrLevelSchema>;
+export type LessonTheme = z.infer<typeof lessonThemeSchema>;
 export type PartOfSpeech = z.infer<typeof partOfSpeechSchema>;
 export type Gender = z.infer<typeof genderSchema>;
 export type Explanation = z.infer<typeof explanationSchema>;

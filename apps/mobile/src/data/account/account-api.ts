@@ -65,6 +65,25 @@ const meSchema = z.object({
 });
 export type AccountDetails = z.infer<typeof meSchema>;
 
+const recommendationSchema = z.object({
+  id: z.string(),
+  kind: z.enum(['lesson', 'practice', 'vocabulary']),
+  teacherName: z.string(),
+  lesson: z.object({
+    id: z.string(),
+    titleItalian: z.string(),
+    titleCzech: z.string(),
+    level: z.string(),
+  }),
+  grammarTopic: z.object({ id: z.string(), title: z.string() }).nullable(),
+  words: z.array(z.object({ id: z.string(), lemma: z.string(), translation: z.string() })),
+  note: z.string().nullable(),
+  createdAt: z.string(),
+});
+/** What the student's lecturer recommends (ADR-0013): a lesson, practice or chosen words. */
+export type Recommendation = z.infer<typeof recommendationSchema>;
+export const recommendationsSchema = z.array(recommendationSchema);
+
 const errorSchema = z.object({
   error: z.object({
     code: z.string(),
@@ -89,6 +108,7 @@ export interface AccountApi {
   me(token: string): Promise<AccountDetails>;
   signOut(token: string): Promise<void>;
   removeDevice(token: string, deviceId: string): Promise<void>;
+  recommendations(token: string): Promise<readonly Recommendation[]>;
 }
 
 const REQUEST_TIMEOUT_MS = 20_000;
@@ -155,6 +175,12 @@ export function createAccountApi(baseUrl: string, fetchImpl: typeof fetch = fetc
     async signOut(token) {
       await call('/logout', z.null(), { method: 'POST', token });
     },
+    recommendations: async (token) =>
+      (
+        await call('/recommendations', z.object({ recommendations: recommendationsSchema }), {
+          token,
+        })
+      ).recommendations,
     async removeDevice(token, deviceId) {
       await call(`/devices/${encodeURIComponent(deviceId)}`, z.null(), {
         method: 'DELETE',

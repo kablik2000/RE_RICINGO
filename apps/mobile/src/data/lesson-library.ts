@@ -37,6 +37,7 @@ function toSummary(bundle: LessonBundle): LessonSummary {
     titleItalian: lesson.titleItalian,
     titleCzech: lesson.titleCzech,
     level: lesson.level,
+    theme: lesson.theme ?? null,
     goal: lesson.goal,
     exchangeCount: countExchanges(lesson),
     sentenceCount: listSentencesInOrder(lesson).length,

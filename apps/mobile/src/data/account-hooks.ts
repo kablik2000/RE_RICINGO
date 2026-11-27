@@ -1,8 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { AppError } from '@/core/errors';
+import { AppError, toAppError } from '@/core/errors';
 
-import { AccountError, type AccountDetails, type SignedIn } from './account/account-api';
+import {
+  AccountError,
+  type AccountDetails,
+  type Recommendation,
+  type SignedIn,
+} from './account/account-api';
 import { deviceName } from './account/device-name';
 import { accountQueryKeys } from './query-keys';
 import { useDataServices } from './query-provider';
@@ -41,6 +46,39 @@ export function useAccount() {
   return { enabled: account !== null, query };
 }
 
+/**
+ * The lecturer's recommendations for the signed-in student; empty when nobody is signed in.
+ * Offline, the last ones received are shown.
+ */
+export function useRecommendations() {
+  const { account, tokens, recommendationCache: cache } = useDataServices();
+  return useQuery({
+    queryKey: accountQueryKeys.recommendations(),
+    enabled: account !== null,
+    queryFn: async (): Promise<readonly Recommendation[]> => {
+      const token = await tokens.read();
+      if (token === null || account === null) {
+        await cache.clear();
+        return [];
+      }
+      try {
+        const recommendations = await account.recommendations(token);
+        await cache.write(recommendations);
+        return recommendations;
+      } catch (error) {
+        if (error instanceof AccountError && error.code === 'unauthorized') {
+          await tokens.clear();
+          await cache.clear();
+          return [];
+        }
+        const cached = toAppError(error).kind === 'network' ? await cache.read() : null;
+        if (cached !== null) return cached;
+        throw error;
+      }
+    },
+  });
+}
+
 function useAfterSignIn() {
   const { tokens, contentSync } = useDataServices();
   const queryClient = useQueryClient();
@@ -76,7 +114,7 @@ export function useSignIn() {
 
 /** Signs this device out. Offline, the session is forgotten here and ends on the server later. */
 export function useSignOut() {
-  const { account, tokens, contentSync } = useDataServices();
+  const { account, tokens, contentSync, recommendationCache } = useDataServices();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
@@ -89,9 +127,11 @@ export function useSignOut() {
         }
       }
       await tokens.clear();
+      await recommendationCache.clear();
     },
     onSuccess: () => {
       queryClient.setQueryData(accountQueryKeys.me(), null);
+      queryClient.setQueryData(accountQueryKeys.recommendations(), []);
       // Lessons only for students leave the device, like lessons the lecturer unpublished.
       void contentSync?.check();
     },

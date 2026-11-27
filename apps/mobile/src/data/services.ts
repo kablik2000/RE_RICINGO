@@ -4,6 +4,10 @@ import { getAppConfig } from '@/core/config';
 import { telemetry } from '@/core/telemetry';
 
 import { createAccountApi, type AccountApi } from './account/account-api';
+import {
+  createRecommendationCache,
+  type RecommendationCache,
+} from './account/recommendation-cache';
 import { openTokenStore, type TokenStore } from './account/token-store';
 import { createContentApi } from './content/content-api';
 import { createContentSync, type ContentSync } from './content/content-sync';
@@ -26,6 +30,8 @@ export interface DataServices {
   account: AccountApi | null;
   /** The signed-in student's session token. */
   tokens: TokenStore;
+  /** The lecturer's recommendations last received, for offline use. */
+  recommendationCache: RecommendationCache;
   /** What the student practised and when each item is due again (on the device, ADR-0017). */
   practice: PracticeProgress;
 }
@@ -54,7 +60,17 @@ export function createDataServices(): DataServices {
         });
   const account = apiUrl === null ? null : createAccountApi(apiUrl);
   const practice = createPracticeProgress(store);
-  return { library, holds, updateSettings, contentSync, account, tokens, practice };
+  const recommendationCache = createRecommendationCache(store);
+  return {
+    library,
+    holds,
+    updateSettings,
+    contentSync,
+    account,
+    tokens,
+    practice,
+    recommendationCache,
+  };
 }
 
 let appServices: DataServices | null = null;

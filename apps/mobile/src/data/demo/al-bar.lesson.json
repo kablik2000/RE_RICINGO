@@ -4,6 +4,7 @@
     "id": "al-bar",
     "version": 1,
     "level": "A1",
+    "theme": "food",
     "titleItalian": "Al bar",
     "titleCzech": "V kavárně",
     "goal": "Objednat si kávu a něco k jídlu, zeptat se na cenu a zaplatit.",

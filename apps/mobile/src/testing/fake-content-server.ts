@@ -9,6 +9,7 @@ import { createUpdateSettings } from '@/data/content/update-settings';
 import alBar from '@/data/demo/al-bar.lesson.json';
 import { createLessonLibrary, toSeed } from '@/data/lesson-library';
 import type { AccountApi } from '@/data/account/account-api';
+import { createRecommendationCache } from '@/data/account/recommendation-cache';
 import { openTokenStore } from '@/data/account/token-store.web';
 import { createMemoryLocalStore } from '@/data/local/local-store';
 import { createPracticeProgress } from '@/data/practice/practice-progress';
@@ -108,6 +109,7 @@ export function createTestServices({
     account,
     tokens,
     practice: createPracticeProgress(store),
+    recommendationCache: createRecommendationCache(store),
   };
   return {
     services,

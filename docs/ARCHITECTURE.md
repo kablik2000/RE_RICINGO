@@ -223,6 +223,8 @@ Lesson ── DialogueTurn ── Sentence ── Segment ─┘   (segment = on
   └─ Exercise (type, payload validated by type schema, refs to sentences/lexemes/topics)
 ```
 
+- **Lesson** has a CEFR level and an optional **theme** from a fixed list (ADR-0018) that
+  students browse by.
 - **Segment** covers spec §3 "rozbor věty": a span of tokens with lemma, morphology
   (e.g. `volere` · condizionale presente · 1st sg), linked lexeme and grammar topics,
   and up to three explanation layers (spec: basic meaning → grammatical function → depth).

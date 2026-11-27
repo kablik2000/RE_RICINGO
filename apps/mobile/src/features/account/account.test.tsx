@@ -41,6 +41,7 @@ function fakeAccountApi(overrides: Partial<AccountApi> = {}): AccountApi {
     me: jest.fn(() => Promise.resolve({ student: STUDENT, devices: DEVICES, maxDevices: 3 })),
     signOut: jest.fn(() => Promise.resolve()),
     removeDevice: jest.fn(() => Promise.resolve()),
+    recommendations: jest.fn(() => Promise.resolve([])),
   };
   return { ...api, ...overrides };
 }

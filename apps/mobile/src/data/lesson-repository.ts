@@ -1,4 +1,4 @@
-import type { CefrLevel, LessonBundle, Lexeme, Sentence } from '@ricingo/domain';
+import type { CefrLevel, LessonBundle, LessonTheme, Lexeme, Sentence } from '@ricingo/domain';
 
 /** Lesson as shown in lists, without the full dialogue. */
 export interface LessonSummary {
@@ -6,6 +6,7 @@ export interface LessonSummary {
   titleItalian: string;
   titleCzech: string;
   level: CefrLevel;
+  theme: LessonTheme | null;
   goal: string;
   exchangeCount: number;
   sentenceCount: number;

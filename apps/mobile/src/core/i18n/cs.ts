@@ -22,9 +22,31 @@ export const cs = {
     evening: 'Buonasera!',
   },
   home: {
-    pending: {
-      title: 'Úvodní stránka se připravuje',
-      message: 'Co tady bude, teprve navrhujeme. Lekce najdete v záložce Lekce.',
+    intro: 'Vyberte si lekci ze sbírky a učte se italsky vlastním tempem.',
+    browse: 'Procházet sbírku lekcí',
+    rows: {
+      themes: 'Tematické okruhy',
+      themesFallback: 'Lekce podle témat',
+      levels: 'Úrovně',
+      all: 'Všechny lekce',
+      allSubtitle: 'Kompletní přehled lekcí',
+    },
+    start: {
+      title: 'Doporučujeme začít',
+      label: '{title}, {czech}, úroveň {level}',
+    },
+    teacher: {
+      title: 'Od vaší lektorky',
+      from: 'Doporučuje {name}',
+      lesson: 'Projít lekci',
+      practiceLesson: 'Procvičit celou lekci',
+      practiceTopic: 'Procvičit: {topic}',
+      vocabulary: {
+        one: 'Procvičit {count} slovíčko',
+        few: 'Procvičit {count} slovíčka',
+        other: 'Procvičit {count} slovíček',
+      },
+      failed: 'Doporučení se teď nepodařilo načíst.',
     },
   },
   lessons: {
@@ -37,6 +59,22 @@ export const cs = {
     upcoming: 'Další lekce připravujeme. Objeví se tady, jakmile budou hotové.',
     loading: 'Načítám lekce…',
     openHint: 'Otevře úvod lekce',
+    themes: {
+      everyday: 'Každodenní život',
+      food: 'Jídlo a pití',
+      travel: 'Cestování',
+      shopping: 'Nakupování',
+      work: 'Práce',
+      'free-time': 'Volný čas',
+      health: 'Zdraví',
+      culture: 'Kultura',
+      none: 'Další lekce',
+    },
+    browse: {
+      themesTitle: 'Tematické okruhy',
+      levelsTitle: 'Úrovně',
+      level: 'Úroveň {level}',
+    },
     empty: {
       title: 'Zatím žádné lekce',
       message: 'Jakmile vám lektor přiřadí první tematický celek, najdete ho tady.',

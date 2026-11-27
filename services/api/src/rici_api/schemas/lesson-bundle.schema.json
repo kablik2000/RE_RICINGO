@@ -31,6 +31,19 @@
             "C2"
           ]
         },
+        "theme": {
+          "type": "string",
+          "enum": [
+            "everyday",
+            "food",
+            "travel",
+            "shopping",
+            "work",
+            "free-time",
+            "health",
+            "culture"
+          ]
+        },
         "titleItalian": {
           "type": "string",
           "minLength": 1

@@ -31,6 +31,12 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-27 — **Home page** (ADR-0018, owner's sketch): greeting over a Roman illustration,
+  "Procházet sbírku lekcí", Tematické okruhy / Úrovně / Všechny lekce, "Doporučujeme začít";
+  for signed-in students **"Od vaší lektorky"** — the lecturer's recommendations, also offline:
+  a lesson opens it, practice opens the topic or the whole lesson, words open practice of exactly
+  those words. **Lesson themes**: chosen in the Studio (Informace o lekci → Téma), the app lists
+  lessons by theme and by level.
 - 2026-11-27 — **Practice** (ADR-0017): the app's Procvičování tab generates exercises from the
   lessons — vocabulary review, dialogues, listening, grammar (fill in the form) and translations
   (build the sentence from tiles); _Doporučené_ shows what is due across lessons, _Podle lekcí_

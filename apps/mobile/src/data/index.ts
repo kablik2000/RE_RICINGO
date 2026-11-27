@@ -26,6 +26,7 @@ export { ContentSyncDriver } from './content-sync-driver';
 export {
   useAcceptInvitation,
   useAccount,
+  useRecommendations,
   useRemoveDevice,
   useSignIn,
   useSignOut,
@@ -35,6 +36,7 @@ export {
   type AccountDetails,
   type AccountErrorCode,
   type Device,
+  type Recommendation,
 } from './account/account-api';
 export type { ContentSync, ContentSyncState, LessonChange } from './content/content-sync';
 export { UPDATE_POLICIES, type LessonUpdate, type UpdatePolicy } from './content/update-rules';

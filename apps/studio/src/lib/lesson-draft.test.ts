@@ -9,6 +9,7 @@ import {
   itemIds,
   removeLexeme,
   removeSentence,
+  setLessonTheme,
   setPracticeExcluded,
   slugify,
   uniqueId,
@@ -38,6 +39,12 @@ function emptyLesson(): LessonBundle {
 }
 
 describe('lesson draft operations', () => {
+  it('sets and removes the lesson theme', () => {
+    const withTheme = setLessonTheme(emptyLesson(), 'travel');
+    expect(withTheme.lesson.theme).toBe('travel');
+    expect('theme' in setLessonTheme(withTheme, null).lesson).toBe(false);
+  });
+
   it('leaves sentences and words out of practice and forgets them when they are removed', () => {
     const withTurn = addTurn(emptyLesson());
     const { sentenceId } = withTurn;

@@ -11,11 +11,11 @@ jest.mock('@/core/config', () => ({
  * Integration tests of the real route tree in src/app with the bundled demo lesson.
  */
 describe('student navigation shell', () => {
-  it('shows the home tab while its content is being designed', async () => {
+  it('shows the home tab with the lesson collection', async () => {
     await renderRouter('./src/app', { initialUrl: '/' });
 
     expect(screen).toHavePathname('/');
-    expect(await screen.findByText('Úvodní stránka se připravuje')).toBeOnTheScreen();
+    expect(await screen.findByRole('button', { name: 'Procházet sbírku lekcí' })).toBeOnTheScreen();
   });
 
   it('offers the first lesson and lists lessons on the lessons tab', async () => {

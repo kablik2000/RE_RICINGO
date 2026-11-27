@@ -1,10 +1,10 @@
 'use client';
 
-import { cefrLevelSchema, type LessonBundle } from '@ricingo/domain';
+import { cefrLevelSchema, type LessonBundle, lessonThemeSchema } from '@ricingo/domain';
 
 import ui from '@/components/ui.module.css';
 import { t } from '@/i18n';
-import { renameSpeaker, updateLessonInfo } from '@/lib/lesson-draft';
+import { renameSpeaker, setLessonTheme, updateLessonInfo } from '@/lib/lesson-draft';
 
 import styles from './editor.module.css';
 
@@ -56,6 +56,24 @@ export function InfoTab({
             <option key={level}>{level}</option>
           ))}
         </select>
+      </label>
+      <label className={ui.field}>
+        {t('editor.info.theme')}
+        <select
+          className={ui.select}
+          value={lesson.theme ?? ''}
+          onChange={(event) => {
+            const theme = lessonThemeSchema.safeParse(event.target.value);
+            onChange(setLessonTheme(draft, theme.success ? theme.data : null));
+          }}>
+          <option value="">{t('editor.info.noTheme')}</option>
+          {lessonThemeSchema.options.map((theme) => (
+            <option key={theme} value={theme}>
+              {t(`themes.${theme}`)}
+            </option>
+          ))}
+        </select>
+        <span className={styles.hint}>{t('editor.info.themeHint')}</span>
       </label>
       <label className={ui.field}>
         {t('editor.info.goal')}

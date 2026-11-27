@@ -44,6 +44,7 @@ export default function RootLayout() {
           <Stack.Screen name="lesson/[lessonId]/study" />
           {/* Practice draws its own progress header. */}
           <Stack.Screen name="practice/session" />
+          <Stack.Screen name="browse" options={withHeader} />
           <Stack.Screen
             name="lesson/[lessonId]/dialogue"
             options={{ ...withHeader, title: t('dialogue.title') }}
