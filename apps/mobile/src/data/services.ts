@@ -13,6 +13,7 @@ import { createUpdateSettings, type UpdateSettings } from './content/update-sett
 import alBar from './demo/al-bar.lesson.json';
 import { createLessonLibrary, toSeed, type LessonLibrary } from './lesson-library';
 import { openLocalStore } from './local/open-local-store';
+import { createPracticeProgress, type PracticeProgress } from './practice/practice-progress';
 
 /** Everything the data hooks use; tests replace parts through `DataProvider`. */
 export interface DataServices {
@@ -25,6 +26,8 @@ export interface DataServices {
   account: AccountApi | null;
   /** The signed-in student's session token. */
   tokens: TokenStore;
+  /** What the student practised and when each item is due again (on the device, ADR-0017). */
+  practice: PracticeProgress;
 }
 
 /** Lessons shipped inside the app: available offline from the very first start. */
@@ -50,7 +53,8 @@ export function createDataServices(): DataServices {
           telemetry,
         });
   const account = apiUrl === null ? null : createAccountApi(apiUrl);
-  return { library, holds, updateSettings, contentSync, account, tokens };
+  const practice = createPracticeProgress(store);
+  return { library, holds, updateSettings, contentSync, account, tokens, practice };
 }
 
 let appServices: DataServices | null = null;

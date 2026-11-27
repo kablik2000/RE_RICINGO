@@ -47,6 +47,8 @@ export type InstalledListener = (lessonIds: readonly string[]) => void;
 
 /** The lessons installed on the device: what screens read and what updates replace. */
 export interface LessonLibrary extends LessonRepository {
+  /** Every installed lesson's content (practice is generated from all of them). */
+  listBundles(): Promise<readonly LessonBundle[]>;
   installedVersions(): Promise<readonly InstalledVersion[]>;
   /** Installs downloaded lessons (already validated) and tells listeners which ones changed. */
   install(lessons: readonly StoredLesson[]): Promise<void>;
@@ -117,6 +119,7 @@ export function createLessonLibrary(
 
   return {
     listLessons: async () => (await bundles()).map(toSummary),
+    listBundles: () => bundles(),
 
     async getLessonBundle(lessonId) {
       const bundle = (await bundles()).find((candidate) => candidate.lesson.id === lessonId);

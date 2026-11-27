@@ -8,6 +8,8 @@ import {
   addTurn,
   itemIds,
   removeLexeme,
+  removeSentence,
+  setPracticeExcluded,
   slugify,
   uniqueId,
   updateSegment,
@@ -36,6 +38,27 @@ function emptyLesson(): LessonBundle {
 }
 
 describe('lesson draft operations', () => {
+  it('leaves sentences and words out of practice and forgets them when they are removed', () => {
+    const withTurn = addTurn(emptyLesson());
+    const { sentenceId } = withTurn;
+    const { bundle, lexemeId } = addLexeme(withTurn.bundle);
+
+    const excluded = setPracticeExcluded(
+      setPracticeExcluded(bundle, 'sentence', sentenceId, true),
+      'lexeme',
+      lexemeId,
+      true,
+    );
+    expect(excluded.practice).toEqual({
+      excludedSentenceIds: [sentenceId],
+      excludedLexemeIds: [lexemeId],
+    });
+    expect(setPracticeExcluded(excluded, 'sentence', sentenceId, true)).toBe(excluded);
+
+    const cleaned = removeLexeme(removeSentence(excluded, sentenceId), lexemeId);
+    expect(cleaned.practice).toBeUndefined();
+  });
+
   it('makes schema-valid, unique IDs', () => {
     expect(slugify('Un caffè, per favore!')).toBe('un-caffe-per-favore');
     expect(slugify('!!!')).toBe('item');

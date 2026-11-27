@@ -11,6 +11,7 @@ import { createLessonLibrary, toSeed } from '@/data/lesson-library';
 import type { AccountApi } from '@/data/account/account-api';
 import { openTokenStore } from '@/data/account/token-store.web';
 import { createMemoryLocalStore } from '@/data/local/local-store';
+import { createPracticeProgress } from '@/data/practice/practice-progress';
 
 type Bundle = typeof alBar;
 
@@ -106,6 +107,7 @@ export function createTestServices({
     contentSync,
     account,
     tokens,
+    practice: createPracticeProgress(store),
   };
   return {
     services,

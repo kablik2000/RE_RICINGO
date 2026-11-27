@@ -14,3 +14,9 @@ export const accountQueryKeys = {
 export const settingsQueryKeys = {
   updatePolicy: () => ['settings', 'updatePolicy'] as const,
 };
+
+export const practiceQueryKeys = {
+  all: ['practice'] as const,
+  overview: () => [...practiceQueryKeys.all, 'overview'] as const,
+  session: (filter: object) => [...practiceQueryKeys.all, 'session', filter] as const,
+};

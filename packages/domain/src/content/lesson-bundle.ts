@@ -100,11 +100,22 @@ export const lessonSchema = z.object({
   turns: z.array(dialogueTurnSchema).min(1),
 });
 
+/**
+ * How the lecturer tuned the practice generated from the lesson (ADR-0017). Exercises are built
+ * from the lesson's own sentences and words; these lists leave some out (too short, ambiguous).
+ * IDs that no longer exist are ignored. Optional, so older apps and bundles stay compatible.
+ */
+export const practiceSettingsSchema = z.object({
+  excludedSentenceIds: z.array(idSchema).default([]),
+  excludedLexemeIds: z.array(idSchema).default([]),
+});
+
 export const lessonBundleSchema = z.object({
   contentSchemaVersion: z.literal(CONTENT_SCHEMA_VERSION),
   lesson: lessonSchema,
   grammarTopics: z.array(grammarTopicSchema),
   lexemes: z.array(lexemeSchema),
+  practice: practiceSettingsSchema.optional(),
 });
 
 export type CefrLevel = z.infer<typeof cefrLevelSchema>;
@@ -118,4 +129,5 @@ export type DialogueTurn = z.infer<typeof dialogueTurnSchema>;
 export type GrammarTopic = z.infer<typeof grammarTopicSchema>;
 export type Lexeme = z.infer<typeof lexemeSchema>;
 export type Lesson = z.infer<typeof lessonSchema>;
+export type PracticeSettings = z.infer<typeof practiceSettingsSchema>;
 export type LessonBundle = z.infer<typeof lessonBundleSchema>;

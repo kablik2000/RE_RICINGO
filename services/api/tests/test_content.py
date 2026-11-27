@@ -44,3 +44,13 @@ def test_rejects_ids_that_are_not_kebab_case() -> None:
     bundle["lesson"]["id"] = "Al Bar"
 
     assert [issue.path for issue in validate_lesson_bundle_structure(bundle)] == ["$.lesson.id"]
+
+
+def test_accepts_practice_settings_with_kebab_case_ids() -> None:
+    bundle = copy.deepcopy(demo_bundle())
+    bundle["practice"] = {"excludedSentenceIds": ["certo"], "excludedLexemeIds": []}
+    assert validate_lesson_bundle_structure(bundle) == []
+
+    bundle["practice"]["excludedLexemeIds"] = ["Not Kebab"]
+    issues = validate_lesson_bundle_structure(bundle)
+    assert [issue.path for issue in issues] == ["$.practice.excludedLexemeIds[0]"]

@@ -264,6 +264,27 @@
           "partOfSpeech"
         ]
       }
+    },
+    "practice": {
+      "type": "object",
+      "properties": {
+        "excludedSentenceIds": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          }
+        },
+        "excludedLexemeIds": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          }
+        }
+      }
     }
   },
   "required": [

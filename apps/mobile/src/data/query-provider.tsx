@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 
 import { toAppError } from '@/core/errors';
 
-import { lessonQueryKeys } from './query-keys';
+import { lessonQueryKeys, practiceQueryKeys } from './query-keys';
 import { getAppServices, type DataServices } from './services';
 
 const MAX_RETRIES = 2;
@@ -51,6 +51,7 @@ export function DataProvider({ children, client, services }: DataProviderProps) 
       resolved.library.onInstalled((lessonIds) => {
         void queryClient.invalidateQueries({ queryKey: lessonQueryKeys.list() });
         void queryClient.invalidateQueries({ queryKey: lessonQueryKeys.vocabulary() });
+        void queryClient.invalidateQueries({ queryKey: practiceQueryKeys.overview() });
         lessonIds.forEach((lessonId) => {
           void queryClient.invalidateQueries({ queryKey: lessonQueryKeys.bundle(lessonId) });
         });

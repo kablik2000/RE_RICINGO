@@ -42,6 +42,8 @@ export default function RootLayout() {
           {/* Intro and study draw their own top bars (hero illustration, progress header). */}
           <Stack.Screen name="lesson/[lessonId]/index" />
           <Stack.Screen name="lesson/[lessonId]/study" />
+          {/* Practice draws its own progress header. */}
+          <Stack.Screen name="practice/session" />
           <Stack.Screen
             name="lesson/[lessonId]/dialogue"
             options={{ ...withHeader, title: t('dialogue.title') }}

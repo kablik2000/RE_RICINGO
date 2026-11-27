@@ -252,6 +252,11 @@ interface ExerciseTypeDefinition<TPayload, TAnswer, TEvaluation> {
 ```
 
 Adding a type = add a domain module + a renderer + register both. No other module changes.
+
+**Implemented (ADR-0017, v1):** exercises are _generated_ from lesson content in
+`packages/domain/src/practice` (choice, fill in the blank, build from tiles) rather than authored;
+the lecturer leaves sentences and words out in the Studio (`practice` in the bundle). Authored and
+AI-generated exercises through this registry remain the plan for later types.
 Unknown types (content newer than the app) render a graceful "update the app" placeholder
 and are skipped in sessions — never a crash.
 

@@ -209,10 +209,14 @@ The Supabase plan (ADR-0002) was superseded on 2026-11-23; tasks rewritten for t
 
 ### M5 — Exercises v1
 
-- [ ] Exercise session engine (reducer, ordering, feedback, summary).
-- [ ] Renderers: MultipleChoice, FillInBlank, SentenceBuilder, SentenceTranslation, ListeningExercise.
-- [ ] Graceful handling of unknown exercise types.
-- [ ] Results recorded as events.
+- [x] Practice generated from lesson content (ADR-0017, owner 2026-11-27): `packages/domain/src/practice` — vocabulary (choice, both directions), dialogues (pick the reply), listening (pick the meaning of a spoken sentence), grammar (fill in a grammar-linked segment), translations (build the sentence from tiles); distractors from the same lesson; tests.
+- [x] Exercise session engine (reducer, check, solution, summary) and Leitner review schedule; 10 items per session, new and due first.
+- [x] App: Procvičování tab (Doporučené / Podle lekcí, per grammar topic), session screen per the owner's sketch (progress, options, tiles, green/red feedback with the solution and pronunciation, summary); progress per item in SQLite (`practice_reviews`), saved per answer. Verified on the Android emulator 2026-11-27.
+- [x] Studio: lesson editor tab _Procvičování_ — preview of every generated exercise, sentences and words left out (`practice` in the lesson bundle, JSON Schema regenerated). Verified in the browser 2026-11-27.
+- [ ] Typed answers (translation by typing, accent mistakes reported separately) — owner chose choices and tiles for v1.
+- [ ] More types: word matching, text comprehension; authored or AI-generated exercises through the type registry (ARCHITECTURE §5.2).
+- [ ] Graceful handling of unknown exercise types (once exercises can come as data).
+- [ ] Results recorded as events / synced to the server (ADR-0013 step 6); until then progress stays on the device.
 
 ### M6 — Vocabulary v1
 
@@ -239,7 +243,7 @@ Order: each step is usable on its own.
 - [x] 2. Students and invitations in the Studio: student list, invite by e-mail (Mailpit in development), parental-consent confirmation for students under 15, revoke access. Done 2026-11-24: page Studenti, invitation e-mail with a 12-character one-time code (valid 14 days, stored hashed), resend, revoke, remove a student (a student without any teacher is disabled), max 50 invitations per teacher a day; migration `0005_students_and_invitations`. Verified in the browser with Mailpit.
 - [x] 3. Student sign-in in the app: accept invitation with the code alone (account takes the invited e-mail), set password, sign in/out on any device, at most 3 signed-in devices (a 4th is refused; the student removes a device in the app, the lecturer can sign the student out everywhere in the Studio), tokens in `expo-secure-store`; the app keeps working without an account. Done 2026-11-25: Profile → \"Účet studenta\" (Mám pozvánku / Přihlásit se / Moje zařízení / Odhlásit se), device-limit chooser, `expo-secure-store` (new development build), Studio column \"Zařízení\" and \"Odhlásit všude\"; student passwords at least 12 characters; migration `0006_session_device_name`. Verified on the Android emulator against the Docker API (accept with a code typed in lower case, restart keeps the session, 4th device refused and replaced, device removed, lecturer signs the student out everywhere).
 - [x] 4. Recommendations per student: Studio student detail → recommend lessons and topics ("okruhy"); recommended private lessons download for that student. Done 2026-11-25 (owner: recommend practice, lessons and words): Studio Studenti → student page with "Doporučit" — _Lekce_ (go through a lesson), _Procvičování_ (a whole lesson or one of its grammar topics), _Slovíčka_ (chosen words of a lesson), optional note; list with remove; only published lessons of the teacher's organization; migration `0007_recommendations`; `GET /api/v1/student/recommendations`; the content catalog with the student's token adds recommended lessons (also "Jen studenti"), the app sends the token and checks lessons right after sign-in and sign-out. Verified in the Studio and on the Android emulator (a students-only lesson downloads after sign-in and is removed after sign-out).
-- [ ] 5. Home block "Od vaší lektorky" for signed-in students (part of the Home design): show `GET /api/v1/student/recommendations` (lesson → open it, practice → practice screen once exercises exist (M5), words → vocabulary filtered to them); keep them offline.
+- [ ] 5. Home block "Od vaší lektorky" for signed-in students (part of the Home design): show `GET /api/v1/student/recommendations` (lesson → open it, practice → `/practice/session?kind=grammar&lessonId=…&topicId=…` (ADR-0017), words → vocabulary filtered to them); keep them offline.
 - [ ] Recommendations: recommend public lessons of other organizations (the Studio lists only its own); mark a recommendation done (with progress, step 6).
 - [ ] 6. Server-side progress for signed-in students (with M7 progress sync); keep anonymous progress after signing in.
 

@@ -31,6 +31,13 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-27 — **Practice** (ADR-0017): the app's Procvičování tab generates exercises from the
+  lessons — vocabulary review, dialogues, listening, grammar (fill in the form) and translations
+  (build the sentence from tiles); _Doporučené_ shows what is due across lessons, _Podle lekcí_
+  per lesson and grammar topic. Sessions of 10 with green/red feedback, the solution and a
+  summary; progress per item is kept on the device and schedules reviews (1–60 days). Studio:
+  new lesson editor tab _Procvičování_ with a preview of every exercise and checkboxes to leave
+  sentences and words out (optional `practice` field in the lesson bundle).
 - 2026-11-26 — **Android app to download** (ADR-0016): signed release APK at
   `https://rici.esprog.eu/app` with an install guide; new app icon in the italstinarici.cz
   brand; application ID `eu.esprog.rici`; release signing through a config plugin with the key

@@ -30,7 +30,7 @@ describe('student navigation shell', () => {
   it.each([
     ['/lessons', 'Další lekce připravujeme. Objeví se tady, jakmile budou hotové.'],
     ['/vocabulary', 'volere'],
-    ['/practice', 'Zatím není co procvičovat'],
+    ['/practice', 'Opakování slovíček'],
     ['/profile', 'Verze aplikace'],
   ] as const)('navigates to %s', async (path, expectedText) => {
     await renderRouter('./src/app', { initialUrl: '/' });

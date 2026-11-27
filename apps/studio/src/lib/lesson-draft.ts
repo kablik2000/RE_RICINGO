@@ -159,10 +159,11 @@ export function addSentence(
 }
 
 export function removeSentence(bundle: LessonBundle, sentenceId: string): LessonBundle {
-  return mapTurns(bundle, (turn) => ({
+  const removed = mapTurns(bundle, (turn) => ({
     ...turn,
     sentences: turn.sentences.filter((sentence) => sentence.id !== sentenceId),
   }));
+  return setPracticeExcluded(removed, 'sentence', sentenceId, false);
 }
 
 export function updateSentence(
@@ -309,7 +310,38 @@ export function removeLexeme(bundle: LessonBundle, lexemeId: string): LessonBund
       })),
     })),
   }));
-  return { ...cleaned, lexemes: cleaned.lexemes.filter((lexeme) => lexeme.id !== lexemeId) };
+  return setPracticeExcluded(
+    { ...cleaned, lexemes: cleaned.lexemes.filter((lexeme) => lexeme.id !== lexemeId) },
+    'lexeme',
+    lexemeId,
+    false,
+  );
+}
+
+/**
+ * Leaves a sentence or word out of the practice generated from the lesson, or takes it back
+ * (ADR-0017). A lesson with nothing left out keeps no practice settings at all.
+ */
+export function setPracticeExcluded(
+  bundle: LessonBundle,
+  item: 'sentence' | 'lexeme',
+  id: string,
+  excluded: boolean,
+): LessonBundle {
+  const key = item === 'sentence' ? 'excludedSentenceIds' : 'excludedLexemeIds';
+  const current = {
+    excludedSentenceIds: bundle.practice?.excludedSentenceIds ?? [],
+    excludedLexemeIds: bundle.practice?.excludedLexemeIds ?? [],
+  };
+  if (current[key].includes(id) === excluded) return bundle;
+  const others = current[key].filter((other) => other !== id);
+  const practice = { ...current, [key]: excluded ? [...others, id] : others };
+  if (practice.excludedSentenceIds.length > 0 || practice.excludedLexemeIds.length > 0) {
+    return { ...bundle, practice };
+  }
+  const withoutSettings = { ...bundle };
+  delete withoutSettings.practice;
+  return withoutSettings;
 }
 
 export function addGrammarTopic(bundle: LessonBundle): { bundle: LessonBundle; topicId: string } {

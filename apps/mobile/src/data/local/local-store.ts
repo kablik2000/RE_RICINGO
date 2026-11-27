@@ -1,3 +1,5 @@
+import type { ReviewState } from '@ricingo/domain';
+
 /**
  * A lesson version kept on the device. `checksum` identifies the published version it came from;
  * it is `null` for lessons bundled with the app (they were never downloaded).
@@ -29,12 +31,17 @@ export interface LocalStore {
   removeLessons(lessonIds: readonly string[]): Promise<void>;
   readSetting(key: string): Promise<string | null>;
   writeSetting(key: string, value: string): Promise<void>;
+  /** How well the student knows each practised item (ADR-0017); stays on the device. */
+  readReviews(): Promise<readonly ReviewState[]>;
+  /** Inserts or replaces review states, all or nothing. */
+  saveReviews(reviews: readonly ReviewState[]): Promise<void>;
 }
 
 /** Storage that lives as long as the JavaScript runtime (web previews, tests). */
 export function createMemoryLocalStore(): LocalStore {
   const lessons = new Map<string, StoredLesson>();
   const settings = new Map<string, string>();
+  const reviews = new Map<string, ReviewState>();
   return {
     readLessons: () => Promise.resolve([...lessons.values()]),
     readVersions: () =>
@@ -64,6 +71,13 @@ export function createMemoryLocalStore(): LocalStore {
     readSetting: (key) => Promise.resolve(settings.get(key) ?? null),
     writeSetting(key, value) {
       settings.set(key, value);
+      return Promise.resolve();
+    },
+    readReviews: () => Promise.resolve([...reviews.values()]),
+    saveReviews(saved) {
+      for (const state of saved) {
+        reviews.set(state.itemKey, state);
+      }
       return Promise.resolve();
     },
   };

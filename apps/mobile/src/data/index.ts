@@ -1,6 +1,14 @@
 export type { LessonRepository, LessonSummary, VocabularyEntry } from './lesson-repository';
 export { useLessonBundle, useLessons, useVocabulary } from './lesson-queries';
-export { lessonQueryKeys } from './query-keys';
+export { lessonQueryKeys, practiceQueryKeys } from './query-keys';
+export {
+  usePracticeOverview,
+  usePracticeSession,
+  useRecordPractice,
+  type LessonPractice,
+  type PracticeOverview,
+  type TopicPractice,
+} from './practice-hooks';
 export {
   createQueryClient,
   DataProvider,

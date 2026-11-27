@@ -1,3 +1,4 @@
+import type { ReviewState } from '@ricingo/domain';
 import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 
 import { AppError } from '@/core/errors';
@@ -21,6 +22,15 @@ const MIGRATIONS: readonly string[] = [
    CREATE TABLE settings (
      key TEXT PRIMARY KEY NOT NULL,
      value TEXT NOT NULL
+   );`,
+  // Practice progress (ADR-0017): one row per practised item.
+  `CREATE TABLE practice_reviews (
+     item_key TEXT PRIMARY KEY NOT NULL,
+     box INTEGER NOT NULL,
+     due_at TEXT NOT NULL,
+     correct INTEGER NOT NULL,
+     wrong INTEGER NOT NULL,
+     last_answered_at TEXT NOT NULL
    );`,
 ];
 
@@ -53,6 +63,20 @@ const UPSERT = `INSERT INTO lessons (id, version, checksum, bundle, installed_at
   VALUES (?, ?, ?, ?, ?)
   ON CONFLICT (id) DO UPDATE SET version = excluded.version, checksum = excluded.checksum,
     bundle = excluded.bundle, installed_at = excluded.installed_at`;
+interface ReviewRow {
+  item_key: string;
+  box: number;
+  due_at: string;
+  correct: number;
+  wrong: number;
+  last_answered_at: string;
+}
+
+const UPSERT_REVIEW = `INSERT INTO practice_reviews
+  (item_key, box, due_at, correct, wrong, last_answered_at) VALUES (?, ?, ?, ?, ?, ?)
+  ON CONFLICT (item_key) DO UPDATE SET box = excluded.box, due_at = excluded.due_at,
+    correct = excluded.correct, wrong = excluded.wrong, last_answered_at = excluded.last_answered_at`;
+
 const INSERT_IF_MISSING = `INSERT INTO lessons (id, version, checksum, bundle, installed_at)
   VALUES (?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING`;
 
@@ -129,5 +153,33 @@ export function openSqliteLocalStore(): LocalStore {
           value,
         );
       }),
+    readReviews: () =>
+      run('read practice progress', async (db) => {
+        const rows = await db.getAllAsync<ReviewRow>('SELECT * FROM practice_reviews');
+        return rows.map((row): ReviewState => ({
+          itemKey: row.item_key,
+          box: row.box,
+          dueAt: row.due_at,
+          correct: row.correct,
+          wrong: row.wrong,
+          lastAnsweredAt: row.last_answered_at,
+        }));
+      }),
+    saveReviews: (reviews) =>
+      run('save practice progress', (db) =>
+        db.withTransactionAsync(async () => {
+          for (const state of reviews) {
+            await db.runAsync(
+              UPSERT_REVIEW,
+              state.itemKey,
+              state.box,
+              state.dueAt,
+              state.correct,
+              state.wrong,
+              state.lastAnsweredAt,
+            );
+          }
+        }),
+      ),
   };
 }

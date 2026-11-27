@@ -25,10 +25,11 @@ import styles from './editor.module.css';
 import { GrammarTab } from './grammar-tab';
 import { InfoTab } from './info-tab';
 import { IssuesPanel } from './issues-panel';
+import { PracticeTab } from './practice-tab';
 import { VisibilitySwitch } from './visibility-switch';
 import { VocabularyTab } from './vocabulary-tab';
 
-export type EditorTab = 'dialog' | 'vocabulary' | 'grammar' | 'info';
+export type EditorTab = 'dialog' | 'vocabulary' | 'grammar' | 'practice' | 'info';
 type SaveState = 'saved' | 'unsaved' | 'saving' | 'failed';
 
 const AUTOSAVE_DELAY_MS = 800;
@@ -154,6 +155,7 @@ export function LessonEditor({ initial }: { initial: LessonDetail }) {
     { id: 'dialog', label: t('editor.tabs.dialog') },
     { id: 'vocabulary', label: t('editor.tabs.vocabulary', { count: draft.lexemes.length }) },
     { id: 'grammar', label: t('editor.tabs.grammar', { count: draft.grammarTopics.length }) },
+    { id: 'practice', label: t('editor.tabs.practice') },
     { id: 'info', label: t('editor.tabs.info') },
   ];
 
@@ -349,6 +351,7 @@ export function LessonEditor({ initial }: { initial: LessonDetail }) {
         )}
         {tab === 'vocabulary' && <VocabularyTab draft={draft} onChange={setDraft} />}
         {tab === 'grammar' && <GrammarTab draft={draft} onChange={setDraft} />}
+        {tab === 'practice' && <PracticeTab draft={draft} onChange={setDraft} />}
         {tab === 'info' && <InfoTab draft={draft} onChange={setDraft} />}
       </div>
     </main>
