@@ -1,12 +1,14 @@
 # Nasazení na VPS — návod
 
-Teacher Studio, API a databáze běží na VPS `esprog-vps` (Forpsi, 80.211.213.195) v Dockeru
-(ADR-0015). Image se staví na GitHubu, server jen stahuje a spouští hotové verze.
+Teacher Studio, API, databáze a webová aplikace pro studenty běží na VPS `esprog-vps` (Forpsi,
+80.211.213.195) v Dockeru (ADR-0015, ADR-0019). Image se staví na GitHubu, server jen stahuje
+a spouští hotové verze.
 
-| Adresa                       | Co to je                            |
-| ---------------------------- | ----------------------------------- |
-| `https://rici.esprog.eu`     | Teacher Studio                      |
-| `https://api.rici.esprog.eu` | API (pro Studio i mobilní aplikaci) |
+| Adresa                       | Co to je                                                  |
+| ---------------------------- | --------------------------------------------------------- |
+| `https://rici.esprog.eu`     | Teacher Studio                                            |
+| `https://api.rici.esprog.eu` | API (pro Studio i mobilní aplikaci)                       |
+| `https://app.rici.esprog.eu` | Aplikace pro studenty na webu (PWA); `/api/*` vede na API |
 
 ## Jak to funguje
 
@@ -49,6 +51,24 @@ Nic se nestaví, nasadí se existující image. Migrace databáze se nevrací.
 3. Server (udělal Claude přes SSH): uživatel `deploy` ve skupině `docker`, jeho klíč smí spustit
    jen `/srv/ricingo/deploy.sh`; složky `/srv/ricingo` a `/srv/proxy`; `.env` s náhodným heslem
    databáze; Caddy spuštěný (`cd /srv/proxy && docker compose up -d`).
+
+## Webová aplikace pro studenty (ADR-0019) — jednorázově před prvním vydáním
+
+1. **DNS (Wedos):** záznam `app.rici` typu A `80.211.213.195` a AAAA `2001:15e8:110:54c3::1`.
+   Bez něj Caddy nezíská certifikát pro `app.rici.esprog.eu` (ostatní weby běží dál).
+2. **`deploy.sh` na serveru:** skript na serveru se z tagu neaktualizuje, nová verze stahuje
+   i image `rici-web`. Nahrát ho jednou z repozitáře:
+
+   ```sh
+   scp deploy/deploy.sh esprog-vps:/tmp/deploy.sh
+   ssh -t esprog-vps "sudo install -m 755 /tmp/deploy.sh /srv/ricingo/deploy.sh && rm /tmp/deploy.sh"
+   ```
+
+3. Po vydání: `https://app.rici.esprog.eu` ukáže aplikaci, `https://app.rici.esprog.eu/api/v1/health`
+   vrací `{"database":"ok","status":"ok"}`. Na iPhonu v Safari: Sdílet → **Přidat na plochu**.
+
+Lokálně se webová verze staví příkazem `corepack pnpm --filter @ricingo/mobile build:web`
+(výstup `apps/mobile/dist`).
 
 ## Po prvním nasazení
 

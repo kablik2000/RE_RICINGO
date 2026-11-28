@@ -25,3 +25,4 @@ Status values: **Proposed** (awaiting approval) · **Accepted** · **Superseded 
 | [0016](0016-android-apk-direct-download.md)                | Android app as a direct APK download until the stores              | Accepted                  |
 | [0017](0017-practice-generated-from-lessons.md)            | Practice generated from lesson content, progress on the device     | Accepted                  |
 | [0018](0018-home-page-and-lesson-themes.md)                | Home page, lesson themes, recommendations in the app               | Accepted                  |
+| [0019](0019-student-web-app.md)                            | The student app as an installable web app (PWA)                    | Accepted                  |

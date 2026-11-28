@@ -29,3 +29,17 @@ api.rici.esprog.eu {
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:8100
 }
+
+# The student web app (ADR-0019). The API is served on the same origin, so the app needs no
+# cross-origin requests and its Content Security Policy can stay 'self' only.
+app.rici.esprog.eu {
+	encode zstd gzip
+
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8100
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:3200
+	}
+}

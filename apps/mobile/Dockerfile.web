@@ -1,0 +1,31 @@
+# syntax=docker/dockerfile:1
+# Student web app image (ADR-0019). Build context: the repository root —
+#   docker build -f apps/mobile/Dockerfile.web .
+# Built by .github/workflows/release.yml and run by deploy/compose.yaml on the server.
+
+FROM node:22-slim AS build
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
+    EXPO_NO_TELEMETRY=1 \
+    APP_ENV=production
+RUN corepack enable
+WORKDIR /repo
+
+# Manifests first, so code changes do not reinstall dependencies. Every workspace manifest is
+# copied (the lockfile lists them all); only the app and its workspace packages are installed.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/studio/package.json apps/studio/
+COPY apps/mobile/package.json apps/mobile/
+COPY packages/domain/package.json packages/domain/
+COPY packages/design-system/package.json packages/design-system/
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --filter "@ricingo/mobile..."
+
+COPY tsconfig.base.json ./
+COPY packages ./packages
+COPY apps/mobile ./apps/mobile
+RUN pnpm --filter @ricingo/mobile build:web
+
+FROM caddy:2-alpine AS runtime
+COPY apps/mobile/web/Caddyfile /etc/caddy/Caddyfile
+COPY --from=build /repo/apps/mobile/dist /srv
+EXPOSE 8080

@@ -2,20 +2,26 @@ import type { TokenStore } from './token-store';
 
 export type { TokenStore } from './token-store';
 
+const KEY = 'rici.student.session';
+
 /**
- * Web is a development preview only (Q-4) and has no secure storage: the session lives in memory
- * and ends with the page. Also used by the tests.
+ * The web app (ADR-0019) keeps the session in `localStorage`, so the student stays signed in after
+ * closing the page. A strict Content Security Policy guards it against injected scripts. Without
+ * `localStorage` (tests, some private modes) the session lives in memory and ends with the page.
  */
 export function openTokenStore(): TokenStore {
+  const storage = typeof localStorage === 'undefined' ? null : localStorage;
   let token: string | null = null;
   return {
-    read: () => Promise.resolve(token),
+    read: () => Promise.resolve(storage === null ? token : storage.getItem(KEY)),
     write(value) {
-      token = value;
+      if (storage === null) token = value;
+      else storage.setItem(KEY, value);
       return Promise.resolve();
     },
     clear() {
-      token = null;
+      if (storage === null) token = null;
+      else storage.removeItem(KEY);
       return Promise.resolve();
     },
   };

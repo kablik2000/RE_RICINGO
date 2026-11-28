@@ -52,8 +52,20 @@ describe('resolveContentApiUrl', () => {
   it('downloads nothing without a configured URL outside development, or on web', () => {
     expect(resolveContentApiUrl('preview', undefined, undefined, ANDROID)).toBeNull();
     expect(
-      resolveContentApiUrl('development', undefined, 'localhost:8081', { os: 'web' }),
+      resolveContentApiUrl('development', undefined, 'localhost:8081', {
+        os: 'web',
+        origin: 'http://localhost:8081',
+      }),
     ).toBeNull();
+  });
+
+  it('calls the API on its own origin in a built web app', () => {
+    expect(
+      resolveContentApiUrl('production', undefined, undefined, {
+        os: 'web',
+        origin: 'https://app.rici.esprog.eu',
+      }),
+    ).toBe('https://app.rici.esprog.eu');
   });
 });
 

@@ -488,3 +488,12 @@ checks (Ruff, mypy, pytest) and the API Docker image on every PR; E2E on release
 --prod`, `pip-audit`): Studio and API clean.
 - Teacher Studio: CSP with per-request nonces, `frame-ancestors 'none'`, security headers, no
   open redirects, sessions verified on every page, action and API call (ADR-0012).
+
+## Student web app (ADR-0019)
+
+The student app is also built for the web (`expo export --platform web`, single-page app) and
+served at `app.rici.esprog.eu` by the `rici-web` image. Platform files keep the native and web
+sides apart: `open-local-store.web.ts` (IndexedDB), `token-store.web.ts` (`localStorage`),
+`register-service-worker.web.ts`, `install-app-card.web.tsx`, `(student)/_layout.web.tsx`
+(JavaScript tabs). The service worker precaches the build; the API is reached on the same origin
+through the proxy.

@@ -84,8 +84,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     predictiveBackGestureEnabled: false,
   },
   web: {
-    // Web is used for development previews only; students use iOS/Android (open question Q-4).
+    // The installable web app (ADR-0019); `npm run build:web` adds its service worker.
     output: 'single',
+    name: APP_DISPLAY_NAME,
+    shortName: 'RICI',
+    lang: 'cs',
     favicon: './assets/images/favicon.png',
   },
   plugins: [

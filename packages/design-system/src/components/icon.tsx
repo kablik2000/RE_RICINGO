@@ -37,6 +37,7 @@ export const icons = {
   radioOff: { md: 'radio_button_unchecked', sf: 'circle' },
   bookmark: { md: 'bookmark', sf: 'bookmark' },
   layers: { md: 'layers', sf: 'square.3.layers.3d' },
+  practice: { md: 'exercise', sf: 'square.and.pencil' },
 } as const satisfies Record<string, { md: AndroidSymbol; sf: SFSymbol }>;
 
 export type IconName = keyof typeof icons;

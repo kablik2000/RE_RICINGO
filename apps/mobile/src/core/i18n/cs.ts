@@ -49,6 +49,17 @@ export const cs = {
       failed: 'Doporučení se teď nepodařilo načíst.',
     },
   },
+  pwa: {
+    install: {
+      title: 'Přidejte si aplikaci na plochu',
+      message: 'Otevře se jako aplikace, funguje i bez internetu a nic se nesmaže.',
+      ios: 'V Safari ťukněte dole na Sdílet (čtvereček se šipkou) a vyberte Přidat na plochu. Aplikace pak funguje i bez internetu a nic se nesmaže.',
+      other:
+        'V menu prohlížeče zvolte Nainstalovat aplikaci nebo Přidat na plochu. Aplikace pak funguje i bez internetu.',
+      action: 'Nainstalovat',
+      dismiss: 'Teď ne',
+    },
+  },
   lessons: {
     title: 'Lekce',
     featured: 'Vaše první lekce',

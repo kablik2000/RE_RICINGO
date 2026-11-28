@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { t } from '@/core/i18n';
+import { InstallAppCard } from '@/core/pwa';
 import { QueryView } from '@/core/ui';
 import { type LessonSummary, useLessons } from '@/data';
 import {
@@ -34,6 +35,7 @@ export function HomeScreen() {
   return (
     <Screen>
       <HomeHero />
+      <InstallAppCard />
       <LessonUpdatesBanner />
       <QueryView query={lessons} loadingMessage={t('lessons.loading')}>
         {(items) => <HomeContent lessons={items} />}

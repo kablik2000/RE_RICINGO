@@ -10,6 +10,10 @@ let cached: AppConfig | null = null;
 
 /** Validated configuration of the running build (read on first use). */
 export function getAppConfig(): AppConfig {
-  cached ??= parseAppConfig(Constants.expoConfig, { os: Platform.OS });
+  cached ??= parseAppConfig(Constants.expoConfig, {
+    os: Platform.OS,
+    ...(Platform.OS === 'web' &&
+      typeof window !== 'undefined' && { origin: window.location.origin }),
+  });
   return cached;
 }

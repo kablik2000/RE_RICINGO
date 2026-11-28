@@ -1,4 +1,5 @@
 import { getNetworkStateAsync } from 'expo-network';
+import { Platform } from 'react-native';
 
 import { getAppConfig } from '@/core/config';
 import { telemetry } from '@/core/telemetry';
@@ -54,7 +55,12 @@ export function createDataServices(): DataServices {
           api: createContentApi(apiUrl, fetch, () => tokens.read()),
           library,
           holds,
-          getConnection: async () => toConnectionKind(await getNetworkStateAsync()),
+          getConnection: async () => {
+            const kind = toConnectionKind(await getNetworkStateAsync());
+            // Browsers cannot tell Wi-Fi from mobile data; lessons are small, so the web app
+            // (ADR-0019) downloads them on any connection, like on Wi-Fi.
+            return Platform.OS === 'web' && kind === 'metered' ? 'unmetered' : kind;
+          },
           getPolicy: () => updateSettings.getPolicy(),
           telemetry,
         });

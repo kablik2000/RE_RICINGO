@@ -31,6 +31,11 @@ All notable project changes. Format based on [Keep a Changelog](https://keepacha
 
 ### Added
 
+- 2026-11-27 — **Student app on the web** (ADR-0019): an installable web app (PWA) at
+  `app.rici.esprog.eu` from the same code — lessons, progress and the session kept in the
+  browser (IndexedDB, localStorage), a service worker so it starts offline, manifest and icons
+  for "Přidat na plochu", a hint on Home how to install it, the API on the same address. New
+  `rici-web` image in the release; DNS record and the updated `deploy.sh` needed on the server.
 - 2026-11-27 — **Home page** (ADR-0018, owner's sketch): greeting over a Roman illustration,
   "Procházet sbírku lekcí", Tematické okruhy / Úrovně / Všechny lekce, "Doporučujeme začít";
   for signed-in students **"Od vaší lektorky"** — the lecturer's recommendations, also offline:

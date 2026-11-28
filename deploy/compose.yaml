@@ -1,4 +1,5 @@
-# Production stack on the VPS (ADR-0015): PostgreSQL, the Flask API and the Teacher Studio.
+# Production stack on the VPS (ADR-0015): PostgreSQL, the Flask API, the Teacher Studio and the
+# student web app (ADR-0019).
 # Lives on the server in /srv/ricingo next to `.env` (secrets, the deployed version) and is
 # replaced by deploy.sh from the release tag on every deploy — edit it here, never on the server.
 # Caddy (/srv/proxy) is the only thing reachable from the internet; it forwards to the
@@ -75,6 +76,23 @@ services:
     depends_on:
       api:
         condition: service_healthy
+
+  # The student web app (ADR-0019): static files; the proxy sends /api/* to the API itself.
+  web:
+    <<: *restart
+    image: ${IMAGE_PREFIX}/rici-web:${RICI_VERSION}
+    ports:
+      - '127.0.0.1:3200:8080'
+    read_only: true
+    tmpfs:
+      - /config
+      - /data
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--spider', 'http://127.0.0.1:8080/']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
 volumes:
   db-data:

@@ -1,0 +1,18 @@
+# Build context of the web app image (apps/mobile/Dockerfile.web): the repository root. BuildKit
+# uses this file instead of the root .dockerignore (which leaves out the app) for this Dockerfile.
+**/node_modules
+**/coverage
+**/*.tsbuildinfo
+.git
+.env
+.env.*
+**/.expo
+apps/mobile/android
+apps/mobile/ios
+apps/mobile/dist
+apps/mobile/dist-apk
+apps/studio/*
+!apps/studio/package.json
+services
+docs
+deploy

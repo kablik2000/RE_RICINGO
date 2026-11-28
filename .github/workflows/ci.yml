@@ -33,9 +33,11 @@ jobs:
       - run: pnpm format:check
       - run: pnpm test # jest detects CI=true automatically (Python checks run in the "api" job)
 
-      - name: Bundle check (Android, iOS, web)
+      - name: Bundle check (Android, iOS, web) and the web app's service worker
         working-directory: apps/mobile
-        run: npx expo export --platform all --output-dir dist
+        run: |
+          npx expo export --platform all --output-dir dist
+          node scripts/write-service-worker.mjs dist
 
       - name: Teacher Studio production build
         run: pnpm --filter @ricingo/studio build

@@ -34,15 +34,18 @@ export interface ExpoConfigSource {
   hostUri?: string;
 }
 
-/** Platform facts needed to find the development API. */
+/** Platform facts needed to find the API. */
 export interface RuntimePlatform {
   os: string;
+  /** Web only: the origin the app was loaded from (`https://app.rici.esprog.eu`). */
+  origin?: string;
 }
 
 /**
  * The API URL: `extra.apiUrl` when the build sets one (`RICI_API_URL`); in development the local
- * Docker API on the computer that runs the dev server. Web previews download nothing (the API
- * does not allow cross-origin requests).
+ * Docker API on the computer that runs the dev server. A built web app (ADR-0019) calls the API
+ * on its own origin, where the web server forwards `/api/*` (the API allows no cross-origin
+ * requests); the web development preview downloads nothing.
  */
 export function resolveContentApiUrl(
   appEnv: AppEnv,
@@ -53,7 +56,10 @@ export function resolveContentApiUrl(
   if (configured !== undefined) {
     return configured.replace(/\/+$/, '');
   }
-  if (appEnv !== 'development' || platform.os === 'web') {
+  if (platform.os === 'web') {
+    return appEnv === 'development' || platform.origin === undefined ? null : platform.origin;
+  }
+  if (appEnv !== 'development') {
     return null;
   }
   const devHost = hostUri?.split(':')[0] ?? 'localhost';

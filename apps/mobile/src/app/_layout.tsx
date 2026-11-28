@@ -3,6 +3,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
 import { t } from '@/core/i18n';
+import { registerServiceWorker } from '@/core/pwa';
 import { AppProviders, RouteErrorBoundary, useAppFonts } from '@/core/ui';
 import { ContentSyncDriver, DataProvider } from '@/data';
 
@@ -16,6 +17,8 @@ export function ErrorBoundary(props: ErrorBoundaryProps) {
 
 // Keep the splash screen until the typefaces are ready, so text never re-flows on start.
 void SplashScreen.preventAutoHideAsync();
+// The web app works offline (ADR-0019); does nothing on iOS and Android.
+registerServiceWorker();
 
 const withHeader = { headerShown: true, headerBackButtonDisplayMode: 'minimal' } as const;
 

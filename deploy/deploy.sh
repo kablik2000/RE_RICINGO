@@ -63,7 +63,7 @@ compose config --quiet || fail "compose.yaml of v$version is invalid"
 
 log "pulling images $version"
 printf '%s' "$token" | docker login ghcr.io --username "${REPOSITORY%%/*}" --password-stdin >/dev/null
-compose pull --quiet api studio
+compose pull --quiet api studio web
 docker logout ghcr.io >/dev/null
 
 log "migrating the database"
@@ -73,7 +73,7 @@ compose run --rm --no-deps api flask --app rici_api.wsgi db-upgrade
 log "starting v$version"
 if ! compose up --detach --wait --remove-orphans; then
   compose ps
-  compose logs --tail 50 api studio || true
+  compose logs --tail 50 api studio web || true
   if [[ -n "$previous" ]]; then
     log "v$version is not healthy: starting the previous version $previous again"
     [[ -f "$work/compose.previous.yaml" ]] && cp "$work/compose.previous.yaml" compose.yaml

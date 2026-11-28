@@ -1,4 +1,4 @@
-import { useTheme } from '@ricingo/design-system';
+import { Icon, useTheme } from '@ricingo/design-system';
 import { Tabs } from 'expo-router/js-tabs';
 
 import { t } from '@/core/i18n';
@@ -6,7 +6,7 @@ import { studentTabs } from '@/navigation/student-tabs';
 
 export { RouteErrorBoundary as ErrorBoundary } from '@/core/ui';
 
-/** Native tabs are unavailable on web (used for development previews only). */
+/** The web app's tab bar (ADR-0019): native tabs are unavailable on web. */
 export default function StudentTabsLayout() {
   const { colors } = useTheme();
   return (
@@ -18,7 +18,16 @@ export default function StudentTabsLayout() {
         tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.outlineVariant },
       }}>
       {studentTabs.map((tab) => (
-        <Tabs.Screen key={tab.name} name={tab.name} options={{ title: t(tab.labelKey) }} />
+        <Tabs.Screen
+          key={tab.name}
+          name={tab.name}
+          options={{
+            title: t(tab.labelKey),
+            tabBarIcon: ({ focused }) => (
+              <Icon name={tab.webIcon} color={focused ? 'primary' : 'onSurfaceVariant'} />
+            ),
+          }}
+        />
       ))}
     </Tabs>
   );
