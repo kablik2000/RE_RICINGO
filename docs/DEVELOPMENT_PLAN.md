@@ -301,7 +301,7 @@ Order: each step is usable on its own.
 - [x] Service worker (precache of the build, offline start, API never cached), manifest, icons, iOS meta tags; install hint on Home. Verified in headless Chrome 2026-11-27: worker active, 51 files cached, Home and Slovník load offline, Chrome offers installing.
 - [x] Same-origin API (`/api/*` forwarded by the proxy); web tab bar with icons; lessons download on any connection on the web.
 - [x] `rici-web` image (Caddy, CSP, caching), compose service, proxy site `app.rici.esprog.eu`, release workflow and smoke tests.
-- [ ] DNS record `app.rici` and the updated `deploy.sh` on the server (docs/setup/NASAZENI_VPS.md), then the first release with the web app.
+- [x] DNS record `app.rici` and the updated `deploy.sh` on the server; released as **v0.3.0** on 2026-11-28 (also practice and the home page): `https://app.rici.esprog.eu` serves the app, `/api/v1/health` ok, lessons download from production. Released from branch `pwa` (not merged into `main` yet).
 - [ ] Test on a real iPhone (Safari, Přidat na plochu, offline, Italian voice) and Android (Chrome install).
 - [ ] Notice in the app when a new version is ready ("Zavřete a otevřete aplikaci").
 - [ ] Decide whether to keep the APK download once the web app works (ADR-0016).

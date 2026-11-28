@@ -54,6 +54,8 @@ Nic se nestaví, nasadí se existující image. Migrace databáze se nevrací.
 
 ## Webová aplikace pro studenty (ADR-0019) — jednorázově před prvním vydáním
 
+Hotovo 2026-11-28 (v0.3.0).
+
 1. **DNS (Wedos):** záznam `app.rici` typu A `80.211.213.195` a AAAA `2001:15e8:110:54c3::1`.
    Bez něj Caddy nezíská certifikát pro `app.rici.esprog.eu` (ostatní weby běží dál).
 2. **`deploy.sh` na serveru:** skript na serveru se z tagu neaktualizuje, nová verze stahuje
