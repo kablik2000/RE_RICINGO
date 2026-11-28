@@ -63,7 +63,9 @@ compose config --quiet || fail "compose.yaml of v$version is invalid"
 
 log "pulling images $version"
 printf '%s' "$token" | docker login ghcr.io --username "${REPOSITORY%%/*}" --password-stdin >/dev/null
-compose pull --quiet api studio web
+# The app services this tag defines (an older tag has no web app, so a rollback still works).
+mapfile -t services < <(compose config --services | grep -Ex 'api|studio|web')
+compose pull --quiet "${services[@]}"
 docker logout ghcr.io >/dev/null
 
 log "migrating the database"
@@ -73,7 +75,7 @@ compose run --rm --no-deps api flask --app rici_api.wsgi db-upgrade
 log "starting v$version"
 if ! compose up --detach --wait --remove-orphans; then
   compose ps
-  compose logs --tail 50 api studio web || true
+  compose logs --tail 50 "${services[@]}" || true
   if [[ -n "$previous" ]]; then
     log "v$version is not healthy: starting the previous version $previous again"
     [[ -f "$work/compose.previous.yaml" ]] && cp "$work/compose.previous.yaml" compose.yaml
